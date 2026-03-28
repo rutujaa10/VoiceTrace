@@ -3,7 +3,7 @@
  *
  * Runs every Sunday at 10:00 AM IST.
  * Generates a plain-language narrative of each vendor's week
- * using LLM to create "Story Mode" insights.
+ * using AgentRouter AI (OpenAI-compatible) for "Story Mode" insights.
  */
 
 const OpenAI = require('openai');
@@ -12,7 +12,9 @@ const LedgerEntry = require('../models/LedgerEntry');
 const Insight = require('../models/Insight');
 const { env } = require('../config/env');
 
-const openai = env.OPENAI_API_KEY ? new OpenAI({ apiKey: env.OPENAI_API_KEY }) : null;
+const openai = env.AI_API_KEY
+  ? new OpenAI({ apiKey: env.AI_API_KEY, baseURL: env.AI_BASE_URL })
+  : null;
 
 const run = async () => {
   const vendors = await User.find({ isActive: true });
@@ -24,7 +26,6 @@ const run = async () => {
 
   for (const vendor of vendors) {
     try {
-      // Get this week's entries
       const entries = await LedgerEntry.find({
         vendor: vendor._id,
         date: { $gte: weekAgo },
@@ -32,14 +33,12 @@ const run = async () => {
 
       if (entries.length === 0) continue;
 
-      // Compute weekly stats
       const totalRevenue = entries.reduce((s, e) => s + e.totalRevenue, 0);
       const totalExpenses = entries.reduce((s, e) => s + e.totalExpenses, 0);
       const totalProfit = totalRevenue - totalExpenses;
       const totalMissed = entries.reduce((s, e) =>
         s + e.missedProfits.reduce((ms, mp) => ms + mp.estimatedLoss, 0), 0);
 
-      // Get all items sold this week
       const itemMap = {};
       entries.forEach((e) => {
         e.items.forEach((item) => {
@@ -56,13 +55,12 @@ const run = async () => {
       let storyContent;
 
       if (openai) {
-        // Generate narrative with LLM
         const prompt = buildStoryPrompt(vendor, entries, {
           totalRevenue, totalExpenses, totalProfit, totalMissed, topItems,
         });
 
         const response = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: 'google/gemma-3-27b-it:free',
           messages: [
             { role: 'system', content: 'You are a friendly, encouraging business narrator for Indian street vendors. Write in simple, warm language. Use Hindi words naturally when the vendor prefers Hindi.' },
             { role: 'user', content: prompt },
@@ -73,23 +71,18 @@ const run = async () => {
 
         storyContent = response.choices[0].message.content;
       } else {
-        // Mock story
         storyContent = generateMockStory(vendor, {
           totalRevenue, totalExpenses, totalProfit, topItems, entryCount: entries.length,
         });
       }
 
-      // Save as insight
       await Insight.create({
         vendor: vendor._id,
         type: 'weekly_story',
         title: `📖 ${vendor.displayName} ki Hafte ki Kahani`,
         content: storyContent,
         data: {
-          totalRevenue,
-          totalExpenses,
-          totalProfit,
-          totalMissed,
+          totalRevenue, totalExpenses, totalProfit, totalMissed,
           topItems: topItems.map(([name, data]) => ({ name, ...data })),
           daysLogged: entries.length,
         },

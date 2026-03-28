@@ -1,69 +1,76 @@
 /**
  * Whisper Transcription Service
  *
- * Transcribes audio files using OpenAI Whisper API.
+ * Transcribes audio files using local OpenAI Whisper (Python subprocess).
  * Supports Hindi, English, and Hinglish.
  */
 
+const { execFile } = require('child_process');
+const path = require('path');
 const fs = require('fs');
-const OpenAI = require('openai');
 const { env } = require('../config/env');
 
-const openai = env.OPENAI_API_KEY ? new OpenAI({ apiKey: env.OPENAI_API_KEY }) : null;
+const WHISPER_RUNNER = path.join(__dirname, 'whisper_runner.py');
 
 /**
- * Transcribe an audio file.
+ * Transcribe an audio file using local Whisper.
  * @param {string} filepath – Absolute path to the audio file.
- * @returns {{ text: string, language: string, duration: number }}
+ * @returns {{ text: string, language: string, duration: number, segments: Array }}
  */
 const transcribe = async (filepath) => {
-  if (!openai) {
-    console.warn('[Whisper] OpenAI API key not configured. Returning mock transcription.');
-    return {
-      text: 'Mock transcription: Aaj 50 samose beche 10 rupaye ke, aur 200 rupaye ka tel kharida',
-      language: 'hi',
-      duration: 0,
-    };
+  if (!fs.existsSync(filepath)) {
+    throw new Error(`Audio file not found: ${filepath}`);
   }
 
-  const startTime = Date.now();
+  const model = env.WHISPER_MODEL || 'base';
 
-  try {
-    const response = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(filepath),
-      model: 'whisper-1',
-      language: 'hi',          // Hint for Hindi (works for Hinglish too)
-      response_format: 'verbose_json',
-      prompt: 'Street vendor sales report in Hindi/Hinglish. Items sold, prices, quantities, expenses. ' +
-              'Words like samosa, vada pav, chai, gola, paan, biryani, juice, lassi, pakora.',
-    });
+  return new Promise((resolve, reject) => {
+    execFile(
+      'python',
+      [WHISPER_RUNNER, filepath, model],
+      {
+        timeout: 120000, // 2 minute timeout
+        maxBuffer: 10 * 1024 * 1024, // 10 MB
+      },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error('[Whisper] Transcription error:', error.message);
+          if (stderr) console.error('[Whisper] stderr:', stderr);
 
-    const duration = Date.now() - startTime;
+          // Fallback to mock if Whisper is not available
+          if (stderr && stderr.includes('openai-whisper not installed')) {
+            console.warn('[Whisper] Local Whisper not installed. Returning mock transcription.');
+            return resolve({
+              text: 'Mock transcription: Aaj 50 samose beche 10 rupaye ke, aur 200 rupaye ka tel kharida',
+              language: 'hi',
+              duration: 0,
+              segments: [],
+            });
+          }
 
-    // Detect language from response
-    let detectedLanguage = 'hi';
-    const text = response.text || '';
-    const hindiChars = (text.match(/[\u0900-\u097F]/g) || []).length;
-    const totalChars = text.replace(/\s/g, '').length || 1;
+          return reject(new Error(`Transcription failed: ${error.message}`));
+        }
 
-    if (hindiChars / totalChars > 0.3) {
-      detectedLanguage = 'hi';
-    } else if (hindiChars / totalChars > 0.05) {
-      detectedLanguage = 'hinglish';
-    } else {
-      detectedLanguage = 'en';
-    }
+        try {
+          const result = JSON.parse(stdout.trim());
 
-    return {
-      text: response.text,
-      language: detectedLanguage,
-      duration,
-      segments: response.segments || [],
-    };
-  } catch (error) {
-    console.error('[Whisper] Transcription error:', error.message);
-    throw new Error(`Transcription failed: ${error.message}`);
-  }
+          if (result.error) {
+            return reject(new Error(`Whisper error: ${result.error}`));
+          }
+
+          return resolve({
+            text: result.text || '',
+            language: result.language || 'hi',
+            duration: result.duration || 0,
+            segments: result.segments || [],
+          });
+        } catch (parseError) {
+          console.error('[Whisper] Failed to parse output:', stdout);
+          return reject(new Error(`Failed to parse Whisper output: ${parseError.message}`));
+        }
+      }
+    );
+  });
 };
 
 module.exports = { transcribe };
