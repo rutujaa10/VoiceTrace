@@ -83,7 +83,7 @@ const getWeatherInsight = async (vendor) => {
     return {
       type: 'weather_forecast',
       priority: 1,
-      icon: '🌤️',
+      icon: '️',
       title: 'Weather Forecast',
       subtitle: 'Could not fetch weather data',
       content: 'Check back later for weather-based stock advice.',
@@ -122,7 +122,7 @@ const generateWeatherBusinessAdvice = (forecast, category) => {
 
   // Rain scenario
   if (condition === 'rain' || rainProb > 0.5) {
-    summary = `🌧️ Rain is expected tomorrow (${Math.round(rainProb * 100)}% chance). Foot traffic may drop — focus on rain-friendly items!`;
+    summary = `️ Rain is expected tomorrow (${Math.round(rainProb * 100)}% chance). Foot traffic may drop — focus on rain-friendly items!`;
     tips.push(`Stock up on: ${items.rain.join(', ')}`);
     tips.push('Reduce perishable stock by 20-30% to avoid waste');
     tips.push('Set up rain cover for your stall if possible');
@@ -132,7 +132,7 @@ const generateWeatherBusinessAdvice = (forecast, category) => {
   }
   // Extreme heat
   else if (temp > 40) {
-    summary = `🔥 Extreme heat tomorrow (${temp}°C)! Cold items will fly off the shelves. Stock up and start early before the peak heat.`;
+    summary = `Extreme heat tomorrow (${temp}°C)! Cold items will fly off the shelves. Stock up and start early before the peak heat.`;
     tips.push(`High demand: ${items.hot.join(', ')}`);
     tips.push('Start selling early morning (6-9 AM) and evening (4-8 PM)');
     tips.push('Keep items fresh with ice/cold storage');
@@ -142,7 +142,7 @@ const generateWeatherBusinessAdvice = (forecast, category) => {
   }
   // Hot day
   else if (temp > 35) {
-    summary = `☀️ Hot day ahead (${temp}°C). Cold and refreshing items will sell well. Consider extending evening hours.`;
+    summary = `️ Hot day ahead (${temp}°C). Cold and refreshing items will sell well. Consider extending evening hours.`;
     tips.push(`Focus on: ${items.hot.join(', ')}`);
     tips.push('Evening sales usually peak in hot weather');
     tips.push('Keep perishables in shade or ice box');
@@ -150,7 +150,7 @@ const generateWeatherBusinessAdvice = (forecast, category) => {
   }
   // Cold day
   else if (temp < 15) {
-    summary = `❄️ Cold day tomorrow (${temp}°C). Hot food and warm beverages will be in high demand!`;
+    summary = `️ Cold day tomorrow (${temp}°C). Hot food and warm beverages will be in high demand!`;
     tips.push(`High demand: ${items.cold.join(', ')}`);
     tips.push('Start late morning when people come out');
     tips.push('Keep items warm — invest in thermos/hot plates');
@@ -159,7 +159,7 @@ const generateWeatherBusinessAdvice = (forecast, category) => {
   }
   // Pleasant day
   else {
-    summary = `🌤️ Pleasant weather tomorrow (${temp}°C). Great conditions for business — expect normal to good footfall!`;
+    summary = `️ Pleasant weather tomorrow (${temp}°C). Great conditions for business — expect normal to good footfall!`;
     tips.push('Good weather = good business day!');
     tips.push(`Maintain regular stock of your best sellers`);
     if (new Date().getDay() === 5 || new Date().getDay() === 6) {
@@ -187,7 +187,7 @@ const getGettingStartedInsights = (vendor) => {
     {
       type: 'getting_started',
       priority: 2,
-      icon: '🚀',
+      icon: '',
       title: 'Welcome to VoiceTrace!',
       subtitle: 'Your AI business partner',
       content: 'Start by recording your first day\'s sales. Just tap the mic and speak naturally — "Aaj 50 samose beche, 10 rupaye mein". I\'ll handle the rest!',
@@ -196,7 +196,7 @@ const getGettingStartedInsights = (vendor) => {
     {
       type: 'business_tip',
       priority: 3,
-      icon: '💡',
+      icon: '',
       title: 'Did You Know?',
       subtitle: `Tips for ${formatCategory(category)} vendors`,
       content: getCategoryTip(category),
@@ -205,7 +205,7 @@ const getGettingStartedInsights = (vendor) => {
     {
       type: 'seasonal_tip',
       priority: 4,
-      icon: '📅',
+      icon: '',
       title: 'Seasonal Demand Alert',
       subtitle: getCurrentSeason(),
       content: getSeasonalAdvice(category),
@@ -230,7 +230,7 @@ const getEarlyStageInsights = async (vendor, entries) => {
   insights.push({
     type: 'revenue_analysis',
     priority: 2,
-    icon: '💰',
+    icon: '',
     title: `Your Average: ₹${Math.round(avgRevenue).toLocaleString('en-IN')}/day`,
     subtitle: `Based on ${entries.length} day${entries.length > 1 ? 's' : ''} of logging`,
     content: totalProfit >= 0
@@ -259,7 +259,7 @@ const getEarlyStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'top_items',
       priority: 3,
-      icon: '⭐',
+      icon: '',
       title: `Star Product: ${capitalizeFirst(topItem[0])}`,
       subtitle: `₹${topItem[1].revenue.toLocaleString('en-IN')} revenue from ${topItem[1].qty} units`,
       content: topItems.length > 1
@@ -276,7 +276,7 @@ const getEarlyStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'expense_health',
       priority: 4,
-      icon: isHealthy ? '✅' : '⚠️',
+      icon: isHealthy ? '' : '️',
       title: `Expense Ratio: ${expenseRatio}%`,
       subtitle: isHealthy ? 'Healthy margins!' : 'Expenses are high',
       content: isHealthy
@@ -292,7 +292,7 @@ const getEarlyStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'unlock_preview',
       priority: 5,
-      icon: '🔓',
+      icon: '',
       title: `${daysToGrowth} More Days to Unlock Trends!`,
       subtitle: 'Keep logging daily',
       content: `Log ${daysToGrowth} more day${daysToGrowth > 1 ? 's' : ''} to unlock: weekly trend analysis, best-selling day detection, and AI-powered stock suggestions!`,
@@ -323,7 +323,7 @@ const getGrowthStageInsights = async (vendor, entries) => {
   insights.push({
     type: 'revenue_trend',
     priority: 2,
-    icon: isGrowing ? '📈' : '📉',
+    icon: isGrowing ? '' : '',
     title: isGrowing ? `Revenue Growing +${trendPct}%` : `Revenue Dipped ${trendPct}%`,
     subtitle: `Comparing first ${firstHalf.length} days vs last ${secondHalf.length} days`,
     content: isGrowing
@@ -349,7 +349,7 @@ const getGrowthStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'best_day',
       priority: 3,
-      icon: '🏆',
+      icon: '',
       title: `Best Day: ${bestDay.day}`,
       subtitle: `Avg ₹${Math.round(bestDay.avg).toLocaleString('en-IN')} revenue`,
       content: `${bestDay.day} is your best performing day! Consider preparing extra stock on ${bestDay.day}s for maximum profit.`,
@@ -374,7 +374,7 @@ const getGrowthStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'missed_profit_recovery',
       priority: 3,
-      icon: '💸',
+      icon: '',
       title: `Missed ₹${Math.round(totalMissed).toLocaleString('en-IN')} in Profits!`,
       subtitle: 'Items that ran out too early',
       content: `You could have earned ₹${Math.round(totalMissed).toLocaleString('en-IN')} more! Top items that ran out: ${topMissed.map(([n, v]) => `${capitalizeFirst(n)} (₹${Math.round(v)})`).join(', ')}. Stock 20-30% more of these tomorrow.`,
@@ -388,7 +388,7 @@ const getGrowthStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'unlock_preview',
       priority: 6,
-      icon: '🔮',
+      icon: '',
       title: `${daysToMature} Days to Full AI Predictions!`,
       subtitle: 'Almost there!',
       content: `Log ${daysToMature} more day${daysToMature > 1 ? 's' : ''} to unlock: week-over-week comparison, profit margin optimization, and AI growth score!`,
@@ -428,7 +428,7 @@ const getMatureStageInsights = async (vendor, entries) => {
     insights.push({
       type: 'wow_comparison',
       priority: 2,
-      icon: isUp ? '🚀' : '📊',
+      icon: isUp ? '' : '',
       title: isUp ? `Week-over-Week: +${wowPct}% Growth!` : `Week-over-Week: ${wowPct}%`,
       subtitle: `This week: ₹${Math.round(thisWeekRev).toLocaleString('en-IN')} vs Last week: ₹${Math.round(lastWeekRev).toLocaleString('en-IN')}`,
       content: isUp
@@ -443,7 +443,7 @@ const getMatureStageInsights = async (vendor, entries) => {
   insights.push({
     type: 'profit_optimization',
     priority: 3,
-    icon: profitMargin > 40 ? '🏅' : '📋',
+    icon: profitMargin > 40 ? '' : '',
     title: `Profit Margin: ${profitMargin}%`,
     subtitle: `₹${Math.round(avgDailyProfit).toLocaleString('en-IN')} avg daily profit`,
     content: profitMargin > 50
@@ -459,7 +459,7 @@ const getMatureStageInsights = async (vendor, entries) => {
   insights.push({
     type: 'growth_score',
     priority: 2,
-    icon: growthScore >= 70 ? '🌟' : growthScore >= 40 ? '💪' : '🎯',
+    icon: growthScore >= 70 ? '' : growthScore >= 40 ? '' : '',
     title: `Business Growth Score: ${growthScore}/100`,
     subtitle: getGrowthLabel(growthScore),
     content: getGrowthAdvice(growthScore, entries),
@@ -481,7 +481,7 @@ const getMatureStageInsights = async (vendor, entries) => {
           insights.push({
             type: `ai_prediction_${tip.type || 'tip'}`,
             priority: 3 + i * 0.1,
-            icon: tip.icon || '🧠',
+            icon: tip.icon || '',
             title: tip.title || 'AI Insight',
             subtitle: `AI ${(tip.type || 'insight').charAt(0).toUpperCase() + (tip.type || 'insight').slice(1)}`,
             content: tip.detail || '',
@@ -493,7 +493,7 @@ const getMatureStageInsights = async (vendor, entries) => {
         insights.push({
           type: 'ai_growth_tips',
           priority: 3,
-          icon: '🧠',
+          icon: '',
           title: 'AI Growth Recommendations',
           subtitle: 'Personalized advice to grow your business',
           content: aiTips.join('\n\n'),
@@ -509,7 +509,7 @@ const getMatureStageInsights = async (vendor, entries) => {
       insights.push({
         type: 'ai_growth_tips',
         priority: 3,
-        icon: '🧠',
+        icon: '',
         title: 'AI Growth Recommendations',
         subtitle: 'Based on your business data',
         content: staticTips.join('\n\n'),
@@ -523,7 +523,7 @@ const getMatureStageInsights = async (vendor, entries) => {
   insights.push({
     type: 'consistency',
     priority: 5,
-    icon: '🔥',
+    icon: '',
     title: `Logging Streak: ${vendor.loanReadiness?.streak || 0} Days`,
     subtitle: `${entries.length} entries in last 30 days (${Math.min(consistencyScore, 100)}% consistency)`,
     content: vendor.loanReadiness?.streak >= 7
@@ -575,11 +575,11 @@ const calculateGrowthScore = (entries, vendor) => {
 };
 
 const getGrowthLabel = (score) => {
-  if (score >= 80) return '🌟 Thriving Business!';
-  if (score >= 60) return '📈 Growing Steadily';
-  if (score >= 40) return '💪 Building Momentum';
-  if (score >= 20) return '🌱 Getting Started';
-  return '🎯 Just Beginning';
+  if (score >= 80) return 'Thriving Business!';
+  if (score >= 60) return 'Growing Steadily';
+  if (score >= 40) return 'Building Momentum';
+  if (score >= 20) return 'Getting Started';
+  return 'Just Beginning';
 };
 
 const getGrowthAdvice = (score, entries) => {
@@ -737,11 +737,11 @@ ANALYSIS REQUIREMENTS:
 OUTPUT FORMAT:
 Return EXACTLY 5 insights as a JSON array of objects:
 [
-  {"type": "correlation", "icon": "🔗", "title": "short title", "detail": "1-2 sentence specific insight with exact numbers"},
-  {"type": "prediction", "icon": "🎯", "title": "short title", "detail": "..."},
-  {"type": "anomaly", "icon": "⚡", "title": "short title", "detail": "..."},
-  {"type": "optimization", "icon": "💰", "title": "short title", "detail": "..."},
-  {"type": "action", "icon": "🚀", "title": "short title", "detail": "..."}
+  {"type": "correlation", "icon": "", "title": "short title", "detail": "1-2 sentence specific insight with exact numbers"},
+  {"type": "prediction", "icon": "", "title": "short title", "detail": "..."},
+  {"type": "anomaly", "icon": "", "title": "short title", "detail": "..."},
+  {"type": "optimization", "icon": "", "title": "short title", "detail": "..."},
+  {"type": "action", "icon": "", "title": "short title", "detail": "..."}
 ]
 
 CRITICAL RULES:
@@ -765,7 +765,7 @@ CRITICAL RULES:
       // Return as structured insight objects
       return parsed.slice(0, 5).map(p => ({
         type: p.type || 'tip',
-        icon: p.icon || '💡',
+        icon: p.icon || '',
         title: p.title || 'Insight',
         detail: p.detail || '',
       }));
@@ -810,11 +810,11 @@ const getStaticGrowthTips = (entries, vendor) => {
 
 const getWeatherIcon = (condition) => {
   const map = {
-    clear: '☀️', clouds: '☁️', rain: '🌧️', drizzle: '🌦️',
-    thunderstorm: '⛈️', snow: '❄️', mist: '🌫️', fog: '🌫️',
-    haze: '🌫️', smoke: '🌫️',
+    clear: '️', clouds: '️', rain: '️', drizzle: '️',
+    thunderstorm: '️', snow: '️', mist: '️', fog: '️',
+    haze: '️', smoke: '️',
   };
-  return map[condition?.toLowerCase()] || '🌤️';
+  return map[condition?.toLowerCase()] || '️';
 };
 
 const capitalizeFirst = (str) => {
@@ -848,10 +848,10 @@ const getCategoryTip = (category) => {
 
 const getCurrentSeason = () => {
   const month = new Date().getMonth() + 1;
-  if (month >= 3 && month <= 5) return 'Summer Season ☀️';
-  if (month >= 6 && month <= 9) return 'Monsoon Season 🌧️';
-  if (month >= 10 && month <= 11) return 'Festival Season 🎉';
-  return 'Winter Season ❄️';
+  if (month >= 3 && month <= 5) return 'Summer Season ️';
+  if (month >= 6 && month <= 9) return 'Monsoon Season ️';
+  if (month >= 10 && month <= 11) return 'Festival Season ';
+  return 'Winter Season ️';
 };
 
 const getSeasonalAdvice = (category) => {

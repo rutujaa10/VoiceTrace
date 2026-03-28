@@ -102,9 +102,9 @@ export default function Dashboard() {
         const w = weatherRes.data.data;
         const temp = Math.round(w.temperature || w.temp || 28);
         const condition = w.condition || w.description || 'Clear';
-        const icon = condition.toLowerCase().includes('rain') ? '🌧️'
-          : condition.toLowerCase().includes('cloud') ? '☁️'
-          : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
+        const icon = condition.toLowerCase().includes('rain') ? '️'
+          : condition.toLowerCase().includes('cloud') ? '️'
+          : condition.toLowerCase().includes('snow') ? '️' : '️';
         const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
         setWeatherData({ temp, condition, icon, advice });
       }

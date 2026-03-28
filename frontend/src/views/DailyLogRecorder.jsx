@@ -761,7 +761,7 @@ IMPORTANT RULES:
                 <CheckCircle size={20} style={{ color: 'var(--text-accent)' }} />
               </div>
               <div>
-                <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>✏️ Review AI Extracted Data</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>️ Review AI Extracted Data</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below if the AI got something wrong, then confirm to save</p>
               </div>
             </div>
@@ -870,10 +870,10 @@ IMPORTANT RULES:
             {/* Action buttons */}
             <div className="flex gap-3">
               <button onClick={handleSave} disabled={reviewItems.every(it => !it.name.trim())} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" style={{ background: 'var(--gradient-primary)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.3)', borderRadius: 'var(--radius-lg)' }}>
-                <Save size={16} /> ✅ Confirm & Save to Ledger
+                <Save size={16} /> Confirm & Save to Ledger
               </button>
               <button onClick={handleReset} className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--danger-400)', borderRadius: 'var(--radius-lg)' }}>
-                🗑️ Discard
+                ️ Discard
               </button>
             </div>
           </div>

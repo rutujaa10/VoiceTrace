@@ -307,7 +307,7 @@ export default function Record() {
             disabled={isActive}
             style={{ fontSize: '0.78rem', padding: '6px 12px' }}
           >
-            ✏️ Manual Entry
+            ️ Manual Entry
           </button>
         </div>
 
@@ -341,7 +341,7 @@ export default function Record() {
           className={`badge ${mode === 'speech' ? 'badge-success' : mode === 'audio' ? 'badge-warning' : 'badge-info'}`}
           style={{ alignSelf: 'center', fontSize: '0.7rem' }}
         >
-          {mode === 'speech' ? '💸 Free — Browser STT' : mode === 'audio' ? '🤖 Whisper API' : '📝 Type items & expenses'}
+          {mode === 'speech' ? 'Free — Browser STT' : mode === 'audio' ? 'Whisper API' : 'Type items & expenses'}
         </span>
       </div>
 
@@ -375,7 +375,7 @@ export default function Record() {
                   Review AI Extracted Data
                 </div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  {reviewSource === 'speech' ? '⚡ From Live Speech' : '🎵 From Audio Upload'}
+                  {reviewSource === 'speech' ? 'From Live Speech' : 'From Audio Upload'}
                   {' — '}Edit any values below, then confirm to save
                 </div>
               </div>
@@ -550,7 +550,7 @@ export default function Record() {
           {/* Error */}
           {error && (
             <div style={{ marginTop: '12px', color: 'var(--danger-400)', fontSize: '0.85rem', textAlign: 'center' }}>
-              ❌ {error}
+              {error}
             </div>
           )}
         </div>
@@ -562,7 +562,7 @@ export default function Record() {
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <CheckCircle size={40} style={{ color: 'var(--primary-500)' }} />
           </div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.3rem', marginBottom: '6px' }}>Saved Successfully! 🎉</h2>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.3rem', marginBottom: '6px' }}>Saved Successfully! </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '24px' }}>Your sales entry has been added to the ledger.</p>
 
           <div style={{
@@ -613,7 +613,7 @@ export default function Record() {
               disabled={processing}
               aria-label={isActive ? 'Stop recording' : 'Start recording'}
             >
-              {isActive ? '⏹️' : '🎙️'}
+              {isActive ? '️' : '️'}
             </button>
 
             {/* Timer */}
@@ -622,15 +622,15 @@ export default function Record() {
                 <>
                   <div className="mic-timer">{formattedTime}</div>
                   <div className="mic-status" style={{ color: 'var(--danger-400)' }}>
-                    🔴 {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
+                    {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
                   </div>
                 </>
               ) : (
                 <div className="mic-status">
                   {hasData
                     ? mode === 'speech'
-                      ? `✅ Transcribed ${formattedTime} — Ready to process`
-                      : `✅ Recorded ${formattedTime} — Ready to upload`
+                      ? `Transcribed ${formattedTime} — Ready to process`
+                      : `Recorded ${formattedTime} — Ready to upload`
                     : `Tap the mic to start ${mode === 'speech' ? 'listening' : 'recording'}`}
                 </div>
               )}
@@ -653,7 +653,7 @@ export default function Record() {
                 }}
               >
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: 6 }}>
-                  📝 Live Transcript
+                  Live Transcript
                 </div>
                 <span style={{ color: 'var(--text-primary)' }}>{speech.transcript}</span>
                 {speech.interimText && (
@@ -676,10 +676,10 @@ export default function Record() {
                   className="btn btn-primary btn-lg"
                   onClick={mode === 'speech' ? handleSubmitText : handleUploadAudio}
                 >
-                  🚀 {mode === 'speech' ? 'Process Text' : 'Process Recording'}
+                  {mode === 'speech' ? 'Process Text' : 'Process Recording'}
                 </button>
                 <button className="btn btn-secondary btn-lg" onClick={handleDiscard}>
-                  🗑️ Discard
+                  ️ Discard
                 </button>
               </div>
             )}
@@ -693,7 +693,7 @@ export default function Record() {
                   color: 'var(--text-accent)',
                 }}
               >
-                <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚙️</div>
+                <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>️</div>
                 <p style={{ marginTop: 'var(--space-sm)', fontSize: '0.9rem' }}>
                   {mode === 'speech'
                     ? 'Extracting business data from text...'
@@ -712,7 +712,7 @@ export default function Record() {
                   textAlign: 'center',
                 }}
               >
-                ❌ {error || hookError}
+                {error || hookError}
               </div>
             )}
 
@@ -730,7 +730,7 @@ export default function Record() {
                   textAlign: 'center',
                 }}
               >
-                ⚠️ Web Speech API not supported. Switch to <b>Audio Upload</b> or <b>Manual Entry</b> mode.
+                ️ Web Speech API not supported. Switch to <b>Audio Upload</b> or <b>Manual Entry</b> mode.
               </div>
             )}
           </div>
@@ -738,13 +738,13 @@ export default function Record() {
           {/* Tips */}
           {!result && (
             <div className="glass-card">
-              <h3 className="section-title">💡 Tips for Best Results</h3>
+              <h3 className="section-title">Tips for Best Results</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
                 {[
-                  { emoji: '🗣️', text: 'Speak clearly with item names and prices' },
-                  { emoji: '📋', text: '"50 samose beche 10 rupaye mein"' },
-                  { emoji: '💸', text: 'Mention expenses: "200 ka tel kharida"' },
-                  { emoji: '📉', text: 'Say "khatam ho gaya" for sold-out items' },
+                  { emoji: '️', text: 'Speak clearly with item names and prices' },
+                  { emoji: '', text: '"50 samose beche 10 rupaye mein"' },
+                  { emoji: '', text: 'Mention expenses: "200 ka tel kharida"' },
+                  { emoji: '', text: 'Say "khatam ho gaya" for sold-out items' },
                 ].map((tip) => (
                   <div key={tip.text} style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start' }}>
                     <span style={{ fontSize: '1.3rem' }}>{tip.emoji}</span>
@@ -758,7 +758,7 @@ export default function Record() {
           {/* Result (fallback — only shows if review mode didn't activate) */}
           {result && result.extraction && !reviewMode && !manualSaved && (
             <div className="glass-card animate-fadeInUp">
-              <h3 className="section-title">✅ Extracted Data</h3>
+              <h3 className="section-title">Extracted Data</h3>
 
               {/* Phase 4 Feature 7: Anomaly Alert */}
               {result.anomaly && <AnomalyAlert anomaly={result.anomaly} />}
@@ -767,7 +767,7 @@ export default function Record() {
               {result.extraction.items?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    💰 Items Sold
+                    Items Sold
                   </h4>
                   {result.extraction.items.map((item, i) => (
                     <div
@@ -792,7 +792,7 @@ export default function Record() {
                           <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 5px' }} title={item.clarificationNeeded || 'Needs confirmation'}>?</span>
                         )}
                         {item.confidence < 0.7 && !item.isApproximate && (
-                          <span title="Low confidence"> ⚠️</span>
+                          <span title="Low confidence"> ️</span>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
@@ -803,7 +803,7 @@ export default function Record() {
                             style={{ background: audioPlayback.currentItemId === `item-${i}` ? 'rgba(99,102,241,0.2)' : 'none', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-sm)', padding: '2px 6px', cursor: 'pointer', fontSize: '0.72rem', color: 'var(--text-accent)' }}
                             title={`Hear: "${item.audioTimestamp.sourcePhrase || item.sourcePhrase || ''}"`}
                           >
-                            {audioPlayback.currentItemId === `item-${i}` ? '⏸' : '🔊'}
+                            {audioPlayback.currentItemId === `item-${i}` ? '' : ''}
                           </button>
                         )}
                       </div>
@@ -816,7 +816,7 @@ export default function Record() {
               {result.extraction.expenses?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    💸 Expenses
+                    Expenses
                   </h4>
                   {result.extraction.expenses.map((exp, i) => (
                     <div
@@ -846,7 +846,7 @@ export default function Record() {
               {result.extraction.missedProfits?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    📉 Missed Profits
+                    Missed Profits
                   </h4>
                   {result.extraction.missedProfits.map((mp, i) => (
                     <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.88rem' }}>
@@ -901,7 +901,7 @@ export default function Record() {
                   color: 'var(--warning-400)',
                   textAlign: 'center',
                 }}>
-                  🔍 Some items were approximate — we&apos;ll ask you to confirm next time you open the app
+                  Some items were approximate — we&apos;ll ask you to confirm next time you open the app
                 </div>
               )}
 
@@ -914,7 +914,7 @@ export default function Record() {
                     setError('');
                   }}
                 >
-                  🎙️ Record Another
+                  ️ Record Another
                 </button>
               </div>
             </div>
