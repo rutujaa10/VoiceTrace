@@ -12,7 +12,7 @@
  * Usage:
  *   const { play, stop, isPlaying, currentItemId } = useAudioPlayback(audioUrl);
  *   <button onClick={() => play(item._id, item.audioTimestamp.startTime, item.audioTimestamp.endTime)}>
- *     🔊 Hear this
+ *     Hear this
  *   </button>
  */
 

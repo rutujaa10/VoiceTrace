@@ -19,6 +19,7 @@ import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
 import AnomalyAlert from '../components/common/AnomalyAlert';
 import ClarificationBanner from '../components/common/ClarificationBanner';
+import { IndianRupee, BarChart2, Calendar, TrendingDown, Lightbulb, CloudRain, Cloud, Snowflake, Sun, Target, Mic, FileText, Brain, Package, TrendingUp, Award, Flame, CheckCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
@@ -77,9 +78,9 @@ export default function Dashboard() {
         const w = weatherRes.data.data;
         const temp = Math.round(w.temperature || w.temp || 28);
         const condition = w.condition || w.description || 'Clear';
-        const icon = condition.toLowerCase().includes('rain') ? '🌧️'
-          : condition.toLowerCase().includes('cloud') ? '☁️'
-          : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
+        const icon = condition.toLowerCase().includes('rain') ? <CloudRain size={32} />
+          : condition.toLowerCase().includes('cloud') ? <Cloud size={32} />
+          : condition.toLowerCase().includes('snow') ? <Snowflake size={32} /> : <Sun size={32} />;
         const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
         setWeatherData({ temp, condition, icon, advice });
       }
@@ -127,7 +128,7 @@ export default function Dashboard() {
             lineHeight: 1.3,
           }}
         >
-          Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span> 👋
+          Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px', fontWeight: 500 }}>
           Here&apos;s your business at a glance
@@ -150,25 +151,25 @@ export default function Dashboard() {
       >
         {/* Row 1: 4 Stat Cards */}
         <StatCard
-          icon="💰"
+          icon={<IndianRupee size={20} />}
           value={`₹${(summary?.totalRevenue || 0).toLocaleString('en-IN')}`}
           label="30-Day Revenue"
           bgColor="rgba(34, 197, 94, 0.12)"
         />
         <StatCard
-          icon="📊"
+          icon={<BarChart2 size={20} />}
           value={`₹${(summary?.totalProfit || 0).toLocaleString('en-IN')}`}
           label="30-Day Profit"
           bgColor="rgba(99, 102, 241, 0.12)"
         />
         <StatCard
-          icon="📅"
+          icon={<Calendar size={20} />}
           value={summary?.entryCount || 0}
           label="Days Logged"
           bgColor="rgba(168, 85, 247, 0.12)"
         />
         <StatCard
-          icon="📉"
+          icon={<TrendingDown size={20} />}
           value={`₹${(summary?.totalMissedRevenue || 0).toLocaleString('en-IN')}`}
           label="Missed Revenue"
           bgColor="rgba(239, 68, 68, 0.12)"
@@ -221,7 +222,7 @@ export default function Dashboard() {
             alignItems: 'center',
             gap: '8px',
           }}>
-            💡 AI Insights
+            <Lightbulb size={24} style={{ color: 'var(--primary-500)' }} /> AI Insights
           </h2>
 
           {/* Weather Preview */}
@@ -237,7 +238,7 @@ export default function Dashboard() {
                 border: '1px solid rgba(34, 197, 94, 0.08)',
               }}
             >
-              <div style={{ fontSize: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-500)' }}>
                 {weatherData.icon}
               </div>
               <div style={{ flex: 1 }}>
@@ -260,7 +261,7 @@ export default function Dashboard() {
                 borderRadius: 'var(--radius-lg)',
               }}
             >
-              <span style={{ fontSize: '1.4rem' }}>🌤️</span>
+              <Sun size={24} style={{ color: 'var(--text-muted)' }} />
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                 Loading weather forecast...
               </div>
@@ -282,7 +283,7 @@ export default function Dashboard() {
                   }}
                 >
                   <span style={{ fontSize: '0.78rem', flexShrink: 0 }}>
-                    {['🎯', '📊', '💡'][i % 3]}
+                    {[<Target size={16} key={0} style={{ color: 'var(--text-secondary)' }} />, <BarChart2 size={16} key={1} style={{ color: 'var(--text-secondary)' }} />, <Lightbulb size={16} key={2} style={{ color: 'var(--text-secondary)' }} />][i % 3]}
                   </span>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     {tip}
@@ -330,7 +331,7 @@ export default function Dashboard() {
                 e.currentTarget.style.boxShadow = 'none';
               }}
             >
-              <div style={{ fontSize: '2.8rem', marginBottom: '8px' }}>🎙️</div>
+              <Mic size={48} style={{ color: 'var(--text-accent)', marginBottom: '12px' }} />
               <h3
                 style={{
                   fontFamily: 'var(--font-heading)',
@@ -384,7 +385,7 @@ export default function Dashboard() {
             }}
             onClick={handleDownloadPDF}
           >
-            📄 Download Earnings PDF
+            <FileText size={16} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'text-bottom' }} /> Download Earnings PDF
           </button>
         </div>
       </div>
@@ -402,7 +403,7 @@ export default function Dashboard() {
           }}
         >
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            🧠 Weekly Observations
+            <Brain size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Weekly Observations
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {weeklyPatterns.plainInsights.map((insight, i) => (
@@ -417,7 +418,7 @@ export default function Dashboard() {
                 }}
               >
                 <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>
-                  {['💡', '📊', '🎯'][i % 3]}
+                  {[<Lightbulb size={16} key={0} style={{ color: 'var(--text-secondary)' }} />, <BarChart2 size={16} key={1} style={{ color: 'var(--text-secondary)' }} />, <Target size={16} key={2} style={{ color: 'var(--text-secondary)' }} />][i % 3]}
                 </span>
                 <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
                   {insight}
@@ -441,7 +442,7 @@ export default function Dashboard() {
           }}
         >
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            📦 Tomorrow&apos;s Stock Suggestions
+            <Package size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Tomorrow&apos;s Stock Suggestions
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {weeklyPatterns.stockSuggestions.map((sug, i) => (
@@ -476,7 +477,7 @@ export default function Dashboard() {
       {weeklyPatterns && (
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            📈 Weekly Patterns
+            <TrendingUp size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Weekly Patterns
           </h2>
           <div
             style={{
@@ -500,7 +501,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #22c55e, #10b981)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                🏆 Best Seller
+                <Award size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Best Seller
               </div>
               {weeklyPatterns.bestSeller ? (
                 <>
@@ -533,7 +534,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #a855f7)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                🔥 Peak Day
+                <Flame size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Peak Day
               </div>
               {weeklyPatterns.peakDay ? (
                 <>
@@ -566,7 +567,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                📉 Missed Profits
+                <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Missed Profits
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--danger-400)', marginBottom: 4 }}>
                 ~₹{(weeklyPatterns.missedProfits?.totalLoss || 0).toLocaleString('en-IN')}
@@ -576,7 +577,7 @@ export default function Dashboard() {
                   Top: {weeklyPatterns.missedProfits.topMissedItems.slice(0, 2).map((m) => m.item).join(', ')}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>✅ No missed profits!</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}><CheckCircle size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> No missed profits!</div>
               )}
             </div>
           </div>
@@ -588,7 +589,7 @@ export default function Dashboard() {
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-              💡 Latest Insights
+              <Lightbulb size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Latest Insights
             </h2>
             <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-full)' }}>
               View All →
@@ -617,7 +618,7 @@ export default function Dashboard() {
         }}
       >
         <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-          🎯 Micro-Loan Readiness
+          <Target size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Micro-Loan Readiness
         </h2>
         <LoanGauge
           score={loan.score || 0}
@@ -681,11 +682,11 @@ export default function Dashboard() {
 
 function formatBreakdownLabel(key) {
   const labels = {
-    streakScore: '🔥 Logging Streak',
-    stabilityScore: '📈 Revenue Stability',
-    revenueScore: '💰 Avg Revenue',
-    expenseScore: '💸 Expense Tracking',
-    profileScore: '👤 Profile Complete',
+    streakScore: 'Logging Streak',
+    stabilityScore: 'Revenue Stability',
+    revenueScore: 'Avg Revenue',
+    expenseScore: 'Expense Tracking',
+    profileScore: 'Profile Complete',
   };
   return labels[key] || key;
 }

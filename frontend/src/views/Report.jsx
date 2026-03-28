@@ -201,7 +201,7 @@ export default function Report() {
       <div style={{ marginBottom: '24px' }}>
         <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
             style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-          📊 <span className="gradient-text">Reports</span>
+          <BarChart3 size={32} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">Reports</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
           Generate date-wise business reports and export to PDF

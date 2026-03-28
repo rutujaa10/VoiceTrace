@@ -12,6 +12,7 @@ import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import AnomalyAlert from '../components/common/AnomalyAlert';
+import { BookOpen, Volume2, TrendingDown, CheckCircle, Clock } from 'lucide-react';
 
 export default function Ledger() {
   const { state } = useApp();
@@ -107,7 +108,7 @@ export default function Ledger() {
     <div className="stagger-children">
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          📒 <span className="gradient-text">Business Ledger</span>
+          <BookOpen size={24} style={{ display: 'inline', color: 'var(--text-primary)', verticalAlign: 'text-bottom', marginRight: '8px' }} /><span className="gradient-text">Business Ledger</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Your daily sales history — tap items to hear original audio
@@ -122,7 +123,7 @@ export default function Ledger() {
         </div>
       ) : entries.length === 0 ? (
         <div className="empty-state glass-card">
-          <div className="empty-icon">📒</div>
+          <div className="empty-icon"><BookOpen size={40} style={{ color: 'var(--text-muted)' }} /></div>
           <h3>No Entries Yet</h3>
           <p>Start recording your sales to see them here!</p>
         </div>
@@ -194,8 +195,8 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
           </div>
           <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             {entry.items?.length || 0} items · {entry.language}
-            {entry.hasPendingClarifications && ' · 🔍 has approx values'}
-            {audioPlayback.hasAudio && ' · 🔊 has audio'}
+            {entry.hasPendingClarifications && ' · has approx values'}
+            {audioPlayback.hasAudio && ' · has audio'}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -238,11 +239,11 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
               }}
               title={
                 item.audioTimestamp?.sourcePhrase
-                  ? `🔊 "${item.audioTimestamp.sourcePhrase}"`
+                  ? `"${item.audioTimestamp.sourcePhrase}"`
                   : item.clarificationNeeded || `${item.name} × ${item.quantity}`
               }
             >
-              {audioPlayback.currentItemId === `item-${entry._id}-${i}` ? '🔊 ' : ''}
+              {audioPlayback.currentItemId === `item-${entry._id}-${i}` ? <Volume2 size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> : ''}
               {item.name} × {item.quantity}
               {item.isApproximate ? ' ~' : ''}
               {item.needsConfirmation ? ' ?' : ''}
@@ -289,7 +290,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
           {/* Expenses */}
           {entry.expenses?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-sm)' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>💸 Expenses</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}><TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Expenses</div>
               {entry.expenses.map((exp, i) => (
                 <div key={exp._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', padding: '3px 0' }}>
                   <span>
@@ -334,7 +335,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
           {/* Missed Profits */}
           {entry.missedProfits?.length > 0 && (
             <div style={{ fontSize: '0.78rem', color: 'var(--accent-400)', marginBottom: 'var(--space-sm)' }}>
-              📉 Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
+              Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
             </div>
           )}
 
@@ -345,7 +346,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
               background: 'rgba(99,102,241,0.05)', padding: 'var(--space-sm)', borderRadius: 'var(--radius-sm)',
               marginTop: 'var(--space-xs)', maxHeight: 80, overflowY: 'auto',
             }}>
-              📝 &quot;{entry.rawTranscript.slice(0, 200)}{entry.rawTranscript.length > 200 ? '...' : ''}&quot;
+              &quot;{entry.rawTranscript.slice(0, 200)}{entry.rawTranscript.length > 200 ? '...' : ''}&quot;
             </div>
           )}
         </div>
@@ -356,7 +357,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
         <span
           className={`badge ${entry.confirmedByVendor ? 'badge-success' : 'badge-warning'}`}
         >
-          {entry.confirmedByVendor ? '✅ Confirmed' : '⏳ Pending'}
+          {entry.confirmedByVendor ? <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14} /> Confirmed</span> : <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14} /> Pending</span>}
         </span>
         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
           {!entry.confirmedByVendor && (

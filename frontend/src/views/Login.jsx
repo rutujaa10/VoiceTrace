@@ -10,17 +10,19 @@ import { useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { vendorAPI } from '../api';
 
+import { Mic, Key, Sparkles, Phone, AlertTriangle, CheckCircle, Apple, Leaf, Pizza, Coffee, Utensils, IceCream, Milk, Flower2, Store, Package, User } from 'lucide-react';
+
 const CATEGORIES = [
-  { value: 'fruits', label: '🍎 Fruits', emoji: '🍎' },
-  { value: 'vegetables', label: '🥬 Vegetables', emoji: '🥬' },
-  { value: 'snacks', label: '🍿 Snacks', emoji: '🍿' },
-  { value: 'beverages', label: '🥤 Beverages', emoji: '🥤' },
-  { value: 'street_food', label: '🌮 Street Food', emoji: '🌮' },
-  { value: 'sweets', label: '🍬 Sweets', emoji: '🍬' },
-  { value: 'dairy', label: '🥛 Dairy', emoji: '🥛' },
-  { value: 'flowers', label: '🌸 Flowers', emoji: '🌸' },
-  { value: 'general', label: '🏪 General', emoji: '🏪' },
-  { value: 'other', label: '📦 Other', emoji: '📦' },
+  { value: 'fruits', label: 'Fruits', icon: <Apple size={24} /> },
+  { value: 'vegetables', label: 'Vegetables', icon: <Leaf size={24} /> },
+  { value: 'snacks', label: 'Snacks', icon: <Pizza size={24} /> },
+  { value: 'beverages', label: 'Beverages', icon: <Coffee size={24} /> },
+  { value: 'street_food', label: 'Street Food', icon: <Utensils size={24} /> },
+  { value: 'sweets', label: 'Sweets', icon: <IceCream size={24} /> },
+  { value: 'dairy', label: 'Dairy', icon: <Milk size={24} /> },
+  { value: 'flowers', label: 'Flowers', icon: <Flower2 size={24} /> },
+  { value: 'general', label: 'General', icon: <Store size={24} /> },
+  { value: 'other', label: 'Other', icon: <Package size={24} /> },
 ];
 
 export default function Login() {
@@ -153,7 +155,7 @@ export default function Login() {
         }}
       >
         {/* Logo */}
-        <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>🎙️</div>
+        <Mic size={48} style={{ color: 'var(--primary-500)', margin: '0 auto', marginBottom: 'var(--space-sm)' }} />
         <h1
           style={{
             fontFamily: 'var(--font-display)',
@@ -199,7 +201,7 @@ export default function Login() {
               boxShadow: mode === 'login' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            🔑 Login
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Key size={16} /> Login</span>
           </button>
           <button
             id="tab-register"
@@ -219,7 +221,7 @@ export default function Login() {
               boxShadow: mode === 'register' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            ✨ Register
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={16} /> Register</span>
           </button>
         </div>
 
@@ -238,7 +240,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                📱 Phone Number
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> Phone Number</span>
               </label>
               <input
                 id="login-phone"
@@ -272,7 +274,7 @@ export default function Login() {
                   textAlign: 'left',
                 }}
               >
-                ⚠️ {error}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={14} /> {error}</span>
                 {error.includes('No account') && (
                   <button
                     type="button"
@@ -308,7 +310,7 @@ export default function Login() {
                   marginBottom: 'var(--space-md)',
                 }}
               >
-                ✅ {successMsg}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14} /> {successMsg}</span>
               </div>
             )}
 
@@ -319,7 +321,7 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? '⏳ Logging in...' : '🔑 Login to My Account'}
+              {loading ? 'Logging in...' : 'Login to My Account'}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>
@@ -359,7 +361,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                📱 Phone Number *
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> Phone Number *</span>
               </label>
               <input
                 id="register-phone"
@@ -392,7 +394,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                👤 Your Name *
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><User size={14} /> Your Name *</span>
               </label>
               <input
                 id="register-name"
@@ -424,7 +426,7 @@ export default function Login() {
                   marginBottom: 8,
                 }}
               >
-                🏪 Business Category
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Store size={14} /> Business Category</span>
               </label>
               <div
                 style={{
@@ -456,13 +458,13 @@ export default function Login() {
                       gap: 2,
                     }}
                   >
-                    <span style={{ fontSize: '1.2rem' }}>{cat.emoji}</span>
+                    <span style={{ display: 'inline-flex', color: category === cat.value ? 'var(--primary-500)' : 'var(--text-muted)' }}>{cat.icon}</span>
                     <span style={{
                       fontSize: '0.62rem',
                       fontWeight: 600,
                       color: category === cat.value ? 'var(--text-accent)' : 'var(--text-muted)',
                     }}>
-                      {cat.label.split(' ')[1]}
+                      {cat.label}
                     </span>
                   </button>
                 ))}
@@ -482,7 +484,7 @@ export default function Login() {
                   textAlign: 'left',
                 }}
               >
-                ⚠️ {error}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={14} /> {error}</span>
               </div>
             )}
 
@@ -498,7 +500,7 @@ export default function Login() {
                   marginBottom: 'var(--space-md)',
                 }}
               >
-                ✅ {successMsg}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14} /> {successMsg}</span>
               </div>
             )}
 
@@ -509,7 +511,7 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? '⏳ Creating Account...' : '✨ Create My Account'}
+              {loading ? 'Creating Account...' : 'Create My Account'}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>

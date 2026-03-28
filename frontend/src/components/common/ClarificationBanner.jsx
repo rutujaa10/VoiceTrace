@@ -12,6 +12,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { Search, CheckCircle } from 'lucide-react';
 import { ledgerAPI } from '../../api';
 
 export default function ClarificationBanner({ vendorId }) {
@@ -145,7 +146,7 @@ export default function ClarificationBanner({ vendorId }) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
-            <span style={{ fontSize: '1.1rem' }}>🔍</span>
+            <span style={{ display: 'flex', alignItems: 'center' }}><Search size={18} /></span>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
               Quick check ({currentIndex + 1}/{clarifications.length}) · {dateStr}
             </span>
@@ -195,7 +196,7 @@ export default function ClarificationBanner({ vendorId }) {
             onClick={handleConfirm}
             disabled={loading}
           >
-            ✅ Yes, correct
+            <CheckCircle size={16} style={{ marginRight: '4px', display: 'inline' }} /> Yes, correct
           </button>
 
           {/* Quick edit input */}

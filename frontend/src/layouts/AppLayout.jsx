@@ -11,6 +11,7 @@
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useTheme } from '../state/ThemeContext';
+import { BarChart2, Mic, FileText, BookOpen, Lightbulb, Bot, CheckCircle, RefreshCw, Home, Sun, Moon, LogOut, Menu } from 'lucide-react';
 
 export default function AppLayout() {
   const { state, dispatch } = useApp();
@@ -23,13 +24,13 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/app', icon: '📊', label: 'Dashboard' },
-    { path: '/app/record', icon: '🎙️', label: 'Record' },
-    { path: '/app/daily-log', icon: '📝', label: 'Daily Log' },
-    { path: '/app/ledger', icon: '📒', label: 'Ledger' },
-    { path: '/app/insights', icon: '💡', label: 'Insights' },
-    { path: '/app/report', icon: '📊', label: 'Report' },
-    { path: '/app/assistant', icon: '🤖', label: 'AI Assistant' },
+    { path: '/app', icon: <BarChart2 size={20} />, label: 'Dashboard' },
+    { path: '/app/record', icon: <Mic size={20} />, label: 'Record' },
+    { path: '/app/daily-log', icon: <FileText size={20} />, label: 'Daily Log' },
+    { path: '/app/ledger', icon: <BookOpen size={20} />, label: 'Ledger' },
+    { path: '/app/insights', icon: <Lightbulb size={20} />, label: 'Insights' },
+    { path: '/app/report', icon: <BarChart2 size={20} />, label: 'Report' },
+    { path: '/app/assistant', icon: <Bot size={20} />, label: 'AI Assistant' },
   ];
 
   const handleLogout = () => {
@@ -58,7 +59,7 @@ export default function AppLayout() {
       <aside className={`app-sidebar ${state.sidebarOpen ? 'open' : ''}`}>
         {/* Brand */}
         <div className="nav-logo">
-          <span className="logo-icon">🎙️</span>
+          <Mic size={24} className="logo-icon" style={{ color: 'var(--primary-500)' }} />
           <span className="gradient-text">VoiceTrace</span>
         </div>
 
@@ -116,7 +117,10 @@ export default function AppLayout() {
               className={`badge ${loan.isLoanReady ? 'badge-success' : 'badge-warning'}`}
               style={{ marginTop: 8 }}
             >
-              {loan.isLoanReady ? '✅ Loan Ready' : '🔄 Building...'}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                {loan.isLoanReady ? <CheckCircle size={14} /> : <RefreshCw size={14} />}
+                <span>{loan.isLoanReady ? 'Loan Ready' : 'Building...'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -131,7 +135,7 @@ export default function AppLayout() {
           onClick={handleGoHome}
           title="Go to Home Page"
         >
-          🏠 Home
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Home size={16} /> Home</div>
         </button>
 
         {/* Theme Toggle */}
@@ -140,7 +144,7 @@ export default function AppLayout() {
           onClick={toggleTheme}
           title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
         >
-          {isDark ? '☀️' : '🌙'}
+          {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
 
         {/* User Pill */}
@@ -160,7 +164,7 @@ export default function AppLayout() {
           onClick={handleLogout}
           title="Logout"
         >
-          🚪 Logout
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={16} /> Logout</div>
         </button>
 
         {/* Mobile hamburger */}
@@ -171,7 +175,7 @@ export default function AppLayout() {
           style={{ display: 'none' }}
           id="mobile-menu-btn"
         >
-          ☰
+          <Menu size={20} />
         </button>
       </div>
 

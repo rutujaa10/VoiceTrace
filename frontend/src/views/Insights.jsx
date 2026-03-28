@@ -15,13 +15,15 @@ import { useApp } from '../state/AppContext';
 import { insightAPI } from '../api';
 import InsightCard from '../components/common/InsightCard';
 
+import { Lightbulb, CloudLightning, Map, BookOpen, TrendingDown, CloudRain, Sun, Cloud, CloudDrizzle, Snowflake, CloudFog, Droplets, Wind, FileText, Sprout, BarChart2, Rocket, TrendingUp, Brain, History, Package, Calendar, IndianRupee, Flame, CheckCircle } from 'lucide-react';
+
 const FILTER_TYPES = [
-  { key: 'all', label: 'All', icon: '💡' },
-  { key: 'prediction', label: 'Predictions', icon: '🌦️' },
-  { key: 'csi', label: 'Area Intel', icon: '🗺️' },
-  { key: 'weekly_story', label: 'Stories', icon: '📖' },
-  { key: 'missed_profit', label: 'Missed $', icon: '📉' },
-  { key: 'weather_alert', label: 'Weather', icon: '⛈️' },
+  { key: 'all', label: 'All', icon: <Lightbulb size={14} /> },
+  { key: 'prediction', label: 'Predictions', icon: <CloudLightning size={14} /> },
+  { key: 'csi', label: 'Area Intel', icon: <Map size={14} /> },
+  { key: 'weekly_story', label: 'Stories', icon: <BookOpen size={14} /> },
+  { key: 'missed_profit', label: 'Missed $', icon: <TrendingDown size={14} /> },
+  { key: 'weather_alert', label: 'Weather', icon: <CloudRain size={14} /> },
 ];
 
 /* ---- Weather animations CSS class map ---- */
@@ -38,8 +40,8 @@ const weatherBgClass = {
 };
 
 const weatherEmoji = {
-  clear: '☀️', clouds: '☁️', rain: '🌧️', drizzle: '🌦️',
-  thunderstorm: '⛈️', snow: '❄️', mist: '🌫️', fog: '🌫️', haze: '🌫️',
+  clear: <Sun size={56} />, clouds: <Cloud size={56} />, rain: <CloudRain size={56} />, drizzle: <CloudDrizzle size={56} />,
+  thunderstorm: <CloudLightning size={56} />, snow: <Snowflake size={56} />, mist: <CloudFog size={56} />, fog: <CloudFog size={56} />, haze: <CloudFog size={56} />,
 };
 
 export default function Insights() {
@@ -106,7 +108,7 @@ export default function Insights() {
       {/* ═══ Header ═══ */}
       <div style={{ marginBottom: 'var(--space-lg)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          💡 <span className="gradient-text">AI Business Insights</span>
+          <Lightbulb size={28} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">AI Business Insights</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {smartData?.maturity === 'mature'
@@ -149,7 +151,7 @@ export default function Insights() {
 
           <div className="weather-hero-content">
             <div className="weather-hero-left">
-              <div className="weather-emoji">{weatherEmoji[condition] || '🌤️'}</div>
+              <div className="weather-emoji" style={{ display: 'flex' }}>{weatherEmoji[condition] || <Sun size={56} />}</div>
               <div>
                 <div className="weather-temp">
                   {forecast?.temp || '--'}°C
@@ -162,13 +164,13 @@ export default function Insights() {
                     <span style={{ textTransform: 'capitalize' }}>{forecast.description}</span>
                   ) : null}
                   {forecast?.humidity ? (
-                    <span> · 💧 {forecast.humidity}%</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}> · <Droplets size={12} /> {forecast.humidity}%</span>
                   ) : null}
                   {forecast?.windSpeed ? (
-                    <span> · 💨 {forecast.windSpeed} m/s</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}> · <Wind size={12} /> {forecast.windSpeed} m/s</span>
                   ) : null}
                   {forecast?.rainProbability > 0 ? (
-                    <span> · 🌧️ {Math.round(forecast.rainProbability * 100)}% rain</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}> · <CloudRain size={12} /> {Math.round(forecast.rainProbability * 100)}% rain</span>
                   ) : null}
                 </div>
               </div>
@@ -177,7 +179,7 @@ export default function Insights() {
             {/* Weather business advice */}
             {smartData?.weather?.content && (
               <div className="weather-hero-advice">
-                <div className="weather-advice-label">📋 Business Advice</div>
+                <div className="weather-advice-label"><FileText size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom' }} /> Business Advice</div>
                 <div className="weather-advice-text">{smartData.weather.content}</div>
                 {smartData.weather.data?.advice?.length > 0 && (
                   <div className="weather-advice-tips">
@@ -207,8 +209,8 @@ export default function Insights() {
         <div className="glass-card maturity-card" id="maturity-progress" style={{ marginBottom: 'var(--space-xl)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
-              <span style={{ fontSize: '1.2rem' }}>
-                {smartData.maturity === 'day0' ? '🌱' : smartData.maturity === 'early' ? '📊' : '🚀'}
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {smartData.maturity === 'day0' ? <Sprout size={24} style={{ color: 'var(--primary-500)' }} /> : smartData.maturity === 'early' ? <BarChart2 size={24} style={{ color: 'var(--primary-500)' }} /> : <Rocket size={24} style={{ color: 'var(--primary-500)' }} />}
               </span>
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem' }}>
                 {smartData.maturityProgress.label}
@@ -231,10 +233,10 @@ export default function Insights() {
 
           {/* Milestone markers */}
           <div className="maturity-milestones">
-            <MaturityMilestone day={0} label="Start" current={smartData.entryCount} icon="🌱" />
-            <MaturityMilestone day={1} label="First Log" current={smartData.entryCount} icon="📝" />
-            <MaturityMilestone day={4} label="Trends" current={smartData.entryCount} icon="📈" />
-            <MaturityMilestone day={8} label="Full AI" current={smartData.entryCount} icon="🧠" />
+            <MaturityMilestone day={0} label="Start" current={smartData.entryCount} icon={<Sprout size={16} />} />
+            <MaturityMilestone day={1} label="First Log" current={smartData.entryCount} icon={<FileText size={16} />} />
+            <MaturityMilestone day={4} label="Trends" current={smartData.entryCount} icon={<TrendingUp size={16} />} />
+            <MaturityMilestone day={8} label="Full AI" current={smartData.entryCount} icon={<Brain size={16} />} />
           </div>
         </div>
       )}
@@ -246,7 +248,7 @@ export default function Insights() {
           onClick={() => setActiveTab('smart')}
           id="tab-smart-insights"
         >
-          🧠 Smart Insights
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Brain size={16} /> Smart Insights</div>
           {smartData?.insights?.length > 0 && (
             <span className="insights-tab-count">{smartData.insights.length}</span>
           )}
@@ -256,7 +258,7 @@ export default function Insights() {
           onClick={() => setActiveTab('history')}
           id="tab-history-insights"
         >
-          📜 History
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><History size={16} /> History</div>
           {historicalInsights.length > 0 && (
             <span className="insights-tab-count">{historicalInsights.length}</span>
           )}
@@ -287,7 +289,7 @@ export default function Insights() {
             </div>
           ) : (
             <div className="empty-state glass-card">
-              <div className="empty-icon">💡</div>
+              <div className="empty-icon"><Lightbulb size={40} style={{ color: 'var(--text-muted)' }} /></div>
               <h3>Loading Intelligence...</h3>
               <p>Smart insights are being generated. Check back shortly!</p>
             </div>
@@ -324,7 +326,7 @@ export default function Insights() {
           {/* Insights Feed */}
           {historicalInsights.length === 0 ? (
             <div className="empty-state glass-card">
-              <div className="empty-icon">📜</div>
+              <div className="empty-icon"><History size={40} style={{ color: 'var(--text-muted)' }} /></div>
               <h3>No Historical Insights Yet</h3>
               <p>Daily predictions and weekly stories will appear here as you log more data!</p>
             </div>
@@ -399,10 +401,10 @@ function SmartInsightCard({ insight, isExpanded, onToggle }) {
             {/* Growth score gauge */}
             {insight.type === 'growth_score' && insight.data.factors && (
               <div className="growth-factors">
-                <GrowthFactor label="Consistency" value={insight.data.factors.consistency} icon="📅" />
-                <GrowthFactor label="Profit Margin" value={insight.data.factors.profitMargin} icon="💰" />
-                <GrowthFactor label="Items" value={Math.min(insight.data.factors.diversification * 10, 100)} icon="📦" />
-                <GrowthFactor label="Streak" value={Math.min(insight.data.factors.streak * 3.3, 100)} icon="🔥" />
+                <GrowthFactor label="Consistency" value={insight.data.factors.consistency} icon={<Calendar size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />} />
+                <GrowthFactor label="Profit Margin" value={insight.data.factors.profitMargin} icon={<IndianRupee size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />} />
+                <GrowthFactor label="Items" value={Math.min(insight.data.factors.diversification * 10, 100)} icon={<Package size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />} />
+                <GrowthFactor label="Streak" value={Math.min(insight.data.factors.streak * 3.3, 100)} icon={<Flame size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} />} />
               </div>
             )}
 
@@ -423,8 +425,8 @@ function SmartInsightCard({ insight, isExpanded, onToggle }) {
             {insight.type === 'missed_profit_recovery' && insight.data.topMissedItems && (
               <div className="missed-items-list">
                 {insight.data.topMissedItems.map((item, i) => (
-                  <div key={i} className="missed-item-row">
-                    <span>📦 {item.name}</span>
+                  <div key={i} className="missed-item-row" style={{ display: 'flex', alignItems: 'center' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Package size={14} /> {item.name}</span>
                     <span className="missed-item-loss">-₹{Math.round(item.loss).toLocaleString('en-IN')}</span>
                   </div>
                 ))}
@@ -510,7 +512,7 @@ function MaturityMilestone({ day, label, current, icon }) {
   const isAchieved = current >= day;
   return (
     <div className={`maturity-milestone ${isAchieved ? 'achieved' : ''}`}>
-      <div className="milestone-icon">{isAchieved ? '✅' : icon}</div>
+      <div className="milestone-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isAchieved ? <CheckCircle size={16} /> : icon}</div>
       <div className="milestone-label">{label}</div>
     </div>
   );

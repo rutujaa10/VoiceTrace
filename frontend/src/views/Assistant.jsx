@@ -16,13 +16,15 @@ import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import ReviewForm from '../components/ledger/ReviewForm';
 
 const QUICK_QUESTIONS = [
-  '📊 Aaj ka total kitna hai?',
-  '🏆 Sabse zyada kya bikta hai?',
-  '📈 Is hafte ki kamai?',
-  '🎯 Mera loan score kya hai?',
-  '💸 Kal ka kharcha kitna tha?',
-  '📉 Missed profit kitna hai?',
+  'Aaj ka total kitna hai?',
+  'Sabse zyada kya bikta hai?',
+  'Is hafte ki kamai?',
+  'Mera loan score kya hai?',
+  'Kal ka kharcha kitna tha?',
+  'Missed profit kitna hai?',
 ];
+
+import { Bot, CheckCircle, Send, Mic, Square, AlertCircle } from 'lucide-react';
 
 export default function Assistant() {
   const { state } = useApp();
@@ -30,7 +32,7 @@ export default function Assistant() {
     {
       id: 'welcome',
       role: 'ai',
-      text: 'Namaste! 🙏 Main aapka AI business assistant hoon. Apne business ke baare mein kuch bhi poochiye — Hindi ya English mein!',
+      text: 'Namaste! Main aapka AI business assistant hoon. Apne business ke baare mein kuch bhi poochiye — Hindi ya English mein!',
       time: new Date(),
     },
   ]);
@@ -86,7 +88,7 @@ export default function Assistant() {
       const errorMsg = {
         id: `err-${Date.now()}`,
         role: 'ai',
-        text: '❌ Maaf kijiye, abhi jawab nahi mil paya. Thodi der baad try karein.',
+        text: 'Maaf kijiye, abhi jawab nahi mil paya. Thodi der baad try karein.',
         time: new Date(),
         isError: true,
       };
@@ -107,14 +109,14 @@ export default function Assistant() {
         id: `ai-${Date.now()}`,
         role: 'ai',
         type: 'query',
-        text: 'Aapka data ledger mein save ho gaya hai! 🎉',
+        text: 'Aapka data ledger mein save ho gaya hai!',
         time: new Date(),
       }]);
     } catch (err) {
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         role: 'ai',
-        text: '❌ Save fail ho gaya. Kripya dubara koshish karein.',
+        text: 'Save fail ho gaya. Kripya dubara koshish karein.',
         time: new Date(),
         isError: true,
       }]);
@@ -166,7 +168,8 @@ export default function Assistant() {
             gap: 'var(--space-sm)',
           }}
         >
-          🤖 <span className="gradient-text">AI Assistant</span>
+          <Bot size={24} style={{ color: 'var(--primary-500)', flexShrink: 0 }} />
+          <span className="gradient-text">AI Assistant</span>
           <span
             className="badge badge-success"
             style={{ fontSize: '0.65rem', marginLeft: 'auto' }}
@@ -245,8 +248,8 @@ export default function Assistant() {
             )}
             
             {msg.type === 'logging' && msg.isSaved && (
-              <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--success-500)', fontWeight: 600 }}>
-                ✅ Entry Saved Successfully
+              <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--success-500)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <CheckCircle size={14} /> Entry Saved Successfully
               </div>
             )}
 
@@ -259,7 +262,7 @@ export default function Assistant() {
                 padding: '0 4px',
               }}
             >
-              {msg.role === 'ai' ? '🤖 ' : ''}
+              {msg.role === 'ai' ? <Bot size={12} style={{ display: 'inline', marginRight: '4px' }} /> : ''}
               {formatTime(msg.time)}
             </div>
           </div>
@@ -315,7 +318,7 @@ export default function Assistant() {
               gap: 'var(--space-sm)',
             }}
           >
-            🔴 Listening... {speech.interimText && (
+            Listening... {speech.interimText && (
               <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
                 {speech.interimText}
               </span>
@@ -392,7 +395,7 @@ export default function Assistant() {
             }}
             aria-label={speech.isListening ? 'Stop listening' : 'Voice input'}
           >
-            {speech.isListening ? '⏹️' : '🎙️'}
+            {speech.isListening ? <Square size={18} /> : <Mic size={18} />}
           </button>
         )}
 
@@ -440,7 +443,7 @@ export default function Assistant() {
           }}
           aria-label="Send message"
         >
-          ➤
+          <Send size={16} />
         </button>
       </div>
     </div>

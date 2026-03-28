@@ -20,7 +20,8 @@ import { ledgerAPI } from '../api';
 import AnomalyAlert from '../components/common/AnomalyAlert';
 import {
   Plus, Trash2, Save, ShoppingBag, TrendingDown,
-  Loader2, CheckCircle, RotateCcw, Edit3, ArrowRight
+  Loader2, CheckCircle, RotateCcw, Edit3, ArrowRight,
+  Mic, FileAudio, Zap, Square, AlertTriangle, AlertCircle, Lightbulb, MessageSquare, IndianRupee, Rocket, Sparkles, FileText
 } from 'lucide-react';
 import ReviewForm from '../components/ledger/ReviewForm';
 
@@ -224,7 +225,7 @@ export default function Record() {
             fontWeight: 800,
           }}
         >
-          🎙️ <span className="gradient-text">Record Sales</span>
+          <Mic size={28} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">Record Sales</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Speak naturally or type your sales manually
@@ -256,7 +257,7 @@ export default function Record() {
             disabled={isActive}
             style={{ fontSize: '0.78rem', padding: '6px 12px' }}
           >
-            ⚡ Live Speech
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Zap size={14} /> Live Speech</span>
           </button>
           <button
             className={`btn btn-sm ${mode === 'audio' ? 'btn-primary' : 'btn-ghost'}`}
@@ -264,7 +265,7 @@ export default function Record() {
             disabled={isActive}
             style={{ fontSize: '0.78rem', padding: '6px 12px' }}
           >
-            🎵 Audio Upload
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><FileAudio size={14} /> Audio Upload</span>
           </button>
           <button
             className={`btn btn-sm ${mode === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
@@ -272,7 +273,7 @@ export default function Record() {
             disabled={isActive}
             style={{ fontSize: '0.78rem', padding: '6px 12px' }}
           >
-            ✏️ Manual Entry
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit3 size={14} /> Manual Entry</span>
           </button>
         </div>
 
@@ -306,7 +307,7 @@ export default function Record() {
           className={`badge ${mode === 'speech' ? 'badge-success' : mode === 'audio' ? 'badge-warning' : 'badge-info'}`}
           style={{ alignSelf: 'center', fontSize: '0.7rem' }}
         >
-          {mode === 'speech' ? '💸 Free — Browser STT' : mode === 'audio' ? '🤖 Whisper API' : '📝 Type items & expenses'}
+          {mode === 'speech' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Zap size={10} /> Free — Browser STT</span> : mode === 'audio' ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><FileAudio size={10} /> Whisper API</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit3 size={10} /> Type items & expenses</span>}
         </span>
       </div>
 
@@ -330,7 +331,7 @@ export default function Record() {
           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(34,197,94,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <CheckCircle size={40} style={{ color: 'var(--primary-500)' }} />
           </div>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.3rem', marginBottom: '6px' }}>Saved Successfully! 🎉</h2>
+          <h2 style={{ fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--text-primary)', fontSize: '1.3rem', marginBottom: '6px' }}>Saved Successfully! <Sparkles size={20} style={{ display: 'inline', color: 'var(--primary-500)' }} /></h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '24px' }}>Your sales entry has been added to the ledger.</p>
 
           <div style={{
@@ -381,7 +382,7 @@ export default function Record() {
               disabled={processing}
               aria-label={isActive ? 'Stop recording' : 'Start recording'}
             >
-              {isActive ? '⏹️' : '🎙️'}
+              {isActive ? <Square size={24} /> : <Mic size={24} />}
             </button>
 
             {/* Timer */}
@@ -390,15 +391,15 @@ export default function Record() {
                 <>
                   <div className="mic-timer">{formattedTime}</div>
                   <div className="mic-status" style={{ color: 'var(--danger-400)' }}>
-                    🔴 {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
+                    <span className="animate-pulse">🔴</span> {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
                   </div>
                 </>
               ) : (
                 <div className="mic-status">
                   {hasData
                     ? mode === 'speech'
-                      ? `✅ Transcribed ${formattedTime} — Ready to process`
-                      : `✅ Recorded ${formattedTime} — Ready to upload`
+                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14} /> Transcribed {formattedTime} — Ready to process</span>
+                      : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14} /> Recorded {formattedTime} — Ready to upload</span>
                     : `Tap the mic to start ${mode === 'speech' ? 'listening' : 'recording'}`}
                 </div>
               )}
@@ -421,7 +422,7 @@ export default function Record() {
                 }}
               >
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: 6 }}>
-                  📝 Live Transcript
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><FileText size={12} /> Live Transcript</span>
                 </div>
                 <span style={{ color: 'var(--text-primary)' }}>{speech.transcript}</span>
                 {speech.interimText && (
@@ -444,10 +445,10 @@ export default function Record() {
                   className="btn btn-primary btn-lg"
                   onClick={mode === 'speech' ? handleSubmitText : handleUploadAudio}
                 >
-                  🚀 {mode === 'speech' ? 'Process Text' : 'Process Recording'}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Rocket size={16} /> {mode === 'speech' ? 'Process Text' : 'Process Recording'}</span>
                 </button>
                 <button className="btn btn-secondary btn-lg" onClick={handleDiscard}>
-                  🗑️ Discard
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Trash2 size={16} /> Discard</span>
                 </button>
               </div>
             )}
@@ -461,7 +462,7 @@ export default function Record() {
                   color: 'var(--text-accent)',
                 }}
               >
-                <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚙️</div>
+                <div style={{ animation: 'spin 1.5s linear infinite', display: 'inline-block' }}><Loader2 size={32} /></div>
                 <p style={{ marginTop: 'var(--space-sm)', fontSize: '0.9rem' }}>
                   {mode === 'speech'
                     ? 'Extracting business data from text...'
@@ -480,7 +481,7 @@ export default function Record() {
                   textAlign: 'center',
                 }}
               >
-                ❌ {error || hookError}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={14} /> {error || hookError}</span>
               </div>
             )}
 
@@ -498,7 +499,7 @@ export default function Record() {
                   textAlign: 'center',
                 }}
               >
-                ⚠️ Web Speech API not supported. Switch to <b>Audio Upload</b> or <b>Manual Entry</b> mode.
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={14} /> Web Speech API not supported. Switch to <b>Audio Upload</b> or <b>Manual Entry</b> mode.</span>
               </div>
             )}
           </div>
@@ -506,16 +507,16 @@ export default function Record() {
           {/* Tips */}
           {!result && (
             <div className="glass-card">
-              <h3 className="section-title">💡 Tips for Best Results</h3>
+              <h3 className="section-title"><span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Lightbulb size={20} style={{ color: 'var(--primary-500)' }} /> Tips for Best Results</span></h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
                 {[
-                  { emoji: '🗣️', text: 'Speak clearly with item names and prices' },
-                  { emoji: '📋', text: '"50 samose beche 10 rupaye mein"' },
-                  { emoji: '💸', text: 'Mention expenses: "200 ka tel kharida"' },
-                  { emoji: '📉', text: 'Say "khatam ho gaya" for sold-out items' },
+                  { icon: <MessageSquare size={20} />, text: 'Speak clearly with item names and prices' },
+                  { icon: <FileText size={20} />, text: '"50 samose beche 10 rupaye mein"' },
+                  { icon: <IndianRupee size={20} />, text: 'Mention expenses: "200 ka tel kharida"' },
+                  { icon: <TrendingDown size={20} />, text: 'Say "khatam ho gaya" for sold-out items' },
                 ].map((tip) => (
                   <div key={tip.text} style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start' }}>
-                    <span style={{ fontSize: '1.3rem' }}>{tip.emoji}</span>
+                    <span style={{ color: 'var(--primary-500)' }}>{tip.icon}</span>
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{tip.text}</span>
                   </div>
                 ))}
@@ -526,7 +527,7 @@ export default function Record() {
           {/* Result (fallback — only shows if review mode didn't activate) */}
           {result && result.extraction && !reviewMode && !manualSaved && (
             <div className="glass-card animate-fadeInUp">
-              <h3 className="section-title">✅ Extracted Data</h3>
+              <h3 className="section-title"><span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={20} style={{ color: 'var(--success-400)' }} /> Extracted Data</span></h3>
 
               {/* Phase 4 Feature 7: Anomaly Alert */}
               {result.anomaly && <AnomalyAlert anomaly={result.anomaly} />}
@@ -535,7 +536,7 @@ export default function Record() {
               {result.extraction.items?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    💰 Items Sold
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><ShoppingBag size={14} /> Items Sold</span>
                   </h4>
                   {result.extraction.items.map((item, i) => (
                     <div
@@ -560,7 +561,7 @@ export default function Record() {
                           <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 5px' }} title={item.clarificationNeeded || 'Needs confirmation'}>?</span>
                         )}
                         {item.confidence < 0.7 && !item.isApproximate && (
-                          <span title="Low confidence"> ⚠️</span>
+                          <span title="Low confidence" style={{ marginLeft: '4px' }}><AlertTriangle size={12} style={{ display: 'inline', color: 'var(--warning-400)' }} /></span>
                         )}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
@@ -584,7 +585,7 @@ export default function Record() {
               {result.extraction.expenses?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    💸 Expenses
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><TrendingDown size={14} /> Expenses</span>
                   </h4>
                   {result.extraction.expenses.map((exp, i) => (
                     <div
@@ -614,7 +615,7 @@ export default function Record() {
               {result.extraction.missedProfits?.length > 0 && (
                 <div style={{ marginBottom: 'var(--space-lg)' }}>
                   <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                    📉 Missed Profits
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><TrendingDown size={14} /> Missed Profits</span>
                   </h4>
                   {result.extraction.missedProfits.map((mp, i) => (
                     <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--border-subtle)', fontSize: '0.88rem' }}>
@@ -669,7 +670,7 @@ export default function Record() {
                   color: 'var(--warning-400)',
                   textAlign: 'center',
                 }}>
-                  🔍 Some items were approximate — we&apos;ll ask you to confirm next time you open the app
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><AlertCircle size={14} /> Some items were approximate — we&apos;ll ask you to confirm next time you open the app</span>
                 </div>
               )}
 
@@ -682,7 +683,7 @@ export default function Record() {
                     setError('');
                   }}
                 >
-                  🎙️ Record Another
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Mic size={16} /> Record Another</span>
                 </button>
               </div>
             </div>

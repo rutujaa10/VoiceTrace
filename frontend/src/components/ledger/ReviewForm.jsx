@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Save, ShoppingBag, TrendingDown, Loader2, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Save, ShoppingBag, TrendingDown, Loader2, Edit3, Zap, Music, Bot, AlertCircle } from 'lucide-react';
 
 const EMPTY_ITEM = { name: '', quantity: '1', unitPrice: '', totalPrice: '' };
 const EMPTY_EXPENSE = { description: '', category: 'raw_material', amount: '' };
@@ -83,7 +83,7 @@ export default function ReviewForm({ initialItems, initialExpenses, reviewSource
               Review AI Extracted Data
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-              {reviewSource === 'speech' ? '⚡ From Live Speech' : reviewSource === 'audio' ? '🎵 From Audio Upload' : '🤖 From Assistant Chat'}
+              {reviewSource === 'speech' ? <><Zap size={14} style={{ display: 'inline', marginRight: '4px' }} /> From Live Speech</> : reviewSource === 'audio' ? <><Music size={14} style={{ display: 'inline', marginRight: '4px' }} /> From Audio Upload</> : <><Bot size={14} style={{ display: 'inline', marginRight: '4px' }} /> From Assistant Chat</>}
               {' — '}Edit any values below, then confirm to save
             </div>
           </div>
@@ -261,7 +261,7 @@ export default function ReviewForm({ initialItems, initialExpenses, reviewSource
       {/* Error */}
       {error && (
         <div style={{ marginTop: '12px', color: 'var(--danger-400)', fontSize: '0.85rem', textAlign: 'center' }}>
-          ❌ {error}
+          <AlertCircle size={14} style={{ display: 'inline', marginRight: '4px' }} /> {error}
         </div>
       )}
     </div>

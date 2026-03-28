@@ -12,7 +12,7 @@ import Vapi from '@vapi-ai/web';
 import {
   Mic, MicOff, CheckCircle, Loader2, RotateCcw, Save,
   Phone, PhoneOff, Volume2, Zap, MessageSquare, ArrowRight,
-  IndianRupee, ShoppingBag, TrendingDown, TrendingUp
+  IndianRupee, ShoppingBag, TrendingDown, TrendingUp, Lightbulb, Edit3, MessageCircle, FileText, Brain
 } from 'lucide-react';
 import { useFieldMic } from '../hooks/useFieldMic';
 import { useApp, actionTypes } from '../state/AppContext';
@@ -563,7 +563,7 @@ IMPORTANT RULES:
         <div className="mb-6">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
               style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-            📋 <span className="gradient-text">Daily Log</span>
+            <FileText size={24} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> <span className="gradient-text">Daily Log</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
             Speak naturally — AI detects your sales, expenses & items
@@ -582,21 +582,21 @@ IMPORTANT RULES:
                   <MessageSquare size={34} className="text-white" />
                 </div>
               </div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>🗣️ AI Conversation</h2>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}><MessageCircle size={22} style={{ display: 'inline', verticalAlign: 'bottom', marginRight: '8px' }} />AI Conversation</h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto 20px' }}>
                 AI voice assistant will ask you questions one by one in <span style={{ color: 'var(--primary-500)', fontWeight: 600 }}>Hindi, English, or Hinglish</span> and extract your business data automatically.
               </p>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)' }}>🎙️ Voice Guided</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}>🧠 Auto Extract</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>✏️ Review & Edit</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Mic size={14} /> Voice Guided</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> Auto Extract</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit3 size={14} /> Review & Edit</span>
               </div>
               <button onClick={() => { setMode('vapi'); }} className="transition-all duration-300 cursor-pointer border-0 hover:scale-[1.03] active:scale-[0.97]" style={{ background: 'var(--gradient-primary)', color: 'white', padding: '14px 40px', borderRadius: 'var(--radius-lg)', fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.35)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                 <Phone size={18} /> Start Conversation
               </button>
             </div>
             <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-              💡 Tip: Just answer the AI's questions naturally — it handles the rest!
+              <Lightbulb size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Tip: Just answer the AI's questions naturally — it handles the rest!
             </div>
           </div>
         )}
@@ -616,7 +616,7 @@ IMPORTANT RULES:
               <p className="text-sm mt-1 max-w-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>Tell everything about your day — sales, expenses, items. AI will detect each part.</p>
             </div>
             <div className="w-full rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>💡 Example</p>
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}><Lightbulb size={12} /> Example</p>
               <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"Aaj 50 samose beche 10 rupaye mein, chai se 500 rupaye aaye, 200 rupaye ka tel kharida, aur samose shaam ko khatam ho gaye"</p>
             </div>
             <button onClick={() => setMode('choose')} className="text-sm transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)' }}>← Back</button>
@@ -635,7 +635,7 @@ IMPORTANT RULES:
             </div>
             <div className="text-center">
               <p className="text-3xl font-extrabold font-mono" style={{ color: 'var(--danger-400)' }}>{formatTime(recordingTime)}</p>
-              <p className="text-sm mt-1 animate-pulse" style={{ color: 'rgba(239,68,68,0.7)' }}>🔴 Listening... Tap to stop</p>
+              <p className="text-sm mt-1 animate-pulse" style={{ color: 'rgba(239,68,68,0.7)' }}>Listening... Tap to stop</p>
               <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Speak everything — sales, expenses, items</p>
             </div>
           </div>
@@ -679,7 +679,7 @@ IMPORTANT RULES:
               <button onClick={() => setMode('choose')} className="transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 500 }}>← Back</button>
             </div>
             <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', maxWidth: '340px' }}>
-              🎙️ Make sure your microphone is enabled — speak in any language you're comfortable with!
+              <Mic size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Make sure your microphone is enabled — speak in any language you're comfortable with!
             </div>
           </div>
         )}
@@ -700,7 +700,7 @@ IMPORTANT RULES:
             </div>
             {messages.length > 0 && (
               <div className="w-full rounded-2xl p-4 max-h-52 overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-                <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)' }}>💬 Conversation</p>
+                <p className="text-xs font-semibold mb-3 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}><MessageSquare size={12} /> Conversation</p>
                 <div className="space-y-2">
                   {messages.slice(-8).map((msg, i) => (
                     <div key={i} className="text-sm px-3 py-2 rounded-xl max-w-[85%]" style={msg.role === 'assistant' ? { background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', marginRight: 'auto', borderBottomLeftRadius: '4px' } : { background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginLeft: 'auto', textAlign: 'right', borderBottomRightRadius: '4px' }}>
@@ -738,7 +738,7 @@ IMPORTANT RULES:
                 <CheckCircle size={20} style={{ color: 'var(--text-accent)' }} />
               </div>
               <div>
-                <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>✏️ Review AI Extracted Data</p>
+                <p className="font-semibold text-sm flex items-center gap-1" style={{ color: 'var(--text-primary)' }}><Edit3 size={14} /> Review AI Extracted Data</p>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below if the AI got something wrong, then confirm to save</p>
               </div>
             </div>
