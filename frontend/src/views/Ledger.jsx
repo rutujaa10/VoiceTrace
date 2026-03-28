@@ -13,6 +13,7 @@ import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import AnomalyAlert from '../components/common/AnomalyAlert';
+import { BookOpen, CreditCard, TrendingDown, FileText, CheckCircle, Clock, Search, Volume2, ChevronUp, ChevronDown, X } from 'lucide-react';
 
 export default function Ledger() {
   const { state } = useApp();
@@ -57,7 +58,6 @@ export default function Ledger() {
     try {
       const res = await ledgerAPI.removeItem(entryId, itemId);
       if (res.data.deleted) {
-        // Entry was auto-deleted because it became empty
         setEntries((prev) => prev.filter((e) => e._id !== entryId));
       } else {
         setEntries((prev) =>
@@ -66,7 +66,7 @@ export default function Ledger() {
       }
     } catch (err) {
       if (err.response?.status === 403) {
-        alert('⏰ Edit window expired! Items can only be removed within 36 hours.');
+        alert('Edit window expired! Items can only be removed within 36 hours.');
       }
       console.error('Remove item error:', err);
     }
@@ -84,13 +84,12 @@ export default function Ledger() {
       }
     } catch (err) {
       if (err.response?.status === 403) {
-        alert('⏰ Edit window expired! Expenses can only be removed within 36 hours.');
+        alert('Edit window expired! Expenses can only be removed within 36 hours.');
       }
       console.error('Remove expense error:', err);
     }
   };
 
-  // Check if an entry is within the 36-hour edit window
   const isEntryEditable = (entry) => {
     const entryDate = new Date(entry.date);
     entryDate.setHours(0, 0, 0, 0);
@@ -108,8 +107,8 @@ export default function Ledger() {
   return (
     <div className="stagger-children">
       <div style={{ marginBottom: 'var(--space-xl)' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          📒 <span className="gradient-text">{t('ledger.title')}</span>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+          <BookOpen size={28} style={{ color: 'var(--primary-500)' }} /> <span className="gradient-text">{t('ledger.title')}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {t('ledger.subtitle')}
@@ -124,13 +123,12 @@ export default function Ledger() {
         </div>
       ) : entries.length === 0 ? (
         <div className="empty-state glass-card">
-          <div className="empty-icon">📒</div>
+          <div className="empty-icon"><BookOpen size={48} style={{ color: 'var(--text-muted)' }} /></div>
           <h3>{t('ledger.noEntries')}</h3>
           <p>{t('ledger.noEntriesHint')}</p>
         </div>
       ) : (
         <>
-          {/* Entries as Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {entries.map((entry) => (
               <LedgerEntryCard
@@ -147,7 +145,6 @@ export default function Ledger() {
             ))}
           </div>
 
-          {/* Pagination */}
           {pagination && pagination.pages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-sm)', marginTop: 'var(--space-xl)' }}>
               <button
@@ -175,17 +172,12 @@ export default function Ledger() {
   );
 }
 
-/**
- * LedgerEntryCard — Individual entry with expandable details + audio playback
- */
 function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, onRemoveItem, onRemoveExpense, formatDate }) {
-  // Phase 4 Feature 8: Audio playback hook for this entry
   const audioPlayback = useAudioPlayback(entry.audioUrl);
   const [removingId, setRemovingId] = useState(null);
 
   return (
     <div className="glass-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-      {/* Header row */}
       <div
         style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', cursor: 'pointer' }}
         onClick={onToggle}
@@ -194,10 +186,10 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
           <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem' }}>
             {formatDate(entry.date)}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
             {entry.items?.length || 0} items · {entry.language}
-            {entry.hasPendingClarifications && ' · 🔍 has approx values'}
-            {audioPlayback.hasAudio && ' · 🔊 has audio'}
+            {entry.hasPendingClarifications && <><Search size={11} /> has approx values</>}
+            {audioPlayback.hasAudio && <><Volume2 size={11} /> has audio</>}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -210,10 +202,8 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
         </div>
       </div>
 
-      {/* Phase 4 Feature 7: Anomaly alert */}
       {entry.anomaly?.detected && <AnomalyAlert anomaly={entry.anomaly} />}
 
-      {/* Items Preview (always show) */}
       {entry.items && entry.items.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)', marginBottom: 'var(--space-sm)' }}>
           {entry.items.slice(0, isExpanded ? 999 : 5).map((item, i) => (
@@ -240,11 +230,11 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
               }}
               title={
                 item.audioTimestamp?.sourcePhrase
-                  ? `🔊 "${item.audioTimestamp.sourcePhrase}"`
+                  ? `"${item.audioTimestamp.sourcePhrase}"`
                   : item.clarificationNeeded || `${item.name} × ${item.quantity}`
               }
             >
-              {audioPlayback.currentItemId === `item-${entry._id}-${i}` ? '🔊 ' : ''}
+              {audioPlayback.currentItemId === `item-${entry._id}-${i}` && <Volume2 size={10} />}
               {item.name} × {item.quantity}
               {item.isApproximate ? ' ~' : ''}
               {item.needsConfirmation ? ' ?' : ''}
@@ -274,7 +264,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
                 onMouseEnter={(e) => e.target.style.opacity = 1}
                 onMouseLeave={(e) => e.target.style.opacity = 0.7}
               >
-                {removingId === (item._id || i) ? '...' : '✕'}
+                {removingId === (item._id || i) ? '...' : <X size={10} />}
               </button>
               )}
             </span>
@@ -285,13 +275,11 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
         </div>
       )}
 
-      {/* Expanded details */}
       {isExpanded && (
         <div style={{ marginTop: 'var(--space-sm)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-subtle)' }}>
-          {/* Expenses */}
           {entry.expenses?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-sm)' }}>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>💸 Expenses</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><CreditCard size={12} /> Expenses</div>
               {entry.expenses.map((exp, i) => (
                 <div key={exp._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', padding: '3px 0' }}>
                   <span>
@@ -324,7 +312,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
                       onMouseEnter={(e) => e.target.style.opacity = 1}
                       onMouseLeave={(e) => e.target.style.opacity = 0.6}
                     >
-                      {removingId === exp._id ? '...' : '✕'}
+                      {removingId === exp._id ? '...' : <X size={10} />}
                     </button>
                     )}
                   </div>
@@ -333,49 +321,48 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
             </div>
           )}
 
-          {/* Missed Profits */}
           {entry.missedProfits?.length > 0 && (
-            <div style={{ fontSize: '0.78rem', color: 'var(--accent-400)', marginBottom: 'var(--space-sm)' }}>
-              📉 Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
+            <div style={{ fontSize: '0.78rem', color: 'var(--accent-400)', marginBottom: 'var(--space-sm)', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <TrendingDown size={14} /> Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
             </div>
           )}
 
-          {/* Raw Transcript */}
           {entry.rawTranscript && (
             <div style={{
               fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic',
               background: 'rgba(99,102,241,0.05)', padding: 'var(--space-sm)', borderRadius: 'var(--radius-sm)',
               marginTop: 'var(--space-xs)', maxHeight: 80, overflowY: 'auto',
+              display: 'flex', alignItems: 'flex-start', gap: 4,
             }}>
-              📝 &quot;{entry.rawTranscript.slice(0, 200)}{entry.rawTranscript.length > 200 ? '...' : ''}&quot;
+              <FileText size={12} style={{ flexShrink: 0, marginTop: 2 }} /> &quot;{entry.rawTranscript.slice(0, 200)}{entry.rawTranscript.length > 200 ? '...' : ''}&quot;
             </div>
           )}
         </div>
       )}
 
-      {/* Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-sm)' }}>
         <span
           className={`badge ${entry.confirmedByVendor ? 'badge-success' : 'badge-warning'}`}
+          style={{ display: 'flex', alignItems: 'center', gap: 4 }}
         >
-          {entry.confirmedByVendor ? '✅ Confirmed' : '⏳ Pending'}
+          {entry.confirmedByVendor ? <><CheckCircle size={12} /> Confirmed</> : <><Clock size={12} /> Pending</>}
         </span>
         <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
           {!entry.confirmedByVendor && (
             <button
               className="btn btn-primary"
-              style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
               onClick={(e) => { e.stopPropagation(); onConfirm(); }}
             >
-              Confirm ✓
+              <CheckCircle size={14} /> Confirm
             </button>
           )}
           <button
             className="btn btn-ghost"
-            style={{ fontSize: '0.75rem', padding: '6px 8px' }}
+            style={{ fontSize: '0.75rem', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 4 }}
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
           >
-            {isExpanded ? '▲ Less' : '▼ More'}
+            {isExpanded ? <><ChevronUp size={14} /> Less</> : <><ChevronDown size={14} /> More</>}
           </button>
         </div>
       </div>

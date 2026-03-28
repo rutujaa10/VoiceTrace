@@ -5,15 +5,16 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Globe, Check, ChevronDown } from 'lucide-react';
 
 const LANGUAGES = [
-  { code: 'en', label: 'EN', native: 'English', flag: '🇬🇧' },
-  { code: 'hi', label: 'हिं', native: 'हिंदी', flag: '🇮🇳' },
-  { code: 'mr', label: 'मरा', native: 'मराठी', flag: '🇮🇳' },
-  { code: 'gu', label: 'ગુજ', native: 'ગુજરાતી', flag: '🇮🇳' },
-  { code: 'kn', label: 'ಕನ್', native: 'ಕನ್ನಡ', flag: '🇮🇳' },
-  { code: 'ta', label: 'தமி', native: 'தமிழ்', flag: '🇮🇳' },
-  { code: 'te', label: 'తెలు', native: 'తెలుగు', flag: '🇮🇳' },
+  { code: 'en', label: 'EN', native: 'English' },
+  { code: 'hi', label: 'हिं', native: 'हिंदी' },
+  { code: 'mr', label: 'मरा', native: 'मराठी' },
+  { code: 'gu', label: 'ગુજ', native: 'ગુજરાતી' },
+  { code: 'kn', label: 'ಕನ್', native: 'ಕನ್ನಡ' },
+  { code: 'ta', label: 'தமி', native: 'தமிழ்' },
+  { code: 'te', label: 'తెలు', native: 'తెలుగు' },
 ];
 
 export default function LanguageSwitcher() {
@@ -60,9 +61,9 @@ export default function LanguageSwitcher() {
           transition: 'all 0.2s',
         }}
       >
-        <span style={{ fontSize: '1rem' }}>🌐</span>
+        <Globe size={16} />
         <span>{currentLang.label}</span>
-        <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>▼</span>
+        <ChevronDown size={12} style={{ opacity: 0.7 }} />
       </button>
 
       {isOpen && (
@@ -123,7 +124,7 @@ export default function LanguageSwitcher() {
             >
               <span>{lang.native}</span>
               {i18n.language === lang.code && (
-                <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>
+                <span style={{ marginLeft: 'auto' }}><Check size={14} /></span>
               )}
             </button>
           ))}
