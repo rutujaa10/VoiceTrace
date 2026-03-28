@@ -34,15 +34,15 @@ function VoiceField({ label, icon: Icon, value, onChange, type = 'text', placeho
 
   return (
     <div className="group">
-      <label htmlFor={id} className="flex items-center gap-2 text-sm font-semibold text-slate-300 mb-2">
-        <Icon size={15} className="text-indigo-400" />
+      <label htmlFor={id} className="flex items-center gap-2 text-sm font-semibold mb-2" style={{ color: 'var(--text-secondary)' }}>
+        <Icon size={15} style={{ color: 'var(--primary-500)' }} />
         {label}
       </label>
 
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           {prefix && (
-            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium pointer-events-none">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-medium pointer-events-none" style={{ color: 'var(--text-muted)' }}>
               {prefix}
             </span>
           )}
@@ -52,10 +52,8 @@ function VoiceField({ label, icon: Icon, value, onChange, type = 'text', placeho
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
-            className={`w-full bg-white/5 border border-white/10 rounded-xl py-3 text-white text-base
-                       placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50
-                       focus:border-indigo-500/50 transition-all duration-200
-                       ${prefix ? 'pl-8 pr-4' : 'px-4'}`}
+            className={`w-full rounded-xl py-3 text-base transition-all duration-200 focus:outline-none ${prefix ? 'pl-8 pr-4' : 'px-4'}`}
+            style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
           />
         </div>
 
@@ -63,13 +61,11 @@ function VoiceField({ label, icon: Icon, value, onChange, type = 'text', placeho
           type="button"
           onClick={() => fieldMic.isListening ? fieldMic.stopListening() : fieldMic.startListening()}
           disabled={!fieldMic.isSupported}
-          className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center
-                      transition-all duration-200 border cursor-pointer
-                      ${fieldMic.isListening
-                        ? 'bg-red-500/20 border-red-500/50 text-red-400 shadow-lg shadow-red-500/20'
-                        : 'bg-white/5 border-white/10 text-slate-400 hover:bg-indigo-500/10 hover:border-indigo-500/30 hover:text-indigo-400'
-                      }
-                      disabled:opacity-30 disabled:cursor-not-allowed`}
+          className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+          style={fieldMic.isListening
+            ? { background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: 'var(--danger-400)' }
+            : { background: 'var(--bg-secondary)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }
+          }
           title={fieldMic.isListening ? 'Stop' : 'Speak to correct'}
         >
           {fieldMic.isListening ? <MicOff size={16} /> : <Mic size={16} />}
@@ -77,7 +73,7 @@ function VoiceField({ label, icon: Icon, value, onChange, type = 'text', placeho
       </div>
 
       {fieldMic.isListening && (
-        <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1 animate-pulse">
+        <p className="text-xs mt-1.5 flex items-center gap-1 animate-pulse" style={{ color: 'var(--danger-400)' }}>
           <Volume2 size={11} /> Listening... speak now
         </p>
       )}
@@ -490,75 +486,48 @@ IMPORTANT RULES:
 
   // ---- Render ----
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f23] p-2 md:p-0">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-[calc(100vh-40px)]" style={{ padding: '0' }}>
+      <div className="max-w-lg mx-auto" style={{ paddingTop: '8px' }}>
 
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight"
-              style={{ fontFamily: 'var(--font-display, Outfit, sans-serif)' }}>
-            📋 <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Daily Log
-            </span>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
+              style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
+            📋 <span className="gradient-text">Daily Log</span>
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
             Speak naturally — AI detects your sales, expenses & items
           </p>
         </div>
 
-        {/* ======== MODE CHOOSER ======== */}
+        {/* ======== AI CONVERSATION HERO ======== */}
         {mode === 'choose' && phase === 'idle' && (
-          <div className="space-y-4 animate-[fadeIn_0.4s_ease]">
-
-            {/* Mode: Smart Extract (primary) */}
-            <button
-              onClick={() => { setMode('smart'); }}
-              className="w-full group bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20
-                         rounded-2xl p-5 text-left transition-all duration-300
-                         hover:border-indigo-500/40 hover:shadow-lg hover:shadow-indigo-500/10 cursor-pointer"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500
-                               flex items-center justify-center shrink-0">
-                  <Zap size={22} className="text-white" />
+          <div className="flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease]"
+               style={{ minHeight: 'calc(100vh - 200px)', paddingBottom: '40px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '40px 32px', textAlign: 'center', width: '100%', maxWidth: '420px', boxShadow: '0 4px 24px -4px rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '20px' }}>
+                <div className="animate-pulse" style={{ position: 'absolute', inset: '-12px', borderRadius: '50%', background: 'rgba(34,197,94,0.08)' }} />
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 32px -4px rgba(34,197,94,0.3)', position: 'relative' }}>
+                  <MessageSquare size={34} className="text-white" />
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-base mb-1">⚡ Smart Extract</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    Speak freely about your day — <span className="text-indigo-300">AI auto-detects</span> sales, expenses, items & missed profits from your speech.
-                  </p>
-                  <span className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-green-400 bg-green-500/10 px-2.5 py-1 rounded-full">
-                    ✨ Recommended
-                  </span>
-                </div>
-                <ArrowRight size={18} className="text-slate-500 group-hover:text-indigo-400 transition-colors mt-1" />
               </div>
-            </button>
-
-            {/* Mode: AI Conversation (Vapi) */}
-            <button
-              onClick={() => { setMode('vapi'); }}
-              className="w-full group bg-white/[0.02] border border-white/[0.08]
-                         rounded-2xl p-5 text-left transition-all duration-300
-                         hover:border-purple-500/30 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500
-                               flex items-center justify-center shrink-0">
-                  <MessageSquare size={22} className="text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-white font-bold text-base mb-1">🗣️ AI Conversation</h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">
-                    AI voice asks you questions one by one in Hinglish and extracts data from your answers.
-                  </p>
-                  <span className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded-full">
-                    🎙️ Guided flow
-                  </span>
-                </div>
-                <ArrowRight size={18} className="text-slate-500 group-hover:text-purple-400 transition-colors mt-1" />
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>🗣️ AI Conversation</h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto 20px' }}>
+                AI voice assistant will ask you questions one by one in <span style={{ color: 'var(--primary-500)', fontWeight: 600 }}>Hindi, English, or Hinglish</span> and extract your business data automatically.
+              </p>
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)' }}>🎙️ Voice Guided</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}>🧠 Auto Extract</span>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>✏️ Review & Edit</span>
               </div>
-            </button>
+              <button onClick={() => { setMode('vapi'); }} className="transition-all duration-300 cursor-pointer border-0 hover:scale-[1.03] active:scale-[0.97]" style={{ background: 'var(--gradient-primary)', color: 'white', padding: '14px 40px', borderRadius: 'var(--radius-lg)', fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.35)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <Phone size={18} /> Start Conversation
+              </button>
+            </div>
+            <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+              💡 Tip: Just answer the AI's questions naturally — it handles the rest!
+            </div>
           </div>
         )}
 
@@ -567,36 +536,20 @@ IMPORTANT RULES:
         {mode === 'smart' && phase === 'idle' && (
           <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.4s_ease]">
             <div className="relative">
-              <div className="absolute inset-[-16px] rounded-full border-2 border-indigo-500/10 animate-ping" style={{ animationDuration: '3s' }} />
-              <button
-                onClick={startSmartRecording}
-                className="relative w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500
-                           flex items-center justify-center shadow-2xl shadow-indigo-500/30
-                           hover:scale-105 hover:shadow-indigo-500/50 active:scale-95
-                           transition-all duration-300 cursor-pointer border-0"
-              >
+              <div className="absolute inset-[-16px] rounded-full animate-ping" style={{ border: '2px solid rgba(34,197,94,0.1)', animationDuration: '3s' }} />
+              <button onClick={startSmartRecording} className="relative w-32 h-32 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-0" style={{ background: 'var(--gradient-primary)', boxShadow: '0 12px 40px -8px rgba(34,197,94,0.35)' }}>
                 <Mic size={40} className="text-white" />
               </button>
             </div>
-
             <div className="text-center">
-              <p className="text-white font-semibold text-lg">Tap & Speak</p>
-              <p className="text-slate-500 text-sm mt-1 max-w-xs leading-relaxed">
-                Tell everything about your day — sales, expenses, items. AI will detect each part.
-              </p>
+              <p className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Tap & Speak</p>
+              <p className="text-sm mt-1 max-w-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>Tell everything about your day — sales, expenses, items. AI will detect each part.</p>
             </div>
-
-            <div className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4">
-              <p className="text-xs text-slate-500 font-semibold mb-2">💡 Example</p>
-              <p className="text-sm text-slate-400 leading-relaxed italic">
-                "Aaj 50 samose beche 10 rupaye mein, chai se 500 rupaye aaye, 
-                200 rupaye ka tel kharida, aur samose shaam ko khatam ho gaye"
-              </p>
+            <div className="w-full rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
+              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>💡 Example</p>
+              <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"Aaj 50 samose beche 10 rupaye mein, chai se 500 rupaye aaye, 200 rupaye ka tel kharida, aur samose shaam ko khatam ho gaye"</p>
             </div>
-
-            <button onClick={() => setMode('choose')} className="text-slate-500 text-sm hover:text-slate-300 transition-colors cursor-pointer bg-transparent border-0">
-              ← Back
-            </button>
+            <button onClick={() => setMode('choose')} className="text-sm transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)' }}>← Back</button>
           </div>
         )}
 
@@ -604,22 +557,16 @@ IMPORTANT RULES:
         {mode === 'smart' && phase === 'recording' && (
           <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.3s_ease]">
             <div className="relative">
-              <div className="absolute inset-[-20px] rounded-full bg-red-500/15 animate-ping" style={{ animationDuration: '1.5s' }} />
-              <div className="absolute inset-[-10px] rounded-full border-2 border-red-500/30 animate-pulse" />
-              <button
-                onClick={stopSmartRecording}
-                className="relative w-28 h-28 rounded-full bg-gradient-to-br from-red-500 to-orange-500
-                           flex items-center justify-center shadow-2xl shadow-red-500/30
-                           hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-0"
-              >
+              <div className="absolute inset-[-20px] rounded-full animate-ping" style={{ background: 'rgba(239,68,68,0.1)', animationDuration: '1.5s' }} />
+              <div className="absolute inset-[-10px] rounded-full animate-pulse" style={{ border: '2px solid rgba(239,68,68,0.25)' }} />
+              <button onClick={stopSmartRecording} className="relative w-28 h-28 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer border-0" style={{ background: 'linear-gradient(135deg, #ef4444, #f97316)', boxShadow: '0 12px 40px -8px rgba(239,68,68,0.35)' }}>
                 <MicOff size={36} className="text-white" />
               </button>
             </div>
-
             <div className="text-center">
-              <p className="text-3xl font-extrabold text-red-400 font-mono">{formatTime(recordingTime)}</p>
-              <p className="text-red-400/80 text-sm mt-1 animate-pulse">🔴 Listening... Tap to stop</p>
-              <p className="text-slate-500 text-xs mt-2">Speak everything — sales, expenses, items</p>
+              <p className="text-3xl font-extrabold font-mono" style={{ color: 'var(--danger-400)' }}>{formatTime(recordingTime)}</p>
+              <p className="text-sm mt-1 animate-pulse" style={{ color: 'rgba(239,68,68,0.7)' }}>🔴 Listening... Tap to stop</p>
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Speak everything — sales, expenses, items</p>
             </div>
           </div>
         )}
@@ -627,39 +574,43 @@ IMPORTANT RULES:
         {/* Smart Extract: Processing */}
         {mode === 'smart' && phase === 'processing' && (
           <div className="flex flex-col items-center gap-4 py-16 animate-[fadeIn_0.3s_ease]">
-            <Loader2 size={40} className="text-indigo-400 animate-spin" />
+            <Loader2 size={40} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
             <div className="text-center">
-              <p className="text-white font-semibold">AI is analyzing your speech...</p>
-              <p className="text-slate-500 text-sm mt-1">Detecting sales, expenses, items & missed profits</p>
+              <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>AI is analyzing your speech...</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Detecting sales, expenses, items & missed profits</p>
             </div>
           </div>
         )}
 
 
-        {/* ======== VAPI MODE ======== */}
+        {/* ======== VAPI MODE — Start Call ======== */}
         {mode === 'vapi' && phase === 'idle' && (
-          <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.4s_ease]">
-            <div className="relative">
-              <div className="absolute inset-[-16px] rounded-full border-2 border-purple-500/10 animate-ping" style={{ animationDuration: '3s' }} />
-              <button
-                onClick={startVapiCall}
-                className="relative w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500
-                           flex items-center justify-center shadow-2xl shadow-purple-500/30
-                           hover:scale-105 hover:shadow-purple-500/50 active:scale-95
-                           transition-all duration-300 cursor-pointer border-0"
-              >
-                <Phone size={40} className="text-white" />
-              </button>
+          <div className="flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease]" style={{ minHeight: 'calc(100vh - 200px)', paddingBottom: '40px' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '48px 36px 40px', textAlign: 'center', width: '100%', maxWidth: '420px', boxShadow: '0 4px 24px -4px rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '24px' }}>
+                <div className="animate-ping" style={{ position: 'absolute', inset: '-18px', borderRadius: '50%', border: '2px solid rgba(34,197,94,0.12)', animationDuration: '2.5s' }} />
+                <div className="animate-pulse" style={{ position: 'absolute', inset: '-10px', borderRadius: '50%', background: 'rgba(34,197,94,0.06)' }} />
+                <button onClick={startVapiCall} className="relative hover:scale-110 active:scale-95 transition-all duration-300 cursor-pointer border-0" style={{ width: '100px', height: '100px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 40px -6px rgba(34,197,94,0.4)' }}>
+                  <Phone size={40} className="text-white" />
+                </button>
+              </div>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '6px' }}>Tap to Start</h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '24px' }}>AI will guide you through voice questions</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '20px' }}>
+                {[{ num: '1', text: 'AI asks question' }, { num: '2', text: 'You answer' }, { num: '3', text: 'Review & Save' }].map((step, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', fontWeight: 800, color: 'white' }}>{step.num}</div>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{step.text}</span>
+                    {i < 2 && <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', margin: '0 2px' }}>→</span>}
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setMode('choose')} className="transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 500 }}>← Back</button>
             </div>
-
-            <div className="text-center">
-              <p className="text-white font-semibold text-lg">Start AI Conversation</p>
-              <p className="text-slate-500 text-sm mt-1">AI will ask you questions by voice</p>
+            <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', maxWidth: '340px' }}>
+              🎙️ Make sure your microphone is enabled — speak in any language you're comfortable with!
             </div>
-
-            <button onClick={() => setMode('choose')} className="text-slate-500 text-sm hover:text-slate-300 transition-colors cursor-pointer bg-transparent border-0">
-              ← Back
-            </button>
           </div>
         )}
 
@@ -667,115 +618,91 @@ IMPORTANT RULES:
         {mode === 'vapi' && phase === 'calling' && (
           <div className="flex flex-col items-center gap-5 animate-[fadeIn_0.4s_ease]">
             <div className="relative">
-              <div className="absolute inset-[-20px] rounded-full bg-green-500/15 animate-ping" style={{ animationDuration: '2s' }} />
-              <div className="absolute inset-[-10px] rounded-full border-2 border-green-500/30 animate-pulse" />
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-500
-                             flex items-center justify-center shadow-2xl shadow-green-500/30">
+              <div className="absolute inset-[-20px] rounded-full animate-ping" style={{ background: 'rgba(34,197,94,0.1)', animationDuration: '2s' }} />
+              <div className="absolute inset-[-10px] rounded-full animate-pulse" style={{ border: '2px solid rgba(34,197,94,0.25)' }} />
+              <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--gradient-primary)', boxShadow: '0 12px 40px -8px rgba(34,197,94,0.35)' }}>
                 <Volume2 size={32} className="text-white animate-pulse" />
               </div>
             </div>
-
             <div className="text-center">
-              <p className="text-green-400 font-semibold text-sm">{callStatus}</p>
-              <p className="text-slate-500 text-xs mt-1">Speak naturally in Hindi, English, or Hinglish</p>
+              <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>{callStatus}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Speak naturally in Hindi, English, or Hinglish</p>
             </div>
-
-            {/* Live Messages */}
             {messages.length > 0 && (
-              <div className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 max-h-52 overflow-y-auto">
-                <p className="text-xs text-slate-500 mb-3 font-semibold">💬 Conversation</p>
+              <div className="w-full rounded-2xl p-4 max-h-52 overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
+                <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)' }}>💬 Conversation</p>
                 <div className="space-y-2">
                   {messages.slice(-8).map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`text-sm px-3 py-2 rounded-xl max-w-[85%] ${
-                        msg.role === 'assistant'
-                          ? 'bg-indigo-500/10 text-indigo-300 mr-auto rounded-bl-sm'
-                          : 'bg-white/5 text-slate-300 ml-auto text-right rounded-br-sm'
-                      }`}
-                    >
+                    <div key={i} className="text-sm px-3 py-2 rounded-xl max-w-[85%]" style={msg.role === 'assistant' ? { background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', marginRight: 'auto', borderBottomLeftRadius: '4px' } : { background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginLeft: 'auto', textAlign: 'right', borderBottomRightRadius: '4px' }}>
                       {msg.text}
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
-            <button
-              onClick={endCall}
-              className="flex items-center gap-2 px-5 py-2.5 bg-red-500/15 border border-red-500/30 rounded-xl
-                         text-red-400 font-semibold text-sm hover:bg-red-500/25 transition-all duration-200 cursor-pointer"
-            >
-              <PhoneOff size={15} />
-              End Call
+            <button onClick={endCall} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--danger-400)' }}>
+              <PhoneOff size={15} /> End Call
             </button>
           </div>
         )}
 
 
-        {/* ======== PROCESSING PHASE (extracting from transcript) ======== */}
+        {/* ======== PROCESSING PHASE ======== */}
         {phase === 'processing' && (
           <div className="flex flex-col items-center gap-5 py-16 animate-[fadeIn_0.3s_ease]">
-            <Loader2 size={44} className="text-indigo-400 animate-spin" />
+            <Loader2 size={44} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
             <div className="text-center">
-              <p className="text-white font-semibold text-lg">Extracting your data...</p>
-              <p className="text-slate-400 text-sm mt-1">AI is parsing items, amounts &amp; expenses from your conversation</p>
+              <p className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Extracting your data...</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>AI is parsing items, amounts &amp; expenses from your conversation</p>
             </div>
           </div>
         )}
 
 
-        {/* ======== REVIEW PHASE (both modes) ======== */}
+        {/* ======== REVIEW PHASE ======== */}
         {phase === 'review' && (
           <div className="animate-[fadeIn_0.4s_ease]">
-
-            {/* Success banner */}
-            <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3.5 mb-5">
-              <CheckCircle size={18} className="text-green-400 shrink-0" />
+            <div className="flex items-center gap-3 rounded-xl p-3.5 mb-5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 'var(--radius-2xl)' }}>
+              <CheckCircle size={18} style={{ color: 'var(--primary-500)' }} className="shrink-0" />
               <div>
-                <p className="text-green-400 font-semibold text-sm">✅ Data Extracted — Review Before Saving</p>
-                <p className="text-slate-500 text-xs mt-0.5">Edit any values below, then confirm to save to ledger. Or discard to start over.</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>✅ Data Extracted — Review Before Saving</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below, then confirm to save to ledger. Or discard to start over.</p>
               </div>
             </div>
 
-            {/* Extracted Items Detail (Smart mode only) */}
             {extractionResult && extractionResult.items?.length > 0 && (
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4 mb-4">
-                <h4 className="text-xs font-bold text-slate-400 mb-3 flex items-center gap-1.5">
+              <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
+                <h4 className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                   <ShoppingBag size={13} /> DETECTED ITEMS
                 </h4>
                 <div className="space-y-1.5">
                   {extractionResult.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm py-1.5 border-b border-white/5 last:border-0">
-                      <span className="text-slate-300">
-                        {item.name} <span className="text-slate-500">× {item.quantity}</span>
+                    <div key={i} className="flex justify-between items-center text-sm py-1.5 last:border-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <span style={{ color: 'var(--text-primary)' }}>
+                        {item.name} <span style={{ color: 'var(--text-muted)' }}>× {item.quantity}</span>
                         {item.confidence < 0.7 && <span className="ml-1" title="Low confidence">⚠️</span>}
                       </span>
-                      <span className="font-semibold text-green-400">₹{item.totalPrice}</span>
+                      <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>₹{item.totalPrice}</span>
                     </div>
                   ))}
                 </div>
-
                 {extractionResult.expenses?.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-white/5">
-                    <h4 className="text-xs font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                      <TrendingDown size={13} /> DETECTED EXPENSES
-                    </h4>
+                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}><TrendingDown size={13} /> DETECTED EXPENSES</h4>
                     {extractionResult.expenses.map((exp, i) => (
                       <div key={i} className="flex justify-between text-sm py-1">
-                        <span className="text-slate-400">{exp.description || exp.category}</span>
-                        <span className="text-red-400 font-semibold">-₹{exp.amount}</span>
+                        <span style={{ color: 'var(--text-secondary)' }}>{exp.description || exp.category}</span>
+                        <span className="font-semibold" style={{ color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
                       </div>
                     ))}
                   </div>
                 )}
-
                 {extractionResult.missedProfits?.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-white/5">
-                    <h4 className="text-xs font-bold text-slate-400 mb-2">📉 MISSED PROFITS</h4>
+                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                    <h4 className="text-xs font-bold mb-2" style={{ color: 'var(--text-muted)' }}>📉 MISSED PROFITS</h4>
                     {extractionResult.missedProfits.map((mp, i) => (
-                      <div key={i} className="text-sm py-1 text-amber-400">
-                        {mp.item}: ~₹{mp.estimatedLoss} <span className="text-slate-500 text-xs">"{mp.triggerPhrase}"</span>
+                      <div key={i} className="text-sm py-1" style={{ color: '#f59e0b' }}>
+                        {mp.item}: ~₹{mp.estimatedLoss} <span className="text-xs" style={{ color: 'var(--text-muted)' }}>"{mp.triggerPhrase}"</span>
                       </div>
                     ))}
                   </div>
@@ -783,84 +710,26 @@ IMPORTANT RULES:
               </div>
             )}
 
-            {/* Editable Form */}
-            <div className="bg-white/[0.03] backdrop-blur-lg border border-white/[0.08] rounded-2xl p-5 space-y-4">
-              <VoiceField
-                id="field-sales"
-                label="Total Sales (₹)"
-                icon={TrendingUp}
-                type="number"
-                value={formData.salesAmount}
-                onChange={(val) => setFormData((p) => ({ ...p, salesAmount: val }))}
-                placeholder="e.g. 1500"
-                prefix="₹"
-              />
-
-              <VoiceField
-                id="field-expenses"
-                label="Total Expenses (₹)"
-                icon={TrendingDown}
-                type="number"
-                value={formData.expenseAmount}
-                onChange={(val) => setFormData((p) => ({ ...p, expenseAmount: val }))}
-                placeholder="e.g. 400"
-                prefix="₹"
-              />
-
-              <VoiceField
-                id="field-items"
-                label="Items Sold"
-                icon={ShoppingBag}
-                type="text"
-                value={formData.itemsSold}
-                onChange={(val) => setFormData((p) => ({ ...p, itemsSold: val }))}
-                placeholder="e.g. samosa, chai, pakora"
-              />
-
-              {/* Computed Profit */}
+            <div className="backdrop-blur-lg rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
+              <VoiceField id="field-sales" label="Total Sales (₹)" icon={TrendingUp} type="number" value={formData.salesAmount} onChange={(val) => setFormData((p) => ({ ...p, salesAmount: val }))} placeholder="e.g. 1500" prefix="₹" />
+              <VoiceField id="field-expenses" label="Total Expenses (₹)" icon={TrendingDown} type="number" value={formData.expenseAmount} onChange={(val) => setFormData((p) => ({ ...p, expenseAmount: val }))} placeholder="e.g. 400" prefix="₹" />
+              <VoiceField id="field-items" label="Items Sold" icon={ShoppingBag} type="text" value={formData.itemsSold} onChange={(val) => setFormData((p) => ({ ...p, itemsSold: val }))} placeholder="e.g. samosa, chai, pakora" />
               {formData.salesAmount && (
-                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3.5 flex justify-between items-center">
-                  <span className="text-sm text-indigo-300 font-medium flex items-center gap-1.5">
-                    <IndianRupee size={14} /> Net Profit
-                  </span>
-                  <span className="text-xl font-extrabold text-white"
-                        style={{ fontFamily: 'var(--font-display, Outfit, sans-serif)' }}>
-                    ₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}
-                  </span>
+                <div className="rounded-xl p-3.5 flex justify-between items-center" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)', borderRadius: 'var(--radius-lg)' }}>
+                  <span className="text-sm font-medium flex items-center gap-1.5" style={{ color: 'var(--primary-500)' }}><IndianRupee size={14} /> Net Profit</span>
+                  <span className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}</span>
                 </div>
               )}
             </div>
 
-            {/* Action Buttons */}
             <div className="flex gap-3 mt-5">
-              <button
-                onClick={handleSave}
-                disabled={!formData.salesAmount || !formData.itemsSold}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm
-                           bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white
-                           shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-[1.02]
-                           active:scale-[0.98] transition-all duration-200 cursor-pointer border-0
-                           disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
-              >
-                <Save size={16} />
-                ✅ Confirm & Save to Ledger
+              <button onClick={handleSave} disabled={!formData.salesAmount || !formData.itemsSold} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" style={{ background: 'var(--gradient-primary)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.3)', borderRadius: 'var(--radius-lg)' }}>
+                <Save size={16} /> ✅ Confirm & Save to Ledger
               </button>
-
-              <button
-                onClick={handleReset}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm
-                           bg-red-500/10 border border-red-500/20 text-red-400
-                           hover:bg-red-500/20 transition-all duration-200 cursor-pointer"
-              >
+              <button onClick={handleReset} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--danger-400)', borderRadius: 'var(--radius-lg)' }}>
                 🗑️ Discard
               </button>
-
-              <button
-                onClick={handleReset}
-                className="w-12 h-12 flex items-center justify-center rounded-xl bg-white/5 border border-white/10
-                           text-slate-400 hover:bg-white/10 hover:text-white transition-all duration-200 cursor-pointer"
-                title="Start over"
-              >
+              <button onClick={handleReset} className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }} title="Start over">
                 <RotateCcw size={16} />
               </button>
             </div>
@@ -871,55 +740,45 @@ IMPORTANT RULES:
         {/* ======== SAVING ======== */}
         {phase === 'saving' && (
           <div className="flex flex-col items-center gap-4 py-16 animate-[fadeIn_0.3s_ease]">
-            <Loader2 size={40} className="text-indigo-400 animate-spin" />
-            <p className="text-slate-300 font-medium">Saving to ledger...</p>
+            <Loader2 size={40} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
+            <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>Saving to ledger...</p>
           </div>
         )}
 
         {/* ======== SAVED ======== */}
         {phase === 'saved' && (
           <div className="flex flex-col items-center gap-5 py-10 animate-[fadeIn_0.4s_ease]">
-            <div className="w-20 h-20 rounded-full bg-green-500/15 flex items-center justify-center">
-              <CheckCircle size={40} className="text-green-400" />
+            <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.1)' }}>
+              <CheckCircle size={40} style={{ color: 'var(--primary-500)' }} />
             </div>
-
             <div className="text-center">
-              <p className="text-white font-bold text-xl">Saved! 🎉</p>
-              <p className="text-slate-400 text-sm mt-1">Your daily log has been recorded.</p>
+              <p className="font-bold text-xl" style={{ color: 'var(--text-primary)' }}>Saved! 🎉</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Your daily log has been recorded.</p>
             </div>
-
-            <div className="w-full bg-white/[0.03] border border-white/[0.08] rounded-2xl p-4">
+            <div className="w-full rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
               <div className="grid grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="text-xs text-slate-500">Sales</p>
-                  <p className="text-lg font-bold text-green-400">₹{formData.salesAmount || 0}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sales</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--primary-500)' }}>₹{formData.salesAmount || 0}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Expenses</p>
-                  <p className="text-lg font-bold text-red-400">₹{formData.expenseAmount || 0}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Expenses</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--danger-400)' }}>₹{formData.expenseAmount || 0}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-500">Profit</p>
-                  <p className="text-lg font-bold text-indigo-400">
-                    ₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}
-                  </p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Profit</p>
+                  <p className="text-lg font-bold" style={{ color: 'var(--text-accent)' }}>₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}</p>
                 </div>
               </div>
               {formData.itemsSold && (
-                <div className="mt-3 pt-3 border-t border-white/5 text-center">
-                  <p className="text-xs text-slate-500">Items</p>
-                  <p className="text-sm text-slate-300 mt-1">{formData.itemsSold}</p>
+                <div className="mt-3 pt-3 text-center" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Items</p>
+                  <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{formData.itemsSold}</p>
                 </div>
               )}
             </div>
-
-            <button
-              onClick={handleReset}
-              className="flex items-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-xl
-                         text-slate-300 font-semibold text-sm hover:bg-white/10 transition-all duration-200 cursor-pointer"
-            >
-              <RotateCcw size={14} />
-              Record Another
+            <button onClick={handleReset} className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
+              <RotateCcw size={14} /> Record Another
             </button>
           </div>
         )}
@@ -927,18 +786,11 @@ IMPORTANT RULES:
 
         {/* ======== Error Toast ======== */}
         {error && (
-          <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50
-                          bg-red-500/15 border border-red-500/30 rounded-xl p-4 backdrop-blur-lg
-                          animate-[fadeIn_0.3s_ease]">
+          <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50 rounded-xl p-4 backdrop-blur-lg animate-[fadeIn_0.3s_ease]" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-2xl)' }}>
             <div className="flex items-start gap-3">
-              <span className="text-red-400 text-base">⚠️</span>
-              <p className="flex-1 text-red-300 text-sm">{error}</p>
-              <button
-                onClick={() => setError('')}
-                className="text-red-400/60 hover:text-red-400 cursor-pointer bg-transparent border-0 text-base"
-              >
-                ✕
-              </button>
+              <span style={{ color: 'var(--danger-400)' }} className="text-base">⚠️</span>
+              <p className="flex-1 text-sm" style={{ color: 'var(--danger-400)' }}>{error}</p>
+              <button onClick={() => setError('')} className="cursor-pointer bg-transparent border-0 text-base" style={{ color: 'var(--danger-400)', opacity: 0.7 }}>✕</button>
             </div>
           </div>
         )}
@@ -946,3 +798,4 @@ IMPORTANT RULES:
     </div>
   );
 }
+

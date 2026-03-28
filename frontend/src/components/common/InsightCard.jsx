@@ -1,20 +1,26 @@
 /**
- * InsightCard — Display component for AI insights
+ * InsightCard — Modern borderless insight display
+ *
+ * Features:
+ * - Rounded-2xl, borderless design with soft shadow
+ * - Larger icon in soft circle
+ * - Time badge as subtle pill
+ * - Hover scale + shadow expansion
  */
 
 export default function InsightCard({ insight }) {
   const typeConfig = {
-    prediction: { icon: '🌦️', color: 'rgba(59, 130, 246, 0.15)' },
-    stock_advice: { icon: '📦', color: 'rgba(99, 102, 241, 0.15)' },
-    missed_profit: { icon: '📉', color: 'rgba(239, 68, 68, 0.15)' },
-    weekly_story: { icon: '📖', color: 'rgba(168, 85, 247, 0.15)' },
-    csi: { icon: '🗺️', color: 'rgba(34, 197, 94, 0.15)' },
-    weather_alert: { icon: '⛈️', color: 'rgba(245, 158, 11, 0.15)' },
-    loan_milestone: { icon: '🎯', color: 'rgba(236, 72, 153, 0.15)' },
-    daily_summary: { icon: '📒', color: 'rgba(99, 102, 241, 0.15)' },
+    prediction: { icon: '🌦️', color: 'rgba(59, 130, 246, 0.12)' },
+    stock_advice: { icon: '📦', color: 'rgba(99, 102, 241, 0.12)' },
+    missed_profit: { icon: '📉', color: 'rgba(239, 68, 68, 0.12)' },
+    weekly_story: { icon: '📖', color: 'rgba(168, 85, 247, 0.12)' },
+    csi: { icon: '🗺️', color: 'rgba(34, 197, 94, 0.12)' },
+    weather_alert: { icon: '⛈️', color: 'rgba(245, 158, 11, 0.12)' },
+    loan_milestone: { icon: '🎯', color: 'rgba(236, 72, 153, 0.12)' },
+    daily_summary: { icon: '📒', color: 'rgba(99, 102, 241, 0.12)' },
   };
 
-  const config = typeConfig[insight.type] || { icon: '💡', color: 'rgba(99, 102, 241, 0.15)' };
+  const config = typeConfig[insight.type] || { icon: '💡', color: 'rgba(99, 102, 241, 0.12)' };
 
   const timeAgo = (date) => {
     if (!date) return '';
@@ -26,39 +32,102 @@ export default function InsightCard({ insight }) {
   };
 
   return (
-    <div className="insight-card">
+    <div
+      style={{
+        background: 'var(--bg-card)',
+        borderRadius: 'var(--radius-2xl)',
+        padding: '16px 20px',
+        display: 'flex',
+        gap: '14px',
+        alignItems: 'flex-start',
+        transition: 'all 0.25s ease',
+        cursor: 'default',
+        boxShadow: '0 1px 6px -1px rgba(0,0,0,0.05)',
+        border: '1px solid var(--border-subtle)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'scale(1.01)';
+        e.currentTarget.style.boxShadow = '0 4px 20px -4px rgba(0,0,0,0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '0 1px 6px -1px rgba(0,0,0,0.05)';
+      }}
+    >
+      {/* Icon circle */}
       <div
-        className="insight-icon"
         style={{
-          width: 40,
-          height: 40,
-          borderRadius: 'var(--radius-md)',
+          width: '44px',
+          height: '44px',
+          borderRadius: '14px',
           background: config.color,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          fontSize: '1.4rem',
+          flexShrink: 0,
         }}
       >
         {config.icon}
       </div>
-      <div className="insight-body" style={{ flex: 1 }}>
-        <h4>{insight.title}</h4>
-        <p style={{ whiteSpace: 'pre-line' }}>
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h4
+          style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: '0.92rem',
+            fontWeight: 700,
+            marginBottom: '4px',
+            color: 'var(--text-primary)',
+          }}
+        >
+          {insight.title}
+        </h4>
+        <p
+          style={{
+            fontSize: '0.82rem',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.55,
+            margin: 0,
+            whiteSpace: 'pre-line',
+          }}
+        >
           {insight.content?.length > 200
             ? insight.content.slice(0, 200) + '...'
             : insight.content}
         </p>
-        <div className="insight-time">{timeAgo(insight.createdAt)}</div>
+
+        {/* Time pill */}
+        {insight.createdAt && (
+          <span
+            style={{
+              display: 'inline-block',
+              marginTop: '8px',
+              fontSize: '0.68rem',
+              fontWeight: 600,
+              color: 'var(--text-muted)',
+              background: 'rgba(0,0,0,0.04)',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-full)',
+            }}
+          >
+            {timeAgo(insight.createdAt)}
+          </span>
+        )}
       </div>
+
+      {/* Unread dot */}
       {!insight.isRead && (
         <div
           style={{
             width: 8,
             height: 8,
             borderRadius: '50%',
-            background: 'var(--primary-400)',
+            background: 'var(--gradient-primary)',
             flexShrink: 0,
-            marginTop: 6,
+            marginTop: 8,
+            boxShadow: '0 0 8px rgba(34, 197, 94, 0.4)',
           }}
         />
       )}
