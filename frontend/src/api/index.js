@@ -1,7 +1,10 @@
 /**
- * VoiceTrace — API Service Layer
+ * VoiceTrace — API Service Layer (Enhanced)
  *
  * Axios-based service for all backend API calls.
+ * New endpoints for:
+ *  - Phase 2: Stock suggestions via weekly analytics
+ *  - Phase 4: Pending clarifications, resolve clarification
  */
 
 import axios from 'axios';
@@ -32,7 +35,7 @@ export const ledgerAPI = {
     formData.append('audio', audioBlob, 'recording.webm');
     return api.post(`/ledger/${vendorId}/audio`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 60000, // audio processing can take time
+      timeout: 60000,
     });
   },
   submitText: (vendorId, transcript, language = 'hi') =>
@@ -44,6 +47,12 @@ export const ledgerAPI = {
   confirmEntry: (entryId, confirmed) =>
     api.put(`/ledger/entry/${entryId}/confirm`, { confirmed }),
   getToday: (vendorId) => api.get(`/ledger/${vendorId}/today`),
+
+  // Phase 4 Feature 6: Clarification flow
+  getPendingClarifications: (vendorId) =>
+    api.get(`/ledger/${vendorId}/pending-clarifications`),
+  resolveClarification: (entryId, data) =>
+    api.put(`/ledger/entry/${entryId}/clarify`, data),
 };
 
 // ---- Insight APIs ----
@@ -78,4 +87,3 @@ export const assistantAPI = {
 };
 
 export default api;
-

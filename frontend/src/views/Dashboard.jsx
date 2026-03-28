@@ -1,7 +1,13 @@
 /**
- * Dashboard View — Main overview page
+ * Dashboard View — Main overview page (Enhanced)
  *
- * Shows: stat cards, Loan Readiness Gauge, recent insights, quick record button
+ * Shows:
+ * - Stat cards (30-day revenue, profit, days logged, missed revenue)
+ * - Loan Readiness Gauge
+ * - Phase 2 Feature 3: LLM-generated plain-language weekly insights
+ * - Phase 2 Feature 4: Next-day stock suggestions
+ * - Phase 4 Feature 7: Anomaly alerts from today's entry
+ * - Recent insights feed
  */
 
 import { useEffect, useState } from 'react';
@@ -11,6 +17,8 @@ import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
 import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
+import AnomalyAlert from '../components/common/AnomalyAlert';
+import ClarificationBanner from '../components/common/ClarificationBanner';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
@@ -18,6 +26,7 @@ export default function Dashboard() {
   const [summary, setSummary] = useState(null);
   const [recentInsights, setRecentInsights] = useState([]);
   const [weeklyPatterns, setWeeklyPatterns] = useState(null);
+  const [todayAnomaly, setTodayAnomaly] = useState(null);
 
   useEffect(() => {
     if (!state.vendorId) return;
@@ -27,11 +36,12 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const [dashRes, loanRes, insightRes, analyticsRes] = await Promise.all([
+      const [dashRes, loanRes, insightRes, analyticsRes, todayRes] = await Promise.all([
         vendorAPI.getDashboard(state.vendorId),
         vendorAPI.getLoanScore(state.vendorId),
         insightAPI.getUnread(state.vendorId),
         analyticsAPI.getWeekly(state.vendorId).catch(() => null),
+        ledgerAPI.getToday(state.vendorId).catch(() => null),
       ]);
 
       const dash = dashRes.data.data;
@@ -42,6 +52,11 @@ export default function Dashboard() {
 
       if (analyticsRes?.data?.data) {
         setWeeklyPatterns(analyticsRes.data.data);
+      }
+
+      // Phase 4 Feature 7: Check today's entry for anomalies
+      if (todayRes?.data?.data?.anomaly?.detected) {
+        setTodayAnomaly(todayRes.data.data.anomaly);
       }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
@@ -67,6 +82,9 @@ export default function Dashboard() {
 
   return (
     <div className="stagger-children">
+      {/* Phase 4 Feature 6: Clarification Banner */}
+      <ClarificationBanner vendorId={state.vendorId} />
+
       {/* Header */}
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <h1
@@ -82,6 +100,9 @@ export default function Dashboard() {
           Here&apos;s your business at a glance
         </p>
       </div>
+
+      {/* Phase 4 Feature 7: Today's Anomaly Alert */}
+      {todayAnomaly && <AnomalyAlert anomaly={todayAnomaly} />}
 
       {/* Stat Cards */}
       <div className="grid grid-4" style={{ marginBottom: 'var(--space-xl)' }}>
@@ -203,6 +224,67 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Phase 2 Feature 3: LLM Plain-Language Weekly Insights */}
+      {weeklyPatterns?.plainInsights?.length > 0 && (
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">🧠 Weekly Observations</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+            {weeklyPatterns.plainInsights.map((insight, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  gap: 'var(--space-sm)',
+                  alignItems: 'flex-start',
+                  padding: 'var(--space-sm) 0',
+                  borderBottom: i < weeklyPatterns.plainInsights.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                }}
+              >
+                <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>
+                  {['💡', '📊', '🎯'][i % 3]}
+                </span>
+                <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                  {insight}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Phase 2 Feature 4: Next-Day Stock Suggestions */}
+      {weeklyPatterns?.stockSuggestions?.length > 0 && (
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">📦 Tomorrow&apos;s Stock Suggestions</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+            {weeklyPatterns.stockSuggestions.map((sug, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: 'var(--space-sm) 0',
+                  borderBottom: '1px solid var(--border-subtle)',
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                    {sug.item}
+                  </span>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 8 }}>
+                    — {sug.suggestion}
+                  </span>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', maxWidth: '40%', textAlign: 'right' }}>
+                  {sug.reason}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Weekly Patterns */}
       {weeklyPatterns && (

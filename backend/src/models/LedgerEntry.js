@@ -31,7 +31,30 @@ const itemSchema = new mongoose.Schema({
     min: 0,
     max: 1,
   },
-}, { _id: false });
+  // Phase 1 & 4: Ambiguity handling & confidence flags
+  isApproximate: {
+    type: Boolean,
+    default: false,
+  },
+  needsConfirmation: {
+    type: Boolean,
+    default: false,
+  },
+  clarificationNeeded: {
+    type: String, // e.g., "Quantity unclear — you said 'some bananas'"
+    default: null,
+  },
+  resolvedValue: {
+    type: mongoose.Schema.Types.Mixed, // vendor-corrected value
+    default: null,
+  },
+  // Phase 4 Feature 8: Word-level audio mapping
+  audioTimestamp: {
+    startTime: { type: Number, default: null }, // seconds
+    endTime: { type: Number, default: null },   // seconds
+    sourcePhrase: { type: String, default: null }, // original spoken words
+  },
+}, { _id: true });
 
 const expenseSchema = new mongoose.Schema({
   category: {
@@ -63,7 +86,28 @@ const expenseSchema = new mongoose.Schema({
     min: 0,
     max: 1,
   },
-}, { _id: false });
+  isApproximate: {
+    type: Boolean,
+    default: false,
+  },
+  needsConfirmation: {
+    type: Boolean,
+    default: false,
+  },
+  clarificationNeeded: {
+    type: String,
+    default: null,
+  },
+  resolvedValue: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
+  audioTimestamp: {
+    startTime: { type: Number, default: null },
+    endTime: { type: Number, default: null },
+    sourcePhrase: { type: String, default: null },
+  },
+}, { _id: true });
 
 const missedProfitSchema = new mongoose.Schema({
   item: {
@@ -156,9 +200,27 @@ const ledgerEntrySchema = new mongoose.Schema({
     type: String, // path to stored audio file
     default: null,
   },
+  // Phase 4 Feature 8: Store word-level timestamps from transcription
+  wordTimestamps: [{
+    word: String,
+    start: Number,  // seconds
+    end: Number,    // seconds
+  }],
   location: {
     type: locationSchema,
     default: null,
+  },
+  // Phase 4 Feature 7: Anomaly detection flags
+  anomaly: {
+    detected: { type: Boolean, default: false },
+    type: { type: String, enum: ['revenue_high', 'revenue_low', 'expense_high', 'expense_low', null], default: null },
+    message: { type: String, default: null },
+    severity: { type: String, enum: ['info', 'warning', 'alert', null], default: null },
+  },
+  // Phase 4 Feature 6: Overall entry clarification status
+  hasPendingClarifications: {
+    type: Boolean,
+    default: false,
   },
   processingMeta: {
     whisperDuration: Number,   // ms taken by Whisper
@@ -177,11 +239,17 @@ ledgerEntrySchema.index({ vendor: 1, date: -1 });
 ledgerEntrySchema.index({ location: '2dsphere' });
 ledgerEntrySchema.index({ date: -1, 'items.name': 1 }); // for CSI item queries
 
-// ---- Pre-save: compute totals ----
+// ---- Pre-save: compute totals + clarification status ----
 ledgerEntrySchema.pre('save', function (next) {
   this.totalRevenue = this.items.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
   this.totalExpenses = this.expenses.reduce((sum, exp) => sum + (exp.amount || 0), 0);
   this.netProfit = this.totalRevenue - this.totalExpenses;
+
+  // Phase 4: Auto-compute pending clarifications flag
+  const itemNeedsClarification = this.items.some(i => i.needsConfirmation || i.isApproximate);
+  const expenseNeedsClarification = this.expenses.some(e => e.needsConfirmation || e.isApproximate);
+  this.hasPendingClarifications = itemNeedsClarification || expenseNeedsClarification;
+
   next();
 });
 
