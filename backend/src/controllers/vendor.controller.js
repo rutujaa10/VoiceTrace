@@ -10,15 +10,16 @@ const loanService = require('../services/loan.service');
 
 /**
  * POST /api/vendors/register
- * Register new vendor or return existing.
+ * Register a NEW vendor. Returns error if phone already exists.
  */
 const registerVendor = asyncHandler(async (req, res) => {
   const { phone, name, businessCategory, preferredLanguage, latitude, longitude } = req.body;
 
-  let vendor = await User.findOne({ phone });
-
-  if (vendor) {
-    return res.json({ success: true, data: vendor, isNew: false });
+  const existing = await User.findOne({ phone });
+  if (existing) {
+    const err = new Error('Account already exists with this phone number. Please login instead.');
+    err.statusCode = 409;
+    throw err;
   }
 
   const vendorData = {
@@ -36,8 +37,25 @@ const registerVendor = asyncHandler(async (req, res) => {
     };
   }
 
-  vendor = await User.create(vendorData);
+  const vendor = await User.create(vendorData);
   res.status(201).json({ success: true, data: vendor, isNew: true });
+});
+
+/**
+ * POST /api/vendors/login
+ * Login existing vendor by phone. Returns 404 if not found.
+ */
+const loginVendor = asyncHandler(async (req, res) => {
+  const { phone } = req.body;
+
+  const vendor = await User.findOne({ phone });
+  if (!vendor) {
+    const err = new Error('No account found with this phone number. Please register first.');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  res.json({ success: true, data: vendor });
 });
 
 /**
@@ -153,6 +171,7 @@ const getDashboard = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerVendor,
+  loginVendor,
   getVendor,
   updateVendor,
   getLoanScore,

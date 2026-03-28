@@ -22,6 +22,7 @@ const api = axios.create({
 // ---- Vendor APIs ----
 export const vendorAPI = {
   register: (data) => api.post('/vendors/register', data),
+  login: (phone) => api.post('/vendors/login', { phone }),
   get: (id) => api.get(`/vendors/${id}`),
   update: (id, data) => api.put(`/vendors/${id}`, data),
   getLoanScore: (id) => api.get(`/vendors/${id}/loan-score`),
@@ -61,6 +62,9 @@ export const insightAPI = {
     api.get(`/insights/${vendorId}`, { params: type ? { type } : {} }),
   getUnread: (vendorId) => api.get(`/insights/${vendorId}/unread`),
   getWeeklyStory: (vendorId) => api.get(`/insights/${vendorId}/weekly-story`),
+  getSmartInsights: (vendorId) => api.get(`/insights/${vendorId}/smart`, { timeout: 45000 }),
+  getWeatherForecast: (lat, lng) =>
+    api.get('/insights/weather/forecast', { params: { lat, lng } }),
   getCSI: (lat, lng, radius = 2000) =>
     api.get('/insights/csi/area', { params: { lat, lng, radius } }),
   markRead: (insightId) => api.put(`/insights/${insightId}/read`),

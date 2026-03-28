@@ -4,6 +4,8 @@
 
 const Insight = require('../models/Insight');
 const { asyncHandler } = require('../middlewares/errorHandler');
+const { generateSmartInsights } = require('../services/smartInsights.service');
+const weatherService = require('../services/weather.service');
 
 /**
  * GET /api/insights/:vendorId
@@ -19,6 +21,28 @@ const getInsights = asyncHandler(async (req, res) => {
     .lean();
 
   res.json({ success: true, data: insights });
+});
+
+/**
+ * GET /api/insights/:vendorId/smart
+ * Real-time AI insights that work from Day 1
+ */
+const getSmartInsights = asyncHandler(async (req, res) => {
+  const result = await generateSmartInsights(req.params.vendorId);
+  res.json({ success: true, data: result });
+});
+
+/**
+ * GET /api/insights/weather/forecast?lat=X&lng=Y
+ * Direct weather forecast endpoint for frontend geolocation
+ */
+const getWeatherForecast = asyncHandler(async (req, res) => {
+  const { lat, lng } = req.query;
+  const latitude = parseFloat(lat) || 19.076;
+  const longitude = parseFloat(lng) || 72.8777;
+
+  const weather = await weatherService.getWeatherForecast(latitude, longitude);
+  res.json({ success: true, data: weather });
 });
 
 /**
@@ -77,4 +101,5 @@ const markRead = asyncHandler(async (req, res) => {
   res.json({ success: true, data: insight });
 });
 
-module.exports = { getInsights, getUnread, getWeeklyStory, getAreaCSI, markRead };
+module.exports = { getInsights, getSmartInsights, getWeatherForecast, getUnread, getWeeklyStory, getAreaCSI, markRead };
+

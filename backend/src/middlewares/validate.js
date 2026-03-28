@@ -44,6 +44,11 @@ const vendorSchemas = {
     longitude: Joi.number().min(-180).max(180).optional(),
   }),
 
+  login: Joi.object({
+    phone: Joi.string().pattern(/^[+]?[0-9]{10,15}$/).required()
+      .messages({ 'string.pattern.base': 'Phone must be 10-15 digits' }),
+  }),
+
   update: Joi.object({
     name: Joi.string().trim().max(100).optional(),
     businessCategory: Joi.string().valid(
