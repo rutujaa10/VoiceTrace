@@ -19,6 +19,7 @@ import Ledger from './views/Ledger';
 import Insights from './views/Insights';
 import Assistant from './views/Assistant';
 import Login from './views/Login';
+import DailyLogRecorder from './views/DailyLogRecorder';
 import './index.css';
 
 function App() {

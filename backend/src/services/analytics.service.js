@@ -1,13 +1,20 @@
 /**
- * Analytics Service — Advanced Weekly Pattern Detection
+ * Analytics Service — Enhanced Weekly Pattern Detection
  *
- * Queries the last 7 days of ledger data for a vendor and produces:
+ * Phase 2 Features:
+ *  - Feature 3: Weekly pattern detection with LLM plain-language insights
+ *  - Feature 4: Next-day stock suggestions based on sell-through rates
+ *
+ * Queries the last 7 days of ledger data and produces:
  *   1. Best-selling item (by total quantity)
  *   2. Highest revenue day of the week
  *   3. Total missed profits
+ *   4. LLM-generated plain-language observations (2-3 bullets)
+ *   5. Next-day stock suggestions
  */
 
 const LedgerEntry = require('../models/LedgerEntry');
+const { generateWeeklyInsights, generateStockSuggestions } = require('./extraction.service');
 
 const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -15,9 +22,10 @@ const WEEKDAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', '
  * Get weekly analytics for a vendor.
  *
  * @param {ObjectId|string} vendorId
- * @returns {{ bestSeller, peakDay, missedProfits, dailyBreakdown, summary }}
+ * @param {string} language - vendor's preferred language
+ * @returns {{ bestSeller, peakDay, missedProfits, dailyBreakdown, summary, plainInsights, stockSuggestions }}
  */
-const getWeeklyAnalytics = async (vendorId) => {
+const getWeeklyAnalytics = async (vendorId, language = 'hi') => {
   const weekAgo = new Date();
   weekAgo.setDate(weekAgo.getDate() - 7);
   weekAgo.setHours(0, 0, 0, 0);
@@ -43,7 +51,6 @@ const getWeeklyAnalytics = async (vendorId) => {
     });
   });
 
-  // Compute avg price and convert set to count
   const itemList = Object.values(itemMap).map((it) => ({
     name: it.name,
     totalQuantity: it.totalQuantity,
@@ -104,7 +111,7 @@ const getWeeklyAnalytics = async (vendorId) => {
   const totalExpenses = entries.reduce((s, e) => s + (e.totalExpenses || 0), 0);
   const totalProfit = entries.reduce((s, e) => s + (e.netProfit || 0), 0);
 
-  return {
+  const analyticsData = {
     period: { from: weekAgo.toISOString(), to: new Date().toISOString(), days: 7 },
     summary: {
       totalRevenue,
@@ -118,6 +125,36 @@ const getWeeklyAnalytics = async (vendorId) => {
     missedProfits,
     dailyBreakdown,
     topItems: itemList.slice(0, 5),
+  };
+
+  // ---- 4. Phase 2 Feature 3: LLM plain-language insights (if ≥4 days data) ----
+  let plainInsights = [];
+  if (entries.length >= 4) {
+    try {
+      const insightResult = await generateWeeklyInsights(analyticsData, language);
+      plainInsights = insightResult.insights;
+    } catch (err) {
+      console.error('[Analytics] Failed to generate LLM insights:', err.message);
+      plainInsights = ['Keep logging daily — insights get better with more data!'];
+    }
+  } else {
+    plainInsights = [
+      `You've logged ${entries.length} days this week. Log ${4 - entries.length} more to unlock weekly insights!`
+    ];
+  }
+
+  // ---- 5. Phase 2 Feature 4: Next-day stock suggestions ----
+  let stockSuggestions = [];
+  try {
+    stockSuggestions = await generateStockSuggestions(entries, language);
+  } catch (err) {
+    console.error('[Analytics] Failed to generate stock suggestions:', err.message);
+  }
+
+  return {
+    ...analyticsData,
+    plainInsights,
+    stockSuggestions,
   };
 };
 

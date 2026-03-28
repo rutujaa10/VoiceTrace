@@ -37,8 +37,22 @@ app.use(cors({
 }));
 app.use(morgan(env.isDev() ? 'dev' : 'combined'));
 
-// Body parsing — raw body needed for Twilio signature validation
+// ---- Webhook-specific middleware (MUST come before general body parsers) ----
+// Twilio sends form-urlencoded data, not JSON
 app.use('/api/webhook', express.urlencoded({ extended: false }));
+
+// Log incoming webhook requests for debugging
+app.use('/api/webhook', (req, res, next) => {
+  console.log(`[Webhook] ${req.method} ${req.originalUrl}`);
+  console.log(`[Webhook] Content-Type: ${req.headers['content-type']}`);
+  console.log(`[Webhook] User-Agent: ${req.headers['user-agent']}`);
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`[Webhook] Body keys: ${Object.keys(req.body).join(', ')}`);
+  }
+  next();
+});
+
+// General body parsers (for all other routes)
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 

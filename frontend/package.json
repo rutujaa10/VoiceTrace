@@ -11,6 +11,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.2.2",
+    "@vapi-ai/web": "^2.5.2",
     "axios": "^1.7.0",
     "chart.js": "^4.4.0",
     "clsx": "^2.1.1",
@@ -23,6 +25,7 @@
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^3.5.0"
+    "tailwindcss": "^4.2.2"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.0",

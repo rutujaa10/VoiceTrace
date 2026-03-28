@@ -11,8 +11,21 @@ const env = {
   // Database
   MONGODB_URI: process.env.MONGODB_URI || 'mongodb://localhost:27017/voicetrace',
 
-  // OpenAI
-  OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  // AgentRouter AI (OpenAI-compatible)
+  AI_API_KEY: process.env.AI_API_KEY,
+  AI_BASE_URL: process.env.AI_BASE_URL || 'https://api.agentrouter.org/v1',
+
+  // Grok (xAI) API
+  GROK_API_KEY: process.env.GROK_API_KEY,
+
+  // Gemini API
+  GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+
+  // Groq API (free Whisper transcription)
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+
+  // Local Whisper
+  WHISPER_MODEL: process.env.WHISPER_MODEL || 'base',
 
   // Twilio
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
@@ -44,7 +57,7 @@ const env = {
  */
 const validateEnv = () => {
   const required = ['MONGODB_URI'];
-  const warnings = ['OPENAI_API_KEY', 'TWILIO_ACCOUNT_SID', 'OPENWEATHERMAP_API_KEY'];
+  const warnings = ['AI_API_KEY', 'TWILIO_ACCOUNT_SID', 'OPENWEATHERMAP_API_KEY'];
 
   const missing = required.filter((key) => !env[key]);
   if (missing.length > 0) {

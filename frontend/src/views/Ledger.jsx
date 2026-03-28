@@ -1,10 +1,17 @@
 /**
- * Ledger View — Daily business entries list
+ * Ledger View — Daily business entries list (Enhanced)
+ *
+ * Enhanced with:
+ * - Phase 4 Feature 6: Shows approximate/needsConfirmation badges on items
+ * - Phase 4 Feature 7: Anomaly alert per entry
+ * - Phase 4 Feature 8: Audio playback per item (tap to hear original audio)
  */
 
 import { useEffect, useState } from 'react';
 import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
+import { useAudioPlayback } from '../hooks/useAudioPlayback';
+import AnomalyAlert from '../components/common/AnomalyAlert';
 
 export default function Ledger() {
   const { state } = useApp();
@@ -12,6 +19,7 @@ export default function Ledger() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [expandedEntry, setExpandedEntry] = useState(null);
 
   useEffect(() => {
     if (state.vendorId) fetchEntries();
@@ -57,7 +65,7 @@ export default function Ledger() {
           📒 <span className="gradient-text">Business Ledger</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Your daily sales history
+          Your daily sales history — tap items to hear original audio
         </p>
       </div>
 
@@ -78,65 +86,14 @@ export default function Ledger() {
           {/* Entries as Cards */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
             {entries.map((entry) => (
-              <div key={entry._id} className="glass-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)' }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem' }}>
-                      {formatDate(entry.date)}
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {entry.items?.length || 0} items · {entry.language}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem', color: 'var(--success-400)' }}>
-                      ₹{(entry.totalRevenue || 0).toLocaleString('en-IN')}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                      Profit: ₹{(entry.netProfit || 0).toLocaleString('en-IN')}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Items Preview */}
-                {entry.items && entry.items.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)', marginBottom: 'var(--space-sm)' }}>
-                    {entry.items.slice(0, 5).map((item, i) => (
-                      <span key={i} className="badge badge-info">
-                        {item.name} × {item.quantity}
-                      </span>
-                    ))}
-                    {entry.items.length > 5 && (
-                      <span className="badge badge-info">+{entry.items.length - 5} more</span>
-                    )}
-                  </div>
-                )}
-
-                {/* Missed Profits */}
-                {entry.missedProfits && entry.missedProfits.length > 0 && (
-                  <div style={{ fontSize: '0.78rem', color: 'var(--accent-400)', marginBottom: 'var(--space-sm)' }}>
-                    📉 Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span
-                    className={`badge ${entry.confirmedByVendor ? 'badge-success' : 'badge-warning'}`}
-                  >
-                    {entry.confirmedByVendor ? '✅ Confirmed' : '⏳ Pending'}
-                  </span>
-                  {!entry.confirmedByVendor && (
-                    <button
-                      className="btn btn-primary"
-                      style={{ fontSize: '0.78rem', padding: '6px 12px' }}
-                      onClick={() => handleConfirm(entry._id)}
-                    >
-                      Confirm ✓
-                    </button>
-                  )}
-                </div>
-              </div>
+              <LedgerEntryCard
+                key={entry._id}
+                entry={entry}
+                isExpanded={expandedEntry === entry._id}
+                onToggle={() => setExpandedEntry(expandedEntry === entry._id ? null : entry._id)}
+                onConfirm={() => handleConfirm(entry._id)}
+                formatDate={formatDate}
+              />
             ))}
           </div>
 
@@ -164,6 +121,151 @@ export default function Ledger() {
           )}
         </>
       )}
+    </div>
+  );
+}
+
+/**
+ * LedgerEntryCard — Individual entry with expandable details + audio playback
+ */
+function LedgerEntryCard({ entry, isExpanded, onToggle, onConfirm, formatDate }) {
+  // Phase 4 Feature 8: Audio playback hook for this entry
+  const audioPlayback = useAudioPlayback(entry.audioUrl);
+
+  return (
+    <div className="glass-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
+      {/* Header row */}
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-sm)', cursor: 'pointer' }}
+        onClick={onToggle}
+      >
+        <div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem' }}>
+            {formatDate(entry.date)}
+          </div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            {entry.items?.length || 0} items · {entry.language}
+            {entry.hasPendingClarifications && ' · 🔍 has approx values'}
+            {audioPlayback.hasAudio && ' · 🔊 has audio'}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.2rem', color: 'var(--success-400)' }}>
+            ₹{(entry.totalRevenue || 0).toLocaleString('en-IN')}
+          </div>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
+            Profit: ₹{(entry.netProfit || 0).toLocaleString('en-IN')}
+          </div>
+        </div>
+      </div>
+
+      {/* Phase 4 Feature 7: Anomaly alert */}
+      {entry.anomaly?.detected && <AnomalyAlert anomaly={entry.anomaly} />}
+
+      {/* Items Preview (always show) */}
+      {entry.items && entry.items.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)', marginBottom: 'var(--space-sm)' }}>
+          {entry.items.slice(0, isExpanded ? 999 : 5).map((item, i) => (
+            <span
+              key={i}
+              className={`badge ${item.isApproximate ? 'badge-warning' : item.needsConfirmation ? 'badge-info' : 'badge-info'}`}
+              style={{
+                cursor: audioPlayback.hasAudio && item.audioTimestamp?.startTime != null ? 'pointer' : 'default',
+                background: audioPlayback.currentItemId === `item-${entry._id}-${i}` ? 'rgba(99,102,241,0.3)' : undefined,
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (audioPlayback.hasAudio && item.audioTimestamp?.startTime != null) {
+                  audioPlayback.play(
+                    `item-${entry._id}-${i}`,
+                    item.audioTimestamp.startTime,
+                    item.audioTimestamp.endTime
+                  );
+                }
+              }}
+              title={
+                item.audioTimestamp?.sourcePhrase
+                  ? `🔊 "${item.audioTimestamp.sourcePhrase}"`
+                  : item.clarificationNeeded || `${item.name} × ${item.quantity}`
+              }
+            >
+              {audioPlayback.currentItemId === `item-${entry._id}-${i}` ? '🔊 ' : ''}
+              {item.name} × {item.quantity}
+              {item.isApproximate ? ' ~' : ''}
+              {item.needsConfirmation ? ' ?' : ''}
+            </span>
+          ))}
+          {!isExpanded && entry.items.length > 5 && (
+            <span className="badge badge-info">+{entry.items.length - 5} more</span>
+          )}
+        </div>
+      )}
+
+      {/* Expanded details */}
+      {isExpanded && (
+        <div style={{ marginTop: 'var(--space-sm)', paddingTop: 'var(--space-sm)', borderTop: '1px solid var(--border-subtle)' }}>
+          {/* Expenses */}
+          {entry.expenses?.length > 0 && (
+            <div style={{ marginBottom: 'var(--space-sm)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>💸 Expenses</div>
+              {entry.expenses.map((exp, i) => (
+                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '3px 0' }}>
+                  <span>
+                    {exp.description || exp.category}
+                    {exp.isApproximate && <span style={{ color: 'var(--warning-400)' }}> ~</span>}
+                  </span>
+                  <span style={{ color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Missed Profits */}
+          {entry.missedProfits?.length > 0 && (
+            <div style={{ fontSize: '0.78rem', color: 'var(--accent-400)', marginBottom: 'var(--space-sm)' }}>
+              📉 Missed: {entry.missedProfits.map((mp) => `${mp.item} (~₹${mp.estimatedLoss})`).join(', ')}
+            </div>
+          )}
+
+          {/* Raw Transcript */}
+          {entry.rawTranscript && (
+            <div style={{
+              fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic',
+              background: 'rgba(99,102,241,0.05)', padding: 'var(--space-sm)', borderRadius: 'var(--radius-sm)',
+              marginTop: 'var(--space-xs)', maxHeight: 80, overflowY: 'auto',
+            }}>
+              📝 &quot;{entry.rawTranscript.slice(0, 200)}{entry.rawTranscript.length > 200 ? '...' : ''}&quot;
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--space-sm)' }}>
+        <span
+          className={`badge ${entry.confirmedByVendor ? 'badge-success' : 'badge-warning'}`}
+        >
+          {entry.confirmedByVendor ? '✅ Confirmed' : '⏳ Pending'}
+        </span>
+        <div style={{ display: 'flex', gap: 'var(--space-xs)' }}>
+          {!entry.confirmedByVendor && (
+            <button
+              className="btn btn-primary"
+              style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              onClick={(e) => { e.stopPropagation(); onConfirm(); }}
+            >
+              Confirm ✓
+            </button>
+          )}
+          <button
+            className="btn btn-ghost"
+            style={{ fontSize: '0.75rem', padding: '6px 8px' }}
+            onClick={(e) => { e.stopPropagation(); onToggle(); }}
+          >
+            {isExpanded ? '▲ Less' : '▼ More'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
