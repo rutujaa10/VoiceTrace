@@ -10,7 +10,7 @@ const loanService = require('../services/loan.service');
 
 /**
  * POST /api/vendors/register
- * Register new vendor or return existing.
+ * Register a NEW vendor. Returns error if phone already exists.
  */
 const registerVendor = asyncHandler(async (req, res) => {
   const { phone: rawPhone, name, businessCategory, preferredLanguage, latitude, longitude } = req.body;
@@ -29,17 +29,11 @@ const registerVendor = asyncHandler(async (req, res) => {
   // De-duplicate
   const uniquePhones = [...new Set(possiblePhones)];
 
-  let vendor = await User.findOne({ phone: { $in: uniquePhones } });
-
-  if (vendor) {
-    // If the vendor was created via WhatsApp with a different phone format,
-    // keep their existing phone so ledger entries stay linked.
-    // Update name if provided and vendor doesn't have one yet.
-    if (name && (!vendor.name || vendor.name === '')) {
-      vendor.name = name;
-      await vendor.save();
-    }
-    return res.json({ success: true, data: vendor, isNew: false });
+  const existing = await User.findOne({ phone: { $in: uniquePhones } });
+  if (existing) {
+    const err = new Error('Account already exists with this phone number. Please login instead.');
+    err.statusCode = 409;
+    throw err;
   }
 
   // New user: store with +91 prefix for consistency
@@ -64,8 +58,37 @@ const registerVendor = asyncHandler(async (req, res) => {
     };
   }
 
-  vendor = await User.create(vendorData);
+  const vendor = await User.create(vendorData);
   res.status(201).json({ success: true, data: vendor, isNew: true });
+});
+
+/**
+ * POST /api/vendors/login
+ * Login existing vendor by phone. Returns 404 if not found.
+ */
+const loginVendor = asyncHandler(async (req, res) => {
+  const { phone: rawPhone } = req.body;
+
+  // Normalize phone to match any stored format
+  const phoneDigits = rawPhone.replace(/\D/g, '');
+  const possiblePhones = [
+    rawPhone,
+    phoneDigits,
+    `+${phoneDigits}`,
+    `+91${phoneDigits}`,
+    phoneDigits.replace(/^91/, ''),
+    `+91${phoneDigits.replace(/^91/, '')}`,
+  ];
+  const uniquePhones = [...new Set(possiblePhones)];
+
+  const vendor = await User.findOne({ phone: { $in: uniquePhones } });
+  if (!vendor) {
+    const err = new Error('No account found with this phone number. Please register first.');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  res.json({ success: true, data: vendor });
 });
 
 /**
@@ -181,6 +204,7 @@ const getDashboard = asyncHandler(async (req, res) => {
 
 module.exports = {
   registerVendor,
+  loginVendor,
   getVendor,
   updateVendor,
   getLoanScore,

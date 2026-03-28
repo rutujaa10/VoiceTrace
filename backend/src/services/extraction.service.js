@@ -695,4 +695,5 @@ module.exports = {
   generateWeeklyInsights,
   generateStockSuggestions,
   mapAudioTimestamps,
+  callWithFallback,
 };

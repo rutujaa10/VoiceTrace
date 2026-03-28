@@ -112,6 +112,7 @@ export default function DailyLogRecorder() {
     salesAmount: '',
     expenseAmount: '',
     itemsSold: '',
+    daySummary: '',
   });
 
   // Full extraction result from backend
@@ -170,6 +171,7 @@ export default function DailyLogRecorder() {
               salesAmount: String(args.salesAmount ?? ''),
               expenseAmount: String(args.expenseAmount ?? ''),
               itemsSold: String(args.itemsSold ?? ''),
+              daySummary: String(args.daySummary ?? ''),
             });
 
             setTimeout(() => {
@@ -233,23 +235,50 @@ export default function DailyLogRecorder() {
           messages: [
             {
               role: 'system',
-              content: `You are a friendly voice assistant for Indian street vendors using VoiceTrace. You speak in Hinglish (mix of Hindi and English). Be warm, patient, and encouraging.
+              content: `You are a warm, friendly AI assistant for Indian street vendors using VoiceTrace app. You speak in Hinglish (Hindi-English mix) with a casual, encouraging tone.
 
-YOUR GOAL: Extract exactly 3 pieces of data by asking one question at a time:
-1. salesAmount (number) — Total sales in rupees
-2. expenseAmount (number) — Total expenses in rupees  
-3. itemsSold (string) — What items were sold today
+CRITICAL LANGUAGE RULE:
+- You ALWAYS speak and ask questions in Hinglish.
+- The user can answer in ANY language — Hindi, English, Hinglish, Marathi, or any mix. You MUST understand and accept their answer regardless of language.
+- Never ask the user to repeat in a specific language. Just extract the data from whatever they say.
 
-FLOW:
-- Greet warmly, then ask: "Aaj ki total bikri kitni rahi? Rupees mein batao."
-- After getting sales, ask: "Bahut badhiya! Aur aaj ka total kharcha kitna hua?"
-- After getting expenses, ask: "Achha! Ab bataiye aaj kya kya becha? Items ke naam bata do."
-- After getting all 3, IMMEDIATELY call submit_ledger_data with the data. Say: "Shukriya! Main aapka data save kar raha hoon."
+YOUR GOAL: Ask exactly 3 questions, ONE AT A TIME, in this exact order:
 
-VALIDATION:
-- If user says something that is NOT a number for sales or expenses, say: "Woh samajh nahi aaya, rupees mein kitna? Jaise 500 ya 1000."
-- If user says gibberish for items, say: "Kya kya items beche aaj? Jaise samosa, chai, juice."
-- Be patient — ask up to 2 times before moving on with a reasonable estimate.`,
+QUESTION 1 — WHAT DID YOU SELL?
+Ask: "Aaj aapne kya kya becha? Items ke naam aur kitne mein beche woh batao."
+Extract: itemsSold (string — item names), salesAmount (number — total sales in ₹)
+Example answers you should accept:
+- "Maine samose beche 500 rupay ke, aur chai 300 ki" → items: samosa, chai | sales: 800
+- "I sold 50 samosas at 10 each and tea for 300" → items: samosa, tea | sales: 800
+- "samosa 500, chai 300" → items: samosa, chai | sales: 800
+
+QUESTION 2 — WHAT DID YOU SPEND?
+Ask: "Badhiya! Ab batao aaj kya kya kharcha hua? Kitne rupaye lage?"
+Extract: expenseAmount (number — total expenses in ₹), expenseDetails (string)
+Example answers:
+- "200 ka tel liya aur 100 ka maida" → expenses: 300 | details: oil, flour
+- "I spent 500 on raw materials" → expenses: 500 | details: raw materials
+- "kuch nahi kharcha" → expenses: 0
+
+QUESTION 3 — HOW WAS THE DAY?
+Ask: "Achha! Aur overall aaj ka din kaisa raha? Koi item khatam ho gaya ya kuch special hua?"
+Extract: daySummary (string — any missed profits, stockouts, or general feedback)
+Example answers:
+- "Samose 3 baje khatam ho gaye, nahi toh aur bik jaate" → missed: samosa sold out at 3pm
+- "Good day, everything sold well" → summary: good day
+- "Bohot slow tha aaj" → summary: slow day
+
+AFTER ALL 3 QUESTIONS:
+- IMMEDIATELY call submit_ledger_data with ALL the collected data.
+- Say: "Shukriya! Aapka poora din ka hisaab save ho raha hai. Kal bhi batana!"
+- Calculate salesAmount by adding up all item prices mentioned.
+
+IMPORTANT RULES:
+- Ask ONLY ONE question at a time. Wait for the answer before asking the next.
+- Be patient and encouraging after each answer — say things like "Bahut badhiya!", "Achha!", "Wah!"
+- If the user's answer is unclear, gently ask for clarification ONCE, then move on with your best estimate.
+- NEVER skip a question. Always ask all 3.
+- Accept numbers in any format: "500", "paanch sau", "five hundred", "5 hundred" — all are valid.`,
             },
           ],
           tools: [
@@ -257,13 +286,14 @@ VALIDATION:
               type: 'function',
               function: {
                 name: 'submit_ledger_data',
-                description: 'Submit the daily ledger data once all 3 fields (salesAmount, expenseAmount, itemsSold) are captured.',
+                description: 'Submit the complete daily ledger data after all 3 questions are answered. Call this ONLY after collecting items sold, expenses, and day summary.',
                 parameters: {
                   type: 'object',
                   properties: {
-                    salesAmount: { type: 'number', description: 'Total sales amount in rupees' },
-                    expenseAmount: { type: 'number', description: 'Total expense amount in rupees' },
-                    itemsSold: { type: 'string', description: 'Comma-separated list of items sold' },
+                    salesAmount: { type: 'number', description: 'Total sales/revenue in rupees, calculated by adding up all items sold' },
+                    expenseAmount: { type: 'number', description: 'Total expenses in rupees' },
+                    itemsSold: { type: 'string', description: 'Comma-separated list of items sold with quantities if mentioned' },
+                    daySummary: { type: 'string', description: 'How the day went — any missed profits, stockouts, or general feedback from the vendor' },
                   },
                   required: ['salesAmount', 'expenseAmount', 'itemsSold'],
                 },
@@ -272,10 +302,10 @@ VALIDATION:
           ],
         },
         voice: {
-          provider: '11labs',
-          voiceId: 'sarah',
+          provider: 'azure',
+          voiceId: 'en-IN-PrabhatNeural',
         },
-        firstMessage: 'Namaste! Main aapka VoiceTrace assistant hoon. Chaliye aaj ka hisaab likhte hain! Sabse pehle bataaiye — aaj ki total bikri kitni rahi rupees mein?',
+        firstMessage: 'Namaste! Main aapka VoiceTrace assistant hoon. Chaliye aaj ka hisaab likhte hain! Sabse pehle bataaiye — aaj aapne kya kya becha aur kitne mein becha?',
       });
     } catch (err) {
       console.error('[Vapi] Start error:', err);
@@ -332,6 +362,7 @@ VALIDATION:
         salesAmount: String(totalSales),
         expenseAmount: String(totalExpenses),
         itemsSold: itemNames || '',
+        daySummary: '',
       });
 
       if (data.loanReadiness) {
@@ -361,7 +392,8 @@ VALIDATION:
     try {
       if (mode === 'vapi') {
         // Vapi mode: submit as text to backend
-        const transcript = `Aaj ki bikri ${formData.salesAmount} rupees. Kharcha ${formData.expenseAmount} rupees. Items: ${formData.itemsSold}.`;
+        const summaryPart = formData.daySummary ? ` Din kaisa raha: ${formData.daySummary}.` : '';
+        const transcript = `Aaj ki bikri ${formData.salesAmount} rupees. Kharcha ${formData.expenseAmount} rupees. Items: ${formData.itemsSold}.${summaryPart}`;
         const res = await ledgerAPI.submitText(state.vendorId, transcript, 'hi');
 
         if (res.data.data?.loanReadiness) {
@@ -382,7 +414,7 @@ VALIDATION:
   const handleReset = () => {
     setPhase('idle');
     setMode('choose');
-    setFormData({ salesAmount: '', expenseAmount: '', itemsSold: '' });
+    setFormData({ salesAmount: '', expenseAmount: '', itemsSold: '', daySummary: '' });
     setExtractionResult(null);
     setMessages([]);
     setError('');

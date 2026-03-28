@@ -27,6 +27,8 @@ export default function Dashboard() {
   const [recentInsights, setRecentInsights] = useState([]);
   const [weeklyPatterns, setWeeklyPatterns] = useState(null);
   const [todayAnomaly, setTodayAnomaly] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
+  const [smartTips, setSmartTips] = useState([]);
 
   useEffect(() => {
     if (!state.vendorId) return;
@@ -57,6 +59,36 @@ export default function Dashboard() {
       // Phase 4 Feature 7: Check today's entry for anomalies
       if (todayRes?.data?.data?.anomaly?.detected) {
         setTodayAnomaly(todayRes.data.data.anomaly);
+      }
+
+      // Fetch AI Insights for dashboard box
+      try {
+        const [smartRes, weatherRes] = await Promise.all([
+          insightAPI.getSmartInsights(state.vendorId).catch(() => null),
+          insightAPI.getWeatherForecast().catch(() => null),
+        ]);
+
+        if (weatherRes?.data?.data) {
+          const w = weatherRes.data.data;
+          const temp = Math.round(w.temperature || w.temp || 28);
+          const condition = w.condition || w.description || 'Clear';
+          const icon = condition.toLowerCase().includes('rain') ? '🌧️'
+            : condition.toLowerCase().includes('cloud') ? '☁️'
+            : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
+          const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
+          setWeatherData({ temp, condition, icon, advice });
+        }
+
+        if (smartRes?.data?.data?.insights) {
+          const tips = smartRes.data.data.insights
+            .filter(i => i.type !== 'welcome')
+            .slice(0, 3)
+            .map(i => i.title + (i.subtitle ? ' — ' + i.subtitle : ''));
+          setSmartTips(tips);
+        }
+      } catch (e) {
+        // Non-critical — dashboard still works without insights
+        console.warn('Smart insights fetch (non-critical):', e);
       }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
@@ -132,46 +164,112 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Main Content: Gauge + Quick Actions + Insights */}
+      {/* Main Content: AI Insights + Quick Actions */}
       <div className="grid grid-2" style={{ marginBottom: 'var(--space-xl)' }}>
-        {/* Loan Readiness Gauge */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
+        {/* AI Insights Summary Box */}
+        <div
+          className="glass-card"
+          id="dashboard-insights-box"
+          style={{
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(16, 185, 129, 0.04))',
+            borderLeft: '3px solid var(--primary-500)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-md)',
+          }}
+        >
           <h2 className="section-title" style={{ marginBottom: 0 }}>
-            🎯 Micro-Loan Readiness
+            💡 AI Insights
           </h2>
-          <LoanGauge
-            score={loan.score || 0}
-            isReady={loan.isLoanReady || false}
-            streak={loan.streak || 0}
-          />
 
-          {/* Score Breakdown */}
-          <div style={{ width: '100%', marginTop: 'var(--space-sm)' }}>
-            {loan.breakdown && Object.entries(loan.breakdown).map(([key, val]) => (
-              <div
-                key={key}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '0.78rem',
-                  color: 'var(--text-secondary)',
-                  padding: '4px 0',
-                  borderBottom: '1px solid var(--border-subtle)',
-                }}
-              >
-                <span>{formatBreakdownLabel(key)}</span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
-                  {Math.round(val * 10) / 10}
-                </span>
+          {/* Weather Preview */}
+          {weatherData ? (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-md)',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <div style={{ fontSize: '2.2rem' }}>
+                {weatherData.icon === '🌧️' ? '🌧️' :
+                 weatherData.icon === '☁️' ? '☁️' :
+                 weatherData.icon === '❄️' ? '❄️' : '☀️'}
               </div>
-            ))}
-          </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                  Tomorrow: {weatherData.temp}°C {weatherData.condition}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 2 }}>
+                  {weatherData.advice}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-subtle)',
+              }}
+            >
+              <span style={{ fontSize: '1.5rem' }}>🌤️</span>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                Loading weather forecast...
+              </div>
+            </div>
+          )}
+
+          {/* Quick Smart Tips */}
+          {smartTips.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
+              {smartTips.slice(0, 3).map((tip, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--space-sm)',
+                    alignItems: 'flex-start',
+                    padding: '6px 0',
+                    borderBottom: i < Math.min(smartTips.length, 3) - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  }}
+                >
+                  <span style={{ fontSize: '0.82rem', flexShrink: 0 }}>
+                    {['🎯', '📊', '💡'][i % 3]}
+                  </span>
+                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {tip}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+              Log your first day to unlock personalized insights!
+            </div>
+          )}
+
+          <Link
+            to="/app/insights"
+            className="btn btn-primary"
+            style={{ fontSize: '0.82rem', textDecoration: 'none', textAlign: 'center', marginTop: 'auto' }}
+          >
+            View Full Insights →
+          </Link>
         </div>
 
         {/* Quick Actions + Record CTA */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
           {/* Record CTA */}
-          <Link to="/record" style={{ textDecoration: 'none' }}>
+          <Link to="/app/record" style={{ textDecoration: 'none' }}>
             <div
               className="glass-card"
               style={{
@@ -398,12 +496,12 @@ export default function Dashboard() {
 
       {/* Recent Insights */}
       {recentInsights.length > 0 && (
-        <div>
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
             <h2 className="section-title" style={{ margin: 0 }}>
               💡 Latest Insights
             </h2>
-            <Link to="/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
+            <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
               View All →
             </Link>
           </div>
@@ -414,6 +512,40 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Micro-Loan Readiness (moved to bottom) */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
+        <h2 className="section-title" style={{ marginBottom: 0 }}>
+          🎯 Micro-Loan Readiness
+        </h2>
+        <LoanGauge
+          score={loan.score || 0}
+          isReady={loan.isLoanReady || false}
+          streak={loan.streak || 0}
+        />
+
+        {/* Score Breakdown */}
+        <div style={{ width: '100%', marginTop: 'var(--space-sm)' }}>
+          {loan.breakdown && Object.entries(loan.breakdown).map(([key, val]) => (
+            <div
+              key={key}
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '0.78rem',
+                color: 'var(--text-secondary)',
+                padding: '4px 0',
+                borderBottom: '1px solid var(--border-subtle)',
+              }}
+            >
+              <span>{formatBreakdownLabel(key)}</span>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                {Math.round(val * 10) / 10}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 

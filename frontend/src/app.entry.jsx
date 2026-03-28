@@ -46,6 +46,7 @@ function App() {
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="record" element={<Record />} />
+              <Route path="daily-log" element={<DailyLogRecorder />} />
               <Route path="ledger" element={<Ledger />} />
               <Route path="insights" element={<Insights />} />
               <Route path="assistant" element={<Assistant />} />

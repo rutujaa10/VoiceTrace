@@ -7,8 +7,11 @@ const router = express.Router();
 const vendorController = require('../controllers/vendor.controller');
 const { validate, vendorSchemas } = require('../middlewares/validate');
 
-// POST /api/vendors/register — Register or find existing vendor
+// POST /api/vendors/register — Register a new vendor
 router.post('/register', validate(vendorSchemas.register), vendorController.registerVendor);
+
+// POST /api/vendors/login — Login existing vendor by phone
+router.post('/login', validate(vendorSchemas.login), vendorController.loginVendor);
 
 // GET /api/vendors/:id — Get vendor profile
 router.get('/:id', vendorController.getVendor);
