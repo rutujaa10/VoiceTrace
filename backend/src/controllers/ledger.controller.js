@@ -4,6 +4,7 @@
 
 const LedgerEntry = require('../models/LedgerEntry');
 const User = require('../models/User');
+const Item = require('../models/Item');
 const { asyncHandler } = require('../middlewares/errorHandler');
 const whisperService = require('../services/whisper.service');
 const extractionService = require('../services/extraction.service');
@@ -68,6 +69,9 @@ const processAudio = asyncHandler(async (req, res) => {
   }
 
   await entry.save();
+
+  // Upsert items into the auto-updated catalog
+  await Item.upsertFromExtraction(vendor._id, extraction.items, today);
 
   // Update loan score
   vendor.updateStreak(today);
@@ -159,4 +163,80 @@ const getTodayEntry = asyncHandler(async (req, res) => {
   res.json({ success: true, data: entry });
 });
 
-module.exports = { processAudio, getEntries, getSummary, confirmEntry, getTodayEntry };
+/**
+ * POST /api/ledger/:vendorId/text — Process pre-transcribed text (from Web Speech API)
+ */
+const processText = asyncHandler(async (req, res) => {
+  const vendor = await User.findById(req.params.vendorId);
+  if (!vendor) {
+    const err = new Error('Vendor not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const { transcript, language } = req.body;
+  if (!transcript || transcript.trim().length === 0) {
+    const err = new Error('Transcript is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Extract entities (same LLM call, but no Whisper cost)
+  const extraction = await extractionService.extractEntities(
+    transcript.trim(),
+    vendor.businessCategory,
+    language || vendor.preferredLanguage
+  );
+
+  // Create/append to today's entry
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let entry = await LedgerEntry.findOne({ vendor: vendor._id, date: { $gte: today } });
+
+  if (entry) {
+    entry.items.push(...extraction.items);
+    entry.expenses.push(...extraction.expenses);
+    entry.missedProfits.push(...extraction.missedProfits);
+    entry.rawTranscript += '\n---\n' + transcript.trim();
+  } else {
+    entry = new LedgerEntry({
+      vendor: vendor._id,
+      date: today,
+      rawTranscript: transcript.trim(),
+      language: language || vendor.preferredLanguage,
+      items: extraction.items,
+      expenses: extraction.expenses,
+      missedProfits: extraction.missedProfits,
+      source: 'web_speech_api',
+      location: vendor.location,
+      processingMeta: {
+        llmModel: extraction.model,
+        llmTokensUsed: extraction.tokensUsed,
+        processedAt: new Date(),
+      },
+    });
+  }
+
+  await entry.save();
+
+  // Upsert items into catalog
+  await Item.upsertFromExtraction(vendor._id, extraction.items, today);
+
+  // Update loan score
+  vendor.updateStreak(today);
+  await loanService.recalculateScore(vendor);
+  await vendor.save();
+
+  res.status(201).json({
+    success: true,
+    data: {
+      entry,
+      extraction,
+      loanReadiness: vendor.loanReadiness,
+    },
+  });
+});
+
+module.exports = { processAudio, processText, getEntries, getSummary, confirmEntry, getTodayEntry };
+

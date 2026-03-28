@@ -35,6 +35,8 @@ export const ledgerAPI = {
       timeout: 60000, // audio processing can take time
     });
   },
+  submitText: (vendorId, transcript, language = 'hi') =>
+    api.post(`/ledger/${vendorId}/text`, { transcript, language }),
   getEntries: (vendorId, params = {}) =>
     api.get(`/ledger/${vendorId}`, { params }),
   getSummary: (vendorId, days = 30) =>

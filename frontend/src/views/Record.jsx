@@ -1,36 +1,101 @@
 /**
- * Record View — Big microphone button for voice recording
+ * Record View — Voice-to-Ledger with dual mode
+ *
+ * Mode 1 (default): Web Speech API — free, real-time browser transcription
+ * Mode 2 (fallback): Audio Recording → Whisper — better accuracy, costs per call
  *
  * Features:
- * - Massive mic button with pulse animation when recording
+ * - Massive mic button with pulse animation when active
+ * - Live transcript preview (Web Speech mode)
+ * - Language toggle (Hindi / English)
  * - Timer display
- * - Auto-upload on stop
+ * - Auto-process on stop
  * - Shows extracted data after processing
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useApp, actionTypes } from '../state/AppContext';
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { ledgerAPI } from '../api';
 
+const LANGUAGES = [
+  { code: 'hi-IN', label: '🇮🇳 Hindi', short: 'hi' },
+  { code: 'en-IN', label: '🇬🇧 English', short: 'en' },
+];
+
 export default function Record() {
   const { state, dispatch } = useApp();
+
+  // Mode toggle
+  const [mode, setMode] = useState('speech'); // 'speech' | 'audio'
+  const [lang, setLang] = useState(LANGUAGES[0]);
+
+  // Web Speech API hook
+  const speech = useVoiceRecorder({ lang: lang.code, maxDurationSeconds: 180 });
+
+  // Audio recording fallback hook
   const recorder = useAudioRecorder(180);
+
+  // Shared UI state
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
-  const handleToggleRecording = () => {
-    if (recorder.isRecording) {
-      recorder.stopRecording();
+  const isActive = mode === 'speech' ? speech.isListening : recorder.isRecording;
+
+  // ---- Handle mic button ----
+  const handleToggle = useCallback(() => {
+    setError('');
+
+    if (mode === 'speech') {
+      if (speech.isListening) {
+        speech.stopListening();
+      } else {
+        setResult(null);
+        speech.startListening();
+      }
     } else {
-      setResult(null);
-      setError('');
-      recorder.startRecording();
+      if (recorder.isRecording) {
+        recorder.stopRecording();
+      } else {
+        setResult(null);
+        recorder.startRecording();
+      }
+    }
+  }, [mode, speech, recorder]);
+
+  // ---- Submit transcript (Web Speech mode) ----
+  const handleSubmitText = async () => {
+    if (!speech.hasTranscript) return;
+
+    setProcessing(true);
+    setError('');
+    try {
+      const res = await ledgerAPI.submitText(
+        state.vendorId,
+        speech.transcript,
+        lang.short
+      );
+      setResult(res.data.data);
+
+      if (res.data.data.loanReadiness) {
+        dispatch({
+          type: actionTypes.SET_LOAN_SCORE,
+          payload: res.data.data.loanReadiness,
+        });
+      }
+
+      speech.resetTranscript();
+    } catch (err) {
+      setError(err.response?.data?.error?.message || 'Processing failed. Please try again.');
+    } finally {
+      setProcessing(false);
     }
   };
 
-  const handleUpload = async () => {
+  // ---- Upload audio blob (Whisper mode) ----
+  const handleUploadAudio = async () => {
     if (!recorder.audioBlob) return;
 
     setProcessing(true);
@@ -39,7 +104,6 @@ export default function Record() {
       const res = await ledgerAPI.uploadAudio(state.vendorId, recorder.audioBlob);
       setResult(res.data.data);
 
-      // Update loan score in global state
       if (res.data.data.loanReadiness) {
         dispatch({
           type: actionTypes.SET_LOAN_SCORE,
@@ -55,8 +119,24 @@ export default function Record() {
     }
   };
 
+  // ---- Reset everything ----
+  const handleDiscard = () => {
+    if (mode === 'speech') {
+      speech.resetTranscript();
+    } else {
+      recorder.resetRecording();
+    }
+    setResult(null);
+    setError('');
+  };
+
+  const hasData = mode === 'speech' ? speech.hasTranscript : !!recorder.audioBlob;
+  const formattedTime = mode === 'speech' ? speech.formattedTime : recorder.formattedTime;
+  const hookError = mode === 'speech' ? speech.error : recorder.error;
+
   return (
     <div className="stagger-children">
+      {/* Header */}
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <h1
           style={{
@@ -68,8 +148,79 @@ export default function Record() {
           🎙️ <span className="gradient-text">Record Sales</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Tap the mic and speak naturally — Hindi, English, or Hinglish
+          Speak naturally — Hindi, English, or Hinglish
         </p>
+      </div>
+
+      {/* Mode + Language Toggles */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 'var(--space-md)',
+          marginBottom: 'var(--space-lg)',
+          flexWrap: 'wrap',
+        }}
+      >
+        {/* Mode toggle */}
+        <div
+          className="glass-card"
+          style={{
+            display: 'inline-flex',
+            padding: '4px',
+            borderRadius: 'var(--radius-lg)',
+            gap: '2px',
+          }}
+        >
+          <button
+            className={`btn btn-sm ${mode === 'speech' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => { setMode('speech'); handleDiscard(); }}
+            disabled={isActive}
+            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+          >
+            ⚡ Live Speech
+          </button>
+          <button
+            className={`btn btn-sm ${mode === 'audio' ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => { setMode('audio'); handleDiscard(); }}
+            disabled={isActive}
+            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+          >
+            🎵 Audio Upload
+          </button>
+        </div>
+
+        {/* Language toggle (Speech mode only) */}
+        {mode === 'speech' && (
+          <div
+            className="glass-card"
+            style={{
+              display: 'inline-flex',
+              padding: '4px',
+              borderRadius: 'var(--radius-lg)',
+              gap: '2px',
+            }}
+          >
+            {LANGUAGES.map((l) => (
+              <button
+                key={l.code}
+                className={`btn btn-sm ${lang.code === l.code ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setLang(l)}
+                disabled={speech.isListening}
+                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Mode info badge */}
+        <span
+          className={`badge ${mode === 'speech' ? 'badge-success' : 'badge-warning'}`}
+          style={{ alignSelf: 'center', fontSize: '0.7rem' }}
+        >
+          {mode === 'speech' ? '💸 Free — Browser STT' : '🤖 Whisper API — Higher accuracy'}
+        </span>
       </div>
 
       {/* Mic Button Area */}
@@ -86,45 +237,77 @@ export default function Record() {
         {/* Big Mic Button */}
         <button
           id="mic-record-btn"
-          className={`mic-btn ${recorder.isRecording ? 'recording' : ''}`}
-          onClick={handleToggleRecording}
+          className={`mic-btn ${isActive ? 'recording' : ''}`}
+          onClick={handleToggle}
           disabled={processing}
-          aria-label={recorder.isRecording ? 'Stop recording' : 'Start recording'}
+          aria-label={isActive ? 'Stop recording' : 'Start recording'}
         >
-          {recorder.isRecording ? '⏹️' : '🎙️'}
+          {isActive ? '⏹️' : '🎙️'}
         </button>
 
         {/* Timer */}
         <div style={{ marginTop: 'var(--space-lg)', textAlign: 'center' }}>
-          {recorder.isRecording ? (
+          {isActive ? (
             <>
-              <div className="mic-timer">{recorder.formattedTime}</div>
+              <div className="mic-timer">{formattedTime}</div>
               <div className="mic-status" style={{ color: 'var(--danger-400)' }}>
-                🔴 Recording... Tap to stop
+                🔴 {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
               </div>
             </>
           ) : (
             <div className="mic-status">
-              {recorder.audioBlob
-                ? `✅ Recorded ${recorder.formattedTime} — Ready to upload`
-                : 'Tap the mic to start recording'}
+              {hasData
+                ? mode === 'speech'
+                  ? `✅ Transcribed ${formattedTime} — Ready to process`
+                  : `✅ Recorded ${formattedTime} — Ready to upload`
+                : `Tap the mic to start ${mode === 'speech' ? 'listening' : 'recording'}`}
             </div>
           )}
         </div>
 
-        {/* Upload Button */}
-        {recorder.audioBlob && !recorder.isRecording && !processing && (
+        {/* Live Transcript Preview (Speech mode) */}
+        {mode === 'speech' && (speech.isListening || speech.hasTranscript) && (
+          <div
+            style={{
+              marginTop: 'var(--space-lg)',
+              width: '100%',
+              padding: 'var(--space-md)',
+              background: 'rgba(99, 102, 241, 0.08)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-subtle)',
+              maxHeight: '150px',
+              overflowY: 'auto',
+              fontSize: '0.88rem',
+              lineHeight: 1.6,
+            }}
+          >
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: 6 }}>
+              📝 Live Transcript
+            </div>
+            <span style={{ color: 'var(--text-primary)' }}>{speech.transcript}</span>
+            {speech.interimText && (
+              <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                {' '}{speech.interimText}
+              </span>
+            )}
+            {!speech.transcript && !speech.interimText && (
+              <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                Waiting for speech...
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        {hasData && !isActive && !processing && (
           <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-lg)' }}>
-            <button className="btn btn-primary btn-lg" onClick={handleUpload}>
-              🚀 Process Recording
-            </button>
             <button
-              className="btn btn-secondary btn-lg"
-              onClick={() => {
-                recorder.resetRecording();
-                setResult(null);
-              }}
+              className="btn btn-primary btn-lg"
+              onClick={mode === 'speech' ? handleSubmitText : handleUploadAudio}
             >
+              🚀 {mode === 'speech' ? 'Process Text' : 'Process Recording'}
+            </button>
+            <button className="btn btn-secondary btn-lg" onClick={handleDiscard}>
               🗑️ Discard
             </button>
           </div>
@@ -141,13 +324,15 @@ export default function Record() {
           >
             <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚙️</div>
             <p style={{ marginTop: 'var(--space-sm)', fontSize: '0.9rem' }}>
-              Transcribing & extracting business data...
+              {mode === 'speech'
+                ? 'Extracting business data from text...'
+                : 'Transcribing & extracting business data...'}
             </p>
           </div>
         )}
 
         {/* Error */}
-        {(error || recorder.error) && (
+        {(error || hookError) && (
           <div
             style={{
               marginTop: 'var(--space-md)',
@@ -156,12 +341,31 @@ export default function Record() {
               textAlign: 'center',
             }}
           >
-            ❌ {error || recorder.error}
+            ❌ {error || hookError}
+          </div>
+        )}
+
+        {/* Not supported warning */}
+        {mode === 'speech' && !speech.isSupported && (
+          <div
+            style={{
+              marginTop: 'var(--space-md)',
+              padding: 'var(--space-md)',
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              fontSize: '0.82rem',
+              color: 'var(--warning-400)',
+              textAlign: 'center',
+            }}
+          >
+            ⚠️ Web Speech API not supported. Switch to <b>Audio Upload</b> mode
+            or use Chrome / Edge browser.
           </div>
         )}
       </div>
 
-      {/* How It Works */}
+      {/* Tips */}
       {!result && (
         <div className="glass-card">
           <h3 className="section-title">💡 Tips for Best Results</h3>
@@ -290,6 +494,19 @@ export default function Record() {
                 ₹{result.entry?.netProfit || 0}
               </div>
             </div>
+          </div>
+
+          {/* Record another */}
+          <div style={{ textAlign: 'center', marginTop: 'var(--space-lg)' }}>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setResult(null);
+                setError('');
+              }}
+            >
+              🎙️ Record Another
+            </button>
           </div>
         </div>
       )}

@@ -140,45 +140,214 @@ const sanitizeMissedProfit = (mp) => ({
 });
 
 /**
- * Mock extraction for development without API key.
+ * Classify intent: is the vendor logging sales or asking a question?
+ *
+ * Uses a fast, cheap LLM call (low max_tokens, temperature 0).
+ * Returns: { intent: 'logging' | 'query', confidence: number }
  */
-const getMockExtraction = (transcript) => {
-  const lower = transcript.toLowerCase();
-  const items = [];
-  const expenses = [];
-  const missedProfits = [];
+const classifyIntent = async (transcript, language = 'hi') => {
+  if (!openai) {
+    console.warn('[Intent] OpenAI not configured. Defaulting to "logging".');
+    return getMockIntent(transcript);
+  }
 
-  // Simple keyword-based mock
-  if (lower.includes('samosa') || lower.includes('samose')) {
-    items.push({ name: 'samosa', quantity: 50, unitPrice: 10, totalPrice: 500, confidence: 0.9 });
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an intent classifier for an Indian street vendor voice assistant.
+Classify the vendor's spoken transcript into exactly ONE intent:
+
+- "logging" — The vendor is reporting sales, expenses, items sold, or stock information.
+  Examples: "Aaj 50 samose beche", "200 ka tel kharida", "chai bechke 500 aaye", "samose khatam ho gaye"
+
+- "query" — The vendor is ASKING a question about their business data, past sales, profits, or insights.
+  Examples: "Kal kitna kamaya?", "Is hafte ka total kya hai?", "Mera loan score kya hai?",
+  "Sabse zyada kya bikta hai?", "How much did I earn yesterday?", "What is my profit this week?"
+
+CRITICAL RULES:
+- If the vendor is TELLING you what they sold/spent → "logging"
+- If the vendor is ASKING you about their data → "query"
+- When in doubt, default to "logging"
+- Respond ONLY with valid JSON: {"intent": "logging" or "query", "confidence": 0.0-1.0}`,
+        },
+        {
+          role: 'user',
+          content: `TRANSCRIPT (${language}):\n"${transcript}"`,
+        },
+      ],
+      temperature: 0,
+      max_tokens: 50,
+      response_format: { type: 'json_object' },
+    });
+
+    const content = response.choices[0].message.content;
+    const parsed = JSON.parse(content);
+
+    return {
+      intent: parsed.intent === 'query' ? 'query' : 'logging',
+      confidence: Math.min(1, Math.max(0, Number(parsed.confidence) || 0.8)),
+    };
+  } catch (error) {
+    console.error('[Intent] Classification error:', error.message);
+    return { intent: 'logging', confidence: 0.5 };
   }
-  if (lower.includes('chai')) {
-    items.push({ name: 'chai', quantity: 100, unitPrice: 10, totalPrice: 1000, confidence: 0.8 });
+};
+
+/**
+ * Mock intent classifier for dev without API key.
+ */
+const getMockIntent = (transcript) => {
+  const lower = transcript.toLowerCase();
+  const queryKeywords = [
+    'kitna', 'kितना', 'kya hai', 'kya hua', 'how much', 'how many',
+    'total', 'score', 'profit', 'kamai', 'kamaya', 'munafa',
+    'yesterday', 'kal', 'last week', 'is hafte', 'sabse zyada',
+    'average', 'loan', '?',
+  ];
+
+  const isQuery = queryKeywords.some((kw) => lower.includes(kw));
+  return {
+    intent: isQuery ? 'query' : 'logging',
+    confidence: 0.7,
+  };
+};
+
+/**
+ * Answer a vendor's business query using their recent data as context.
+ *
+ * @param {string} transcript — The vendor's question
+ * @param {Object} vendorContext — { name, category, language, loanScore, streak }
+ * @param {Object} weekData — 7-day aggregated data { entries[], summary }
+ * @returns {{ answer: string, tokensUsed: number }}
+ */
+const answerQuery = async (transcript, vendorContext, weekData) => {
+  if (!openai) {
+    console.warn('[Query] OpenAI not configured. Returning mock answer.');
+    return getMockQueryAnswer(transcript, vendorContext, weekData);
   }
-  if (lower.includes('tel') || lower.includes('oil')) {
-    expenses.push({ category: 'raw_material', amount: 200, description: 'cooking oil', confidence: 0.9 });
+
+  try {
+    // Build the data context string for the LLM
+    const dataContext = buildDataContext(vendorContext, weekData);
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a friendly, helpful business assistant for Indian street vendors.
+A vendor is asking a question about their business. Answer using ONLY the data provided below.
+
+RULES:
+1. Respond in ${vendorContext.language === 'en' ? 'English' : 'Hindi/Hinglish (use Roman Hindi, NOT Devanagari)'}.
+2. Keep your answer SHORT — max 4-5 lines. Vendors read on WhatsApp.
+3. Use ₹ symbol for currency and round numbers.
+4. Be warm and encouraging. Use emojis sparingly (1-2 per message).
+5. If you don't have the data to answer, say so honestly.
+6. Never make up numbers. Only use what's in the context below.
+
+VENDOR DATA CONTEXT:
+${dataContext}`,
+        },
+        {
+          role: 'user',
+          content: `VENDOR'S QUESTION:\n"${transcript}"`,
+        },
+      ],
+      temperature: 0.5,
+      max_tokens: 300,
+    });
+
+    return {
+      answer: response.choices[0].message.content.trim(),
+      tokensUsed: response.usage?.total_tokens || 0,
+    };
+  } catch (error) {
+    console.error('[Query] Answer generation error:', error.message);
+    return {
+      answer: vendorContext.language === 'en'
+        ? '❌ Sorry, I could not process your question right now. Please try again.'
+        : '❌ Maaf kijiye, abhi aapka sawaal process nahi ho paya. Dobara try karein.',
+      tokensUsed: 0,
+    };
   }
-  if (lower.includes('khatam')) {
-    missedProfits.push({
-      item: 'samosa',
-      estimatedLoss: 200,
-      triggerPhrase: 'khatam ho gaya',
-      confidence: 0.7,
+};
+
+/**
+ * Build a concise data context string from vendor + 7-day entries.
+ */
+const buildDataContext = (vendor, weekData) => {
+  const { entries = [], summary = {} } = weekData;
+
+  let ctx = `--- Vendor Profile ---
+Name: ${vendor.name || 'Unknown'}
+Category: ${vendor.category || 'general'}
+Loan Readiness Score: ${vendor.loanScore ?? 0}/100
+Loan Ready: ${vendor.loanScore >= 75 ? 'YES' : 'NO (need ' + (75 - (vendor.loanScore || 0)) + ' more points)'}
+Logging Streak: ${vendor.streak || 0} consecutive days
+
+--- Last 7 Days Summary ---
+Total Revenue: ₹${summary.totalRevenue || 0}
+Total Expenses: ₹${summary.totalExpenses || 0}
+Net Profit: ₹${summary.totalProfit || 0}
+Avg Daily Revenue: ₹${Math.round(summary.avgDailyRevenue || 0)}
+Days Logged: ${summary.entryCount || 0}
+Missed Revenue (est.): ₹${summary.totalMissedRevenue || 0}
+`;
+
+  // Day-by-day breakdown
+  if (entries.length > 0) {
+    ctx += '\n--- Daily Breakdown (last 7 days) ---\n';
+    entries.forEach((e) => {
+      const date = new Date(e.date).toLocaleDateString('en-IN', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      });
+      const itemNames = (e.items || []).map((i) => `${i.name}(${i.quantity})`).join(', ');
+      ctx += `${date}: Revenue ₹${e.totalRevenue}, Expenses ₹${e.totalExpenses}, Profit ₹${e.netProfit} | Items: ${itemNames || 'none'}\n`;
     });
   }
 
-  // Default mock if nothing matched
-  if (items.length === 0) {
-    items.push({ name: 'misc_items', quantity: 1, unitPrice: 500, totalPrice: 500, confidence: 0.5 });
+  // Top items this week
+  const itemTotals = {};
+  entries.forEach((e) => {
+    (e.items || []).forEach((item) => {
+      if (!itemTotals[item.name]) itemTotals[item.name] = { qty: 0, rev: 0 };
+      itemTotals[item.name].qty += item.quantity;
+      itemTotals[item.name].rev += item.totalPrice;
+    });
+  });
+
+  const topItems = Object.entries(itemTotals)
+    .sort((a, b) => b[1].rev - a[1].rev)
+    .slice(0, 5);
+
+  if (topItems.length > 0) {
+    ctx += '\n--- Top Items This Week ---\n';
+    topItems.forEach(([name, data]) => {
+      ctx += `${name}: ${data.qty} units, ₹${data.rev} revenue\n`;
+    });
   }
 
+  return ctx;
+};
+
+/**
+ * Mock query answer for dev without API key.
+ */
+const getMockQueryAnswer = (transcript, vendor, weekData) => {
+  const { summary = {} } = weekData;
+  const isHindi = vendor.language !== 'en';
+
   return {
-    items,
-    expenses,
-    missedProfits,
-    model: 'mock',
+    answer: isHindi
+      ? `📊 Aapki pichle 7 din ki kamai ₹${summary.totalRevenue || 0} rahi. Kharcha ₹${summary.totalExpenses || 0} hua aur munafa ₹${summary.totalProfit || 0} raha.\n\n🎯 Loan Score: ${vendor.loanScore || 0}/100 | Streak: ${vendor.streak || 0} din`
+      : `📊 Your last 7-day revenue was ₹${summary.totalRevenue || 0}. Expenses ₹${summary.totalExpenses || 0}, Profit ₹${summary.totalProfit || 0}.\n\n🎯 Loan Score: ${vendor.loanScore || 0}/100 | Streak: ${vendor.streak || 0} days`,
     tokensUsed: 0,
   };
 };
 
-module.exports = { extractEntities };
+module.exports = { extractEntities, classifyIntent, answerQuery };
+

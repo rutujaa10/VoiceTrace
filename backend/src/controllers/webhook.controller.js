@@ -18,6 +18,7 @@ const { env } = require('../config/env');
 const { asyncHandler } = require('../middlewares/errorHandler');
 const User = require('../models/User');
 const LedgerEntry = require('../models/LedgerEntry');
+const Item = require('../models/Item');
 const whisperService = require('../services/whisper.service');
 const extractionService = require('../services/extraction.service');
 const loanService = require('../services/loan.service');
@@ -220,10 +221,104 @@ const handleWhatsApp = asyncHandler(async (req, res) => {
         '❌ Koi baat nahi. Sahi jaankari voice message mein dobara bhejiye.'
       );
     } else {
-      await sendWhatsAppReply(from,
-        '🎙️ Apni bikri batane ke liye voice message bhejiye!\n' +
-        'Ya phir apne aakhri hisaab ko confirm karne ke liye "YES" ya "NO" likhein.'
-      );
+      // ---- PROCESS TEXT AS LOGGING OR QUERY ----
+      try {
+        // Classify intent
+        const { intent } = await extractionService.classifyIntent(
+          body,
+          vendor.preferredLanguage
+        );
+
+        console.log(`[WhatsApp] Text intent: ${intent} for vendor ${vendor.phone}`);
+
+        // ---- BRANCH: QUERY ----
+        if (intent === 'query') {
+          const weekAgo = new Date();
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          weekAgo.setHours(0, 0, 0, 0);
+
+          const [entries, summary] = await Promise.all([
+            LedgerEntry.find({
+              vendor: vendor._id,
+              date: { $gte: weekAgo },
+            }).sort({ date: -1 }).lean(),
+            LedgerEntry.getVendorSummary(vendor._id, 7),
+          ]);
+
+          const vendorContext = {
+            name: vendor.displayName,
+            category: vendor.businessCategory,
+            language: vendor.preferredLanguage,
+            loanScore: vendor.loanReadiness?.score || 0,
+            streak: vendor.loanReadiness?.streak || 0,
+          };
+
+          const { answer } = await extractionService.answerQuery(
+            body,
+            vendorContext,
+            { entries, summary }
+          );
+
+          await sendWhatsAppReply(from, answer);
+        } else {
+          // ---- BRANCH: LOGGING via text ----
+          const extraction = await extractionService.extractEntities(
+            body,
+            vendor.businessCategory,
+            vendor.preferredLanguage
+          );
+
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          let entry = await LedgerEntry.findOne({
+            vendor: vendor._id,
+            date: { $gte: today },
+          });
+
+          if (entry) {
+            entry.items.push(...extraction.items);
+            entry.expenses.push(...extraction.expenses);
+            entry.missedProfits.push(...extraction.missedProfits);
+            entry.rawTranscript += '\n---\n' + body;
+          } else {
+            entry = new LedgerEntry({
+              vendor: vendor._id,
+              date: today,
+              rawTranscript: body,
+              language: vendor.preferredLanguage,
+              items: extraction.items,
+              expenses: extraction.expenses,
+              missedProfits: extraction.missedProfits,
+              source: 'whatsapp_text',
+              location: vendor.location,
+              processingMeta: {
+                llmModel: extraction.model,
+                llmTokensUsed: extraction.tokensUsed,
+                processedAt: new Date(),
+              },
+            });
+          }
+
+          await entry.save();
+
+          // Upsert items into catalog
+          await Item.upsertFromExtraction(vendor._id, extraction.items, today);
+
+          // Update streak & loan score
+          vendor.updateStreak(today);
+          await loanService.recalculateScore(vendor);
+          await vendor.save();
+
+          const replyMsg = formatExtractedData(extraction, vendor.preferredLanguage);
+          await sendWhatsAppReply(from, replyMsg + '\n_Sahi hai? Reply: YES / NO_');
+        }
+      } catch (error) {
+        console.error('[WhatsApp] Text processing error:', error);
+        await sendWhatsAppReply(from,
+          '❌ Message process karne mein dikkat aayi. Kripya dobara bhejiye.'
+        );
+      }
     }
 
     res.type('text/xml').send('<Response></Response>');
@@ -241,7 +336,49 @@ const handleWhatsApp = asyncHandler(async (req, res) => {
       // Transcribe with Whisper
       const transcription = await whisperService.transcribe(filepath);
 
-      // Extract entities with LLM
+      // ---- INTENT CLASSIFICATION (NEW) ----
+      const { intent, confidence: intentConf } = await extractionService.classifyIntent(
+        transcription.text,
+        vendor.preferredLanguage
+      );
+
+      console.log(`[WhatsApp] Intent: ${intent} (confidence: ${intentConf}) for vendor ${vendor.phone}`);
+
+      // ---- BRANCH: QUERY ----
+      if (intent === 'query') {
+        // Fetch last 7 days of data for context
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        weekAgo.setHours(0, 0, 0, 0);
+
+        const [entries, summary] = await Promise.all([
+          LedgerEntry.find({
+            vendor: vendor._id,
+            date: { $gte: weekAgo },
+          }).sort({ date: -1 }).lean(),
+          LedgerEntry.getVendorSummary(vendor._id, 7),
+        ]);
+
+        const vendorContext = {
+          name: vendor.displayName,
+          category: vendor.businessCategory,
+          language: vendor.preferredLanguage,
+          loanScore: vendor.loanReadiness?.score || 0,
+          streak: vendor.loanReadiness?.streak || 0,
+        };
+
+        const { answer } = await extractionService.answerQuery(
+          transcription.text,
+          vendorContext,
+          { entries, summary }
+        );
+
+        await sendWhatsAppReply(from, answer);
+        res.type('text/xml').send('<Response></Response>');
+        return;
+      }
+
+      // ---- BRANCH: LOGGING (existing flow) ----
       const extraction = await extractionService.extractEntities(
         transcription.text,
         vendor.businessCategory,
@@ -284,6 +421,9 @@ const handleWhatsApp = asyncHandler(async (req, res) => {
       }
 
       await entry.save();
+
+      // Upsert items into the auto-updated catalog
+      await Item.upsertFromExtraction(vendor._id, extraction.items, today);
 
       // Update vendor streak & loan score
       vendor.updateStreak(today);

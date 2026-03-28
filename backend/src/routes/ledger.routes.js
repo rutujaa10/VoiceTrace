@@ -11,6 +11,9 @@ const { uploadAudio } = require('../middlewares/upload');
 // POST /api/ledger/:vendorId/audio — Upload audio for processing
 router.post('/:vendorId/audio', uploadAudio.single('audio'), ledgerController.processAudio);
 
+// POST /api/ledger/:vendorId/text — Process pre-transcribed text
+router.post('/:vendorId/text', ledgerController.processText);
+
 // GET /api/ledger/:vendorId — Get ledger entries (paginated)
 router.get('/:vendorId', validate(ledgerSchemas.query, 'query'), ledgerController.getEntries);
 
