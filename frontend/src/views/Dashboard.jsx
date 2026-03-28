@@ -1,17 +1,18 @@
 /**
- * Dashboard View — Bento Grid Layout (Redesigned)
+ * Dashboard View — Main overview page (Enhanced)
  *
- * Modern consumer-app aesthetic with:
- * - Asymmetric Bento grid layout
- * - Modern stat cards with gradient accents
- * - AI Insights tall card spanning 2 rows
- * - Gradient hero Record CTA
- * - Weekly patterns as bento cards
- * - Loan readiness at bottom
+ * Shows:
+ * - Stat cards (30-day revenue, profit, days logged, missed revenue)
+ * - Loan Readiness Gauge
+ * - Phase 2 Feature 3: LLM-generated plain-language weekly insights
+ * - Phase 2 Feature 4: Next-day stock suggestions
+ * - Phase 4 Feature 7: Anomaly alerts from today's entry
+ * - Recent insights feed
  */
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
 import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
@@ -22,6 +23,7 @@ import ClarificationBanner from '../components/common/ClarificationBanner';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [recentInsights, setRecentInsights] = useState([]);
@@ -29,6 +31,7 @@ export default function Dashboard() {
   const [todayAnomaly, setTodayAnomaly] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [smartTips, setSmartTips] = useState([]);
+  const [forecast, setForecast] = useState(null);
 
   useEffect(() => {
     if (!state.vendorId) return;
@@ -56,10 +59,12 @@ export default function Dashboard() {
         setWeeklyPatterns(analyticsRes.data.data);
       }
 
+      // Phase 4 Feature 7: Check today's entry for anomalies
       if (todayRes?.data?.data?.anomaly?.detected) {
         setTodayAnomaly(todayRes.data.data.anomaly);
       }
 
+      // Fetch AI Insights for dashboard box
       try {
         const [smartRes, weatherRes] = await Promise.all([
           insightAPI.getSmartInsights(state.vendorId).catch(() => null),
@@ -84,7 +89,13 @@ export default function Dashboard() {
             .map(i => i.title + (i.subtitle ? ' — ' + i.subtitle : ''));
           setSmartTips(tips);
         }
+
+        // Extract demand forecast from ML service
+        if (smartRes?.data?.data?.forecast?.topPredictions?.length > 0) {
+          setForecast(smartRes.data.data.forecast);
+        }
       } catch (e) {
+        // Non-critical — dashboard still works without insights
         console.warn('Smart insights fetch (non-critical):', e);
       }
     } catch (err) {
@@ -96,11 +107,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ paddingTop: 'var(--space-lg)' }}>
-        <div className="section-title">Dashboard</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+      <div className="stagger-children">
+        <div className="section-title">{t('nav.dashboard')}</div>
+        <div className="grid grid-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="skeleton" style={{ height: 100, borderRadius: 'var(--radius-3xl)' }} />
+            <div key={i} className="skeleton" style={{ height: 100, borderRadius: 'var(--radius-lg)' }} />
           ))}
         </div>
       </div>
@@ -111,115 +122,72 @@ export default function Dashboard() {
 
   return (
     <div className="stagger-children">
-      {/* Clarification Banner */}
+      {/* Phase 4 Feature 6: Clarification Banner */}
       <ClarificationBanner vendorId={state.vendorId} />
 
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
+      <div style={{ marginBottom: 'var(--space-xl)' }}>
         <h1
           style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: '1.85rem',
+            fontFamily: 'var(--font-display)',
+            fontSize: '1.75rem',
             fontWeight: 800,
-            letterSpacing: '-0.02em',
-            lineHeight: 1.3,
           }}
         >
           Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span> 👋
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px', fontWeight: 500 }}>
-          Here&apos;s your business at a glance
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
-      {/* Anomaly Alert */}
+      {/* Phase 4 Feature 7: Today's Anomaly Alert */}
       {todayAnomaly && <AnomalyAlert anomaly={todayAnomaly} />}
 
-      {/* ═══════════ BENTO GRID ═══════════ */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'auto auto',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-        className="bento-stat-grid"
-      >
-        {/* Row 1: 4 Stat Cards */}
+      {/* Stat Cards */}
+      <div className="grid grid-4" style={{ marginBottom: 'var(--space-xl)' }}>
         <StatCard
           icon="💰"
           value={`₹${(summary?.totalRevenue || 0).toLocaleString('en-IN')}`}
-          label="30-Day Revenue"
-          bgColor="rgba(34, 197, 94, 0.12)"
+          label={t('dashboard.revenue30d')}
+          bgColor="rgba(34, 197, 94, 0.15)"
         />
         <StatCard
           icon="📊"
           value={`₹${(summary?.totalProfit || 0).toLocaleString('en-IN')}`}
-          label="30-Day Profit"
-          bgColor="rgba(99, 102, 241, 0.12)"
+          label={t('dashboard.profit30d')}
+          bgColor="rgba(99, 102, 241, 0.15)"
         />
         <StatCard
           icon="📅"
           value={summary?.entryCount || 0}
-          label="Days Logged"
-          bgColor="rgba(168, 85, 247, 0.12)"
+          label={t('dashboard.daysLogged')}
+          bgColor="rgba(168, 85, 247, 0.15)"
         />
         <StatCard
           icon="📉"
           value={`₹${(summary?.totalMissedRevenue || 0).toLocaleString('en-IN')}`}
-          label="Missed Revenue"
-          bgColor="rgba(239, 68, 68, 0.12)"
+          label={t('dashboard.missedRevenue')}
+          bgColor="rgba(239, 68, 68, 0.15)"
         />
       </div>
 
-      {/* ═══════════ INSIGHTS + ACTIONS ROW ═══════════ */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-        className="bento-actions-grid"
-      >
-        {/* AI Insights Box */}
+      {/* Main Content: AI Insights + Quick Actions */}
+      <div className="grid grid-2" style={{ marginBottom: 'var(--space-xl)' }}>
+        {/* AI Insights Summary Box */}
         <div
+          className="glass-card"
           id="dashboard-insights-box"
           style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-3xl)',
-            padding: '24px',
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(16, 185, 129, 0.04))',
+            borderLeft: '3px solid var(--primary-500)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px',
-            position: 'relative',
-            overflow: 'hidden',
-            boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
+            gap: 'var(--space-md)',
           }}
         >
-          {/* Subtle gradient accent */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '3px',
-            background: 'var(--gradient-primary)',
-            borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0',
-          }} />
-
-          <h2 style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: '1.1rem',
-            fontWeight: 800,
-            margin: 0,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}>
-            💡 AI Insights
+          <h2 className="section-title" style={{ marginBottom: 0 }}>
+            {t('dashboard.aiInsights')}
           </h2>
 
           {/* Weather Preview */}
@@ -228,21 +196,23 @@ export default function Dashboard() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
-                padding: '12px 16px',
-                background: 'rgba(34, 197, 94, 0.04)',
-                borderRadius: 'var(--radius-lg)',
-                border: '1px solid rgba(34, 197, 94, 0.08)',
+                gap: 'var(--space-md)',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-subtle)',
               }}
             >
-              <div style={{ fontSize: '2rem' }}>
-                {weatherData.icon}
+              <div style={{ fontSize: '2.2rem' }}>
+                {weatherData.icon === '🌧️' ? '🌧️' :
+                 weatherData.icon === '☁️' ? '☁️' :
+                 weatherData.icon === '❄️' ? '❄️' : '☀️'}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, fontSize: '0.88rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
                   Tomorrow: {weatherData.temp}°C {weatherData.condition}
                 </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: 2 }}>
                   {weatherData.advice}
                 </div>
               </div>
@@ -252,34 +222,35 @@ export default function Dashboard() {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px',
-                padding: '12px 16px',
-                background: 'rgba(0,0,0,0.02)',
-                borderRadius: 'var(--radius-lg)',
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-sm) var(--space-md)',
+                background: 'rgba(255,255,255,0.04)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-subtle)',
               }}
             >
-              <span style={{ fontSize: '1.4rem' }}>🌤️</span>
-              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                Loading weather forecast...
+              <span style={{ fontSize: '1.5rem' }}>🌤️</span>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                {t('dashboard.weatherLoading')}
               </div>
             </div>
           )}
 
-          {/* Smart Tips */}
+          {/* Quick Smart Tips */}
           {smartTips.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
               {smartTips.slice(0, 3).map((tip, i) => (
                 <div
                   key={i}
                   style={{
                     display: 'flex',
-                    gap: '10px',
+                    gap: 'var(--space-sm)',
                     alignItems: 'flex-start',
-                    padding: '8px 0',
+                    padding: '6px 0',
                     borderBottom: i < Math.min(smartTips.length, 3) - 1 ? '1px solid var(--border-subtle)' : 'none',
                   }}
                 >
-                  <span style={{ fontSize: '0.78rem', flexShrink: 0 }}>
+                  <span style={{ fontSize: '0.82rem', flexShrink: 0 }}>
                     {['🎯', '📊', '💡'][i % 3]}
                   </span>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
@@ -290,81 +261,59 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Log your first day to unlock personalized insights!
+              {t('dashboard.logFirst')}
             </div>
           )}
 
           <Link
             to="/app/insights"
             className="btn btn-primary"
-            style={{ fontSize: '0.82rem', textDecoration: 'none', textAlign: 'center', marginTop: 'auto', borderRadius: 'var(--radius-lg)' }}
+            style={{ fontSize: '0.82rem', textDecoration: 'none', textAlign: 'center', marginTop: 'auto' }}
           >
-            View Full Insights →
+            {t('dashboard.viewInsights')}
           </Link>
         </div>
 
-        {/* Right Column: Record CTA + Metrics */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Record CTA Hero */}
+        {/* Quick Actions + Record CTA */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
+          {/* Record CTA */}
           <Link to="/app/record" style={{ textDecoration: 'none' }}>
             <div
+              className="glass-card"
               style={{
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(168,85,247,0.12))',
-                border: '1px solid rgba(99,102,241,0.15)',
-                borderRadius: 'var(--radius-3xl)',
-                padding: '32px 24px',
-                textAlign: 'center',
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.15))',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-3px)';
-                e.currentTarget.style.boxShadow = '0 12px 40px -8px rgba(99,102,241,0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                textAlign: 'center',
+                padding: 'var(--space-xl)',
               }}
             >
-              <div style={{ fontSize: '2.8rem', marginBottom: '8px' }}>🎙️</div>
+              <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>🎙️</div>
               <h3
                 style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: '1.05rem',
-                  fontWeight: 800,
-                  marginBottom: '4px',
-                  color: 'var(--text-primary)',
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  marginBottom: 'var(--space-xs)',
                 }}
               >
-                Record Today&apos;s Sales
+                {t('dashboard.recordSales')}
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: 0 }}>
-                Tap and speak — your voice becomes business data
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                {t('dashboard.recordSubtitle')}
               </p>
             </div>
           </Link>
 
-          {/* Avg Revenue Card */}
-          <div
-            style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-3xl)',
-              padding: '20px 24px',
-              boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-            }}
-          >
-            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginBottom: 4, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Avg Daily Revenue
+          {/* Avg Daily Revenue */}
+          <div className="glass-card">
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>
+              {t('dashboard.avgDailyRevenue')}
             </div>
             <div
               style={{
                 fontFamily: 'var(--font-display)',
                 fontSize: '2rem',
                 fontWeight: 800,
-                color: 'var(--text-primary)',
               }}
             >
               ₹{Math.round(summary?.avgDailyRevenue || 0).toLocaleString('en-IN')}
@@ -373,51 +322,92 @@ export default function Dashboard() {
 
           {/* PDF Export */}
           <button
-            className="btn btn-secondary"
-            style={{
-              width: '100%',
-              borderRadius: 'var(--radius-lg)',
-              padding: '14px',
-              fontSize: '0.88rem',
-            }}
+            className="btn btn-secondary btn-lg"
+            style={{ width: '100%' }}
             onClick={handleDownloadPDF}
           >
-            📄 Download Earnings PDF
+            📄 {t('dashboard.downloadPDF')}
           </button>
         </div>
       </div>
 
-      {/* ═══════════ WEEKLY OBSERVATIONS ═══════════ */}
+      {/* AI Demand Forecast (from Python Prophet ML Service) */}
+      {forecast && forecast.topPredictions?.length > 0 && (
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">🎯 AI Demand Forecast — Tomorrow</h2>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 'var(--space-md)', marginTop: -8 }}>
+            ML-powered predictions based on your sales history (Prophet model)
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--space-md)' }}>
+            {forecast.topPredictions.slice(0, 6).map((pred, i) => (
+              <div
+                key={i}
+                style={{
+                  background: pred.trend === 'up'
+                    ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.06))'
+                    : pred.trend === 'down'
+                      ? 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.06))'
+                      : 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-md)',
+                  border: '1px solid var(--border-subtle)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  cursor: 'default',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                    {pred.item}
+                  </span>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    fontWeight: 600,
+                    background: pred.trend === 'up' ? 'rgba(34,197,94,0.2)' : pred.trend === 'down' ? 'rgba(239,68,68,0.2)' : 'rgba(99,102,241,0.2)',
+                    color: pred.trend === 'up' ? '#16a34a' : pred.trend === 'down' ? '#dc2626' : '#6366f1',
+                  }}>
+                    {pred.trend === 'up' ? '📈 Trending Up' : pred.trend === 'down' ? '📉 Declining' : '➡️ Stable'}
+                  </span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>
+                  {pred.predictedQty}
+                  <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 4 }}>units</span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Confidence: {pred.confidence[0]}–{pred.confidence[1]} units
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  {pred.method === 'prophet' ? '🤖 ML Model' : '📊 Average'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Phase 2 Feature 3: LLM Plain-Language Weekly Insights */}
       {weeklyPatterns?.plainInsights?.length > 0 && (
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-3xl)',
-            padding: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-          }}
-        >
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            🧠 Weekly Observations
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">{t('dashboard.weeklyObservations')}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             {weeklyPatterns.plainInsights.map((insight, i) => (
               <div
                 key={i}
                 style={{
                   display: 'flex',
-                  gap: '10px',
+                  gap: 'var(--space-sm)',
                   alignItems: 'flex-start',
-                  padding: '10px 0',
+                  padding: 'var(--space-sm) 0',
                   borderBottom: i < weeklyPatterns.plainInsights.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                 }}
               >
                 <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>
                   {['💡', '📊', '🎯'][i % 3]}
                 </span>
-                <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.55 }}>
+                <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                   {insight}
                 </span>
               </div>
@@ -426,22 +416,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ═══════════ STOCK SUGGESTIONS ═══════════ */}
+      {/* Phase 2 Feature 4: Next-Day Stock Suggestions */}
       {weeklyPatterns?.stockSuggestions?.length > 0 && (
-        <div
-          style={{
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: 'var(--radius-3xl)',
-            padding: '24px',
-            marginBottom: '24px',
-            boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-          }}
-        >
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            📦 Tomorrow&apos;s Stock Suggestions
-          </h2>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">{t('dashboard.stockSuggestions')}</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {weeklyPatterns.stockSuggestions.map((sug, i) => (
               <div
                 key={i}
@@ -449,12 +428,12 @@ export default function Dashboard() {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '10px 0',
+                  padding: 'var(--space-sm) 0',
                   borderBottom: '1px solid var(--border-subtle)',
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem', textTransform: 'capitalize' }}>
                     {sug.item}
                   </span>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 8 }}>
@@ -470,103 +449,102 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ═══════════ WEEKLY PATTERNS (3-col bento) ═══════════ */}
+      {/* Weekly Patterns */}
       {weeklyPatterns && (
-        <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            📈 Weekly Patterns
-          </h2>
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '16px',
-            }}
-            className="bento-patterns-grid"
-          >
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">{t('dashboard.weeklyPatterns')}</h2>
+          <div className="grid grid-3">
             {/* Best Seller */}
             <div
+              className="glass-card"
               style={{
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-3xl)',
-                padding: '22px',
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-                position: 'relative',
-                overflow: 'hidden',
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))',
+                borderLeft: '3px solid var(--success-400)',
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #22c55e, #10b981)' }} />
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                🏆 Best Seller
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                {t('dashboard.bestSeller')}
               </div>
               {weeklyPatterns.bestSeller ? (
                 <>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 800, textTransform: 'capitalize', marginBottom: 4 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      marginBottom: 4,
+                    }}
+                  >
                     {weeklyPatterns.bestSeller.name}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    {weeklyPatterns.bestSeller.totalQuantity} units · ₹{weeklyPatterns.bestSeller.totalRevenue.toLocaleString('en-IN')}
+                    {weeklyPatterns.bestSeller.totalQuantity} units sold · ₹{weeklyPatterns.bestSeller.totalRevenue.toLocaleString('en-IN')} revenue
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                    {weeklyPatterns.bestSeller.daysAppeared}/7 days
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Appeared on {weeklyPatterns.bestSeller.daysAppeared} of 7 days
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
             {/* Peak Day */}
             <div
+              className="glass-card"
               style={{
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-3xl)',
-                padding: '22px',
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-                position: 'relative',
-                overflow: 'hidden',
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05))',
+                borderLeft: '3px solid var(--text-accent)',
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #a855f7)' }} />
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                🔥 Peak Day
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                {t('dashboard.peakDay')}
               </div>
               {weeklyPatterns.peakDay ? (
                 <>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 800, marginBottom: 4 }}>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                    }}
+                  >
                     {weeklyPatterns.peakDay.dayName}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                    ₹{weeklyPatterns.peakDay.revenue.toLocaleString('en-IN')} revenue
+                    ₹{weeklyPatterns.peakDay.revenue.toLocaleString('en-IN')} revenue · ₹{weeklyPatterns.peakDay.profit.toLocaleString('en-IN')} profit
                   </div>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
                     {new Date(weeklyPatterns.peakDay.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
             {/* Missed Profits */}
             <div
+              className="glass-card"
               style={{
-                background: 'var(--bg-card)',
-                borderRadius: 'var(--radius-3xl)',
-                padding: '22px',
-                border: '1px solid var(--border-subtle)',
-                boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-                position: 'relative',
-                overflow: 'hidden',
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05))',
+                borderLeft: '3px solid var(--danger-400)',
               }}
             >
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                📉 Missed Profits
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                {t('dashboard.missedProfits')}
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--danger-400)', marginBottom: 4 }}>
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: 'var(--danger-400)',
+                  marginBottom: 4,
+                }}
+              >
                 ~₹{(weeklyPatterns.missedProfits?.totalLoss || 0).toLocaleString('en-IN')}
               </div>
               {weeklyPatterns.missedProfits?.topMissedItems?.length > 0 ? (
@@ -574,25 +552,25 @@ export default function Dashboard() {
                   Top: {weeklyPatterns.missedProfits.topMissedItems.slice(0, 2).map((m) => m.item).join(', ')}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>✅ No missed profits!</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>{t('dashboard.noMissedProfits')}</div>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══════════ RECENT INSIGHTS ═══════════ */}
+      {/* Recent Insights */}
       {recentInsights.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-              💡 Latest Insights
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
+            <h2 className="section-title" style={{ margin: 0 }}>
+              {t('dashboard.latestInsights')}
             </h2>
-            <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-full)' }}>
-              View All →
+            <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
+              {t('common.viewAll')}
             </Link>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             {recentInsights.slice(0, 3).map((insight) => (
               <InsightCard key={insight._id} insight={insight} />
             ))}
@@ -600,22 +578,10 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ═══════════ LOAN READINESS (Bottom) ═══════════ */}
-      <div
-        style={{
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 'var(--radius-3xl)',
-          padding: '28px',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '16px',
-          boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
-        }}
-      >
-        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-          🎯 Micro-Loan Readiness
+      {/* Micro-Loan Readiness (moved to bottom) */}
+      <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
+        <h2 className="section-title" style={{ marginBottom: 0 }}>
+          {t('dashboard.loanReadiness')}
         </h2>
         <LoanGauge
           score={loan.score || 0}
@@ -624,7 +590,7 @@ export default function Dashboard() {
         />
 
         {/* Score Breakdown */}
-        <div style={{ width: '100%', maxWidth: '500px', marginTop: '8px' }}>
+        <div style={{ width: '100%', marginTop: 'var(--space-sm)' }}>
           {loan.breakdown && Object.entries(loan.breakdown).map(([key, val]) => (
             <div
               key={key}
@@ -633,31 +599,18 @@ export default function Dashboard() {
                 justifyContent: 'space-between',
                 fontSize: '0.78rem',
                 color: 'var(--text-secondary)',
-                padding: '6px 0',
+                padding: '4px 0',
                 borderBottom: '1px solid var(--border-subtle)',
               }}
             >
               <span>{formatBreakdownLabel(key)}</span>
-              <span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                 {Math.round(val * 10) / 10}
               </span>
             </div>
           ))}
         </div>
       </div>
-
-      {/* ═══ Responsive Overrides ═══ */}
-      <style>{`
-        @media (max-width: 1024px) {
-          .bento-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
-          .bento-patterns-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        }
-        @media (max-width: 640px) {
-          .bento-stat-grid { grid-template-columns: 1fr !important; }
-          .bento-actions-grid { grid-template-columns: 1fr !important; }
-          .bento-patterns-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
     </div>
   );
 

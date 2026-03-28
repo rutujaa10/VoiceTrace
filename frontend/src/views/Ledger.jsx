@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
@@ -15,6 +16,7 @@ import AnomalyAlert from '../components/common/AnomalyAlert';
 
 export default function Ledger() {
   const { state } = useApp();
+  const { t } = useTranslation();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -107,10 +109,10 @@ export default function Ledger() {
     <div className="stagger-children">
       <div style={{ marginBottom: 'var(--space-xl)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          📒 <span className="gradient-text">Business Ledger</span>
+          📒 <span className="gradient-text">{t('ledger.title')}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Your daily sales history — tap items to hear original audio
+          {t('ledger.subtitle')}
         </p>
       </div>
 
@@ -123,8 +125,8 @@ export default function Ledger() {
       ) : entries.length === 0 ? (
         <div className="empty-state glass-card">
           <div className="empty-icon">📒</div>
-          <h3>No Entries Yet</h3>
-          <p>Start recording your sales to see them here!</p>
+          <h3>{t('ledger.noEntries')}</h3>
+          <p>{t('ledger.noEntriesHint')}</p>
         </div>
       ) : (
         <>
@@ -153,17 +155,17 @@ export default function Ledger() {
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                ← Previous
+                {t('common.previous')}
               </button>
               <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Page {page} of {pagination.pages}
+                {t('common.pageOf', { page, pages: pagination.pages })}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={page === pagination.pages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next →
+                {t('common.next')}
               </button>
             </div>
           )}

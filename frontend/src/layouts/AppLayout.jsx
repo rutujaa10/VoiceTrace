@@ -1,21 +1,16 @@
 /**
- * App Layout — Floating glassmorphic sidebar + pill-style top actions
- *
- * Redesigned from the generic admin dashboard layout to a modern,
- * premium aesthetic with:
- * - Full-height glass sidebar (expanded by default)
- * - Floating pill buttons (user, theme toggle, logout)
- * - No full-width top navbar
+ * App Layout — Top navbar + Sidebar navigation + main content area
  */
 
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
-import { useTheme } from '../state/ThemeContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 export default function AppLayout() {
   const { state, dispatch } = useApp();
-  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Redirect to login if no vendor
   if (!state.vendorId) {
@@ -23,12 +18,12 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/app', icon: '📊', label: 'Dashboard' },
-    { path: '/app/record', icon: '🎙️', label: 'Record' },
-    { path: '/app/daily-log', icon: '📝', label: 'Daily Log' },
-    { path: '/app/ledger', icon: '📒', label: 'Ledger' },
-    { path: '/app/insights', icon: '💡', label: 'Insights' },
-    { path: '/app/assistant', icon: '🤖', label: 'AI Assistant' },
+    { path: '/app', icon: '📊', label: t('nav.dashboard') },
+    { path: '/app/record', icon: '🎙️', label: t('nav.record') },
+    { path: '/app/daily-log', icon: '📝', label: t('nav.dailyLog') },
+    { path: '/app/ledger', icon: '📒', label: t('nav.ledger') },
+    { path: '/app/insights', icon: '💡', label: t('nav.insights') },
+    { path: '/app/assistant', icon: '🤖', label: t('nav.assistant') },
   ];
 
   const handleLogout = () => {
@@ -41,10 +36,79 @@ export default function AppLayout() {
   };
 
   const vendorName = state.vendor?.name || state.dashboard?.vendor?.name || '';
-  const loan = state.loanScore || {};
 
   return (
     <div className="app-layout">
+      {/* ═══ Top Navbar ═══ */}
+      <header className="app-topbar" id="app-topbar">
+        <div className="topbar-left">
+          <button
+            className="hamburger topbar-hamburger"
+            onClick={() => dispatch({ type: actionTypes.TOGGLE_SIDEBAR })}
+            aria-label="Toggle menu"
+          >
+            ☰
+          </button>
+          <NavLink to="/app" className="topbar-brand">
+            <span className="topbar-logo">🎙️</span>
+            <span className="topbar-brand-text gradient-text">VoiceTrace</span>
+          </NavLink>
+        </div>
+
+        <div className="topbar-right">
+          <button
+            id="btn-home"
+            className="topbar-btn"
+            onClick={handleGoHome}
+            title="Go to Home Page"
+          >
+            🏠 <span className="topbar-btn-label">Home</span>
+          </button>
+
+          {vendorName && (
+            <div className="topbar-user">
+              <div className="topbar-avatar">
+                {vendorName.charAt(0).toUpperCase()}
+              </div>
+              <span className="topbar-username">{vendorName}</span>
+            </div>
+          )}
+
+          <LanguageSwitcher />
+
+          <button
+            id="btn-logout"
+            className="topbar-btn topbar-btn-danger"
+            onClick={handleLogout}
+            title={t('common.logout')}
+          >
+            🚪 <span className="topbar-btn-label">{t('common.logout')}</span>
+          </button>
+        </div>
+      </header>
+
+      {/* Mobile Header (legacy — hidden on desktop, shown on narrow devices) */}
+      <header className="mobile-header">
+        <button
+          className="hamburger"
+          onClick={() => dispatch({ type: actionTypes.TOGGLE_SIDEBAR })}
+          aria-label="Toggle menu"
+        >
+          ☰
+        </button>
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
+          🎙️ VoiceTrace
+        </span>
+        <button
+          className="hamburger"
+          onClick={handleLogout}
+          aria-label="Logout"
+          style={{ fontSize: '1.2rem' }}
+        >
+          🚪
+        </button>
+      </header>
+
       {/* Sidebar Overlay (mobile) */}
       {state.sidebarOpen && (
         <div
@@ -53,15 +117,13 @@ export default function AppLayout() {
         />
       )}
 
-      {/* ═══ Floating Glass Sidebar ═══ */}
+      {/* Sidebar */}
       <aside className={`app-sidebar ${state.sidebarOpen ? 'open' : ''}`}>
-        {/* Brand */}
         <div className="nav-logo">
           <span className="logo-icon">🎙️</span>
           <span className="gradient-text">VoiceTrace</span>
         </div>
 
-        {/* Navigation Links */}
         <nav>
           <ul className="nav-links">
             {navItems.map((item) => (
@@ -79,112 +141,47 @@ export default function AppLayout() {
                   }}
                 >
                   <span className="nav-icon">{item.icon}</span>
-                  <span>{item.label}</span>
+                  {item.label}
                 </NavLink>
               </li>
             ))}
           </ul>
         </nav>
 
-        {/* Sidebar Footer — Loan Score */}
-        <div style={{ marginTop: 'auto', paddingTop: 'var(--space-md)' }}>
+        <div style={{ marginTop: 'auto', paddingTop: 'var(--space-lg)' }}>
           <div
-            style={{
-              background: 'rgba(34, 197, 94, 0.06)',
-              border: '1px solid rgba(34, 197, 94, 0.12)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '16px',
-              textAlign: 'center',
-            }}
+            className="glass-card"
+            style={{ padding: 'var(--space-md)', textAlign: 'center' }}
           >
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>
               Loan Score
             </div>
             <div
               className="gradient-text"
               style={{
                 fontFamily: 'var(--font-display)',
-                fontSize: '1.6rem',
+                fontSize: '1.8rem',
                 fontWeight: 800,
-                lineHeight: 1.2,
               }}
             >
-              {loan.score ?? '—'}/100
+              {state.loanScore?.score ?? '—'}/100
             </div>
             <div
-              className={`badge ${loan.isLoanReady ? 'badge-success' : 'badge-warning'}`}
+              className={`badge ${
+                state.loanScore?.isLoanReady ? 'badge-success' : 'badge-warning'
+              }`}
               style={{ marginTop: 8 }}
             >
-              {loan.isLoanReady ? '✅ Loan Ready' : '🔄 Building...'}
+              {state.loanScore?.isLoanReady ? '✅ Loan Ready' : '🔄 Building...'}
             </div>
           </div>
         </div>
       </aside>
 
-      {/* ═══ Floating Top Action Pills ═══ */}
-      <div className="app-top-actions" id="app-top-actions">
-        {/* Home */}
-        <button
-          id="btn-home"
-          className="top-action-pill hide-mobile"
-          onClick={handleGoHome}
-          title="Go to Home Page"
-        >
-          🏠 Home
-        </button>
-
-        {/* Theme Toggle */}
-        <button
-          className="top-action-pill theme-toggle"
-          onClick={toggleTheme}
-          title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        >
-          {isDark ? '☀️' : '🌙'}
-        </button>
-
-        {/* User Pill */}
-        {vendorName && (
-          <div className="top-action-pill user-pill">
-            <div className="top-action-avatar">
-              {vendorName.charAt(0).toUpperCase()}
-            </div>
-            <span>{vendorName}</span>
-          </div>
-        )}
-
-        {/* Logout */}
-        <button
-          id="btn-logout"
-          className="top-action-pill danger"
-          onClick={handleLogout}
-          title="Logout"
-        >
-          🚪 Logout
-        </button>
-
-        {/* Mobile hamburger */}
-        <button
-          className="top-action-pill"
-          onClick={() => dispatch({ type: actionTypes.TOGGLE_SIDEBAR })}
-          aria-label="Toggle menu"
-          style={{ display: 'none' }}
-          id="mobile-menu-btn"
-        >
-          ☰
-        </button>
-      </div>
-
-      {/* ═══ Main Content ═══ */}
+      {/* Main Content */}
       <main className="app-main">
         <Outlet />
       </main>
-
-      {/* Mobile menu button — shown via CSS */}
-      <style>{`
-        @media (max-width: 768px) {
-          #mobile-menu-btn { display: flex !important; }
-        }
-      `}</style>
     </div>
   );
 }
