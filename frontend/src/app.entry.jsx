@@ -13,6 +13,7 @@ import Dashboard from './views/Dashboard';
 import Record from './views/Record';
 import Ledger from './views/Ledger';
 import Insights from './views/Insights';
+import Assistant from './views/Assistant';
 import Login from './views/Login';
 import './index.css';
 
@@ -27,6 +28,7 @@ function App() {
             <Route path="/record" element={<Record />} />
             <Route path="/ledger" element={<Ledger />} />
             <Route path="/insights" element={<Insights />} />
+            <Route path="/assistant" element={<Assistant />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

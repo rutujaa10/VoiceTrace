@@ -66,4 +66,16 @@ export const pdfAPI = {
     }),
 };
 
+// ---- Analytics APIs ----
+export const analyticsAPI = {
+  getWeekly: (vendorId) => api.get(`/analytics/weekly/${vendorId}`),
+};
+
+// ---- Assistant APIs ----
+export const assistantAPI = {
+  chat: (vendorId, message) =>
+    api.post('/assistant/chat', { vendorId, message }),
+};
+
 export default api;
+

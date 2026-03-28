@@ -18,6 +18,7 @@ export default function AppLayout() {
     { path: '/record', icon: '🎙️', label: 'Record' },
     { path: '/ledger', icon: '📒', label: 'Ledger' },
     { path: '/insights', icon: '💡', label: 'Insights' },
+    { path: '/assistant', icon: '🤖', label: 'AI Assistant' },
   ];
 
   return (
