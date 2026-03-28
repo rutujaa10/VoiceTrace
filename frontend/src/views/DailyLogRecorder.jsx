@@ -156,31 +156,41 @@ export default function DailyLogRecorder() {
         ]);
       }
 
-      // Tool call — extract data
+      // Tool call — AI finished asking questions, collect raw answers
       if (msg.type === 'tool-calls') {
         const tc = (msg.toolCallList || msg.toolCalls || []).find(
           (t) => t.function?.name === 'submit_ledger_data'
         );
         if (tc) {
-          try {
-            const args = typeof tc.function.arguments === 'string'
-              ? JSON.parse(tc.function.arguments)
-              : tc.function.arguments;
-
-            setFormData({
-              salesAmount: String(args.salesAmount ?? ''),
-              expenseAmount: String(args.expenseAmount ?? ''),
-              itemsSold: String(args.itemsSold ?? ''),
-              daySummary: String(args.daySummary ?? ''),
+          // Instead of trusting GPT's math, we'll send the full
+          // conversation transcript to the backend Gemini extraction
+          // (same pipeline as Record section) for accurate parsing.
+          setTimeout(() => {
+            vapi.stop();
+            // Build transcript from all user messages
+            setMessages((prev) => {
+              const userParts = prev
+                .filter((m) => m.role === 'user')
+                .map((m) => m.text)
+                .join('. ');
+              if (userParts.trim()) {
+                handleVapiExtract(userParts);
+              } else {
+                // Fallback: try to use the tool call args
+                try {
+                  const args = typeof tc.function.arguments === 'string'
+                    ? JSON.parse(tc.function.arguments)
+                    : tc.function.arguments;
+                  const fallbackText = `Items sold: ${args.itemsSold || ''}. Sales: ${args.salesAmount || 0} rupees. Expenses: ${args.expenseAmount || 0} rupees. ${args.daySummary || ''}`;
+                  handleVapiExtract(fallbackText);
+                } catch (e) {
+                  setError('Could not extract data. Please try again.');
+                  setPhase('idle');
+                }
+              }
+              return prev;
             });
-
-            setTimeout(() => {
-              vapi.stop();
-              setPhase('review');
-            }, 800);
-          } catch (e) {
-            console.error('[Vapi] Parse error:', e);
-          }
+          }, 800);
         }
       }
     });
@@ -195,6 +205,54 @@ export default function DailyLogRecorder() {
       vapi.stop();
     };
   }, [mode]);
+
+  // ---- Vapi Extract: Send conversation transcript to backend Gemini extraction ----
+  // Uses the SAME extraction pipeline as the Record section for accurate parsing
+  const handleVapiExtract = async (transcript) => {
+    if (!transcript || transcript.trim().length < 3) {
+      setError('Could not capture enough data. Please try again.');
+      setPhase('idle');
+      return;
+    }
+
+    setPhase('processing');
+
+    try {
+      const res = await ledgerAPI.submitText(
+        state.vendorId,
+        transcript.trim(),
+        'hi'
+      );
+
+      const data = res.data.data;
+      const extraction = data.extraction;
+
+      // Store full extraction for display
+      setExtractionResult(extraction);
+
+      // Compute totals from Gemini's accurate extraction
+      const totalSales = (extraction.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
+      const totalExpenses = (extraction.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
+      const itemNames = (extraction.items || []).map((i) => i.name).join(', ');
+
+      setFormData({
+        salesAmount: String(totalSales),
+        expenseAmount: String(totalExpenses),
+        itemsSold: itemNames || '',
+        daySummary: '',
+      });
+
+      if (data.loanReadiness) {
+        dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: data.loanReadiness });
+      }
+
+      setPhase('review');
+    } catch (err) {
+      console.error('[VapiExtract] Error:', err);
+      setError(err.response?.data?.error?.message || 'Extraction failed. Please try again.');
+      setPhase('idle');
+    }
+  };
 
   // ---- Smart Extract: Handle transcript from Web Speech ----
   useEffect(() => {
@@ -384,30 +442,12 @@ IMPORTANT RULES:
     setCallStatus('');
   }, []);
 
-  // ---- Save to Ledger (for Vapi mode — Smart mode already saved) ----
+  // ---- Save to Ledger ----
+  // Both Vapi and Smart modes already saved during extraction.
+  // This just confirms and shows the success screen.
   const handleSave = async () => {
     setError('');
-    setPhase('saving');
-
-    try {
-      if (mode === 'vapi') {
-        // Vapi mode: submit as text to backend
-        const summaryPart = formData.daySummary ? ` Din kaisa raha: ${formData.daySummary}.` : '';
-        const transcript = `Aaj ki bikri ${formData.salesAmount} rupees. Kharcha ${formData.expenseAmount} rupees. Items: ${formData.itemsSold}.${summaryPart}`;
-        const res = await ledgerAPI.submitText(state.vendorId, transcript, 'hi');
-
-        if (res.data.data?.loanReadiness) {
-          dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: res.data.data.loanReadiness });
-        }
-      }
-      // Smart mode already saved during extraction
-
-      setPhase('saved');
-    } catch (err) {
-      console.error('[Save] Error:', err);
-      setError(err.response?.data?.error?.message || 'Save failed.');
-      setPhase('review');
-    }
+    setPhase('saved');
   };
 
   // ---- Reset ----
