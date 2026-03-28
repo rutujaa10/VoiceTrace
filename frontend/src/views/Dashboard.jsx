@@ -14,12 +14,33 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
-import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
+import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI, pdfAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
 import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
 import AnomalyAlert from '../components/common/AnomalyAlert';
 import ClarificationBanner from '../components/common/ClarificationBanner';
+import { 
+  DollarSign, 
+  BarChart3, 
+  CalendarDays, 
+  TrendingDown, 
+  Mic, 
+  FileText, 
+  Target, 
+  Lightbulb,
+  Cloud,
+  CloudRain,
+  Snowflake,
+  Sun,
+  CloudSun,
+  TrendingUp,
+  Minus,
+  Bot,
+  Flame,
+  User,
+  CreditCard
+} from 'lucide-react';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
@@ -75,11 +96,14 @@ export default function Dashboard() {
           const w = weatherRes.data.data;
           const temp = Math.round(w.temperature || w.temp || 28);
           const condition = w.condition || w.description || 'Clear';
-          const icon = condition.toLowerCase().includes('rain') ? '🌧️'
-            : condition.toLowerCase().includes('cloud') ? '☁️'
-            : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
+          
+          let WeatherIcon = Sun;
+          if (condition.toLowerCase().includes('rain')) WeatherIcon = CloudRain;
+          else if (condition.toLowerCase().includes('cloud')) WeatherIcon = Cloud;
+          else if (condition.toLowerCase().includes('snow')) WeatherIcon = Snowflake;
+          
           const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
-          setWeatherData({ temp, condition, icon, advice });
+          setWeatherData({ temp, condition, icon: <WeatherIcon size={32} />, advice });
         }
 
         if (smartRes?.data?.data?.insights) {
@@ -120,6 +144,20 @@ export default function Dashboard() {
 
   const loan = state.loanScore || {};
 
+  async function handleDownloadPDF() {
+    try {
+      const res = await pdfAPI.downloadEarnings(state.vendorId, 30);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'VoiceTrace_Earnings.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('PDF download error:', err);
+    }
+  }
+
   return (
     <div className="stagger-children">
       {/* Phase 4 Feature 6: Clarification Banner */}
@@ -134,7 +172,7 @@ export default function Dashboard() {
             fontWeight: 800,
           }}
         >
-          Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span> 👋
+          Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {t('dashboard.subtitle')}
@@ -147,25 +185,25 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid grid-4" style={{ marginBottom: 'var(--space-xl)' }}>
         <StatCard
-          icon="💰"
+          icon={<DollarSign size={24} />}
           value={`₹${(summary?.totalRevenue || 0).toLocaleString('en-IN')}`}
           label={t('dashboard.revenue30d')}
           bgColor="rgba(34, 197, 94, 0.15)"
         />
         <StatCard
-          icon="📊"
+          icon={<BarChart3 size={24} />}
           value={`₹${(summary?.totalProfit || 0).toLocaleString('en-IN')}`}
           label={t('dashboard.profit30d')}
           bgColor="rgba(99, 102, 241, 0.15)"
         />
         <StatCard
-          icon="📅"
+          icon={<CalendarDays size={24} />}
           value={summary?.entryCount || 0}
           label={t('dashboard.daysLogged')}
           bgColor="rgba(168, 85, 247, 0.15)"
         />
         <StatCard
-          icon="📉"
+          icon={<TrendingDown size={24} />}
           value={`₹${(summary?.totalMissedRevenue || 0).toLocaleString('en-IN')}`}
           label={t('dashboard.missedRevenue')}
           bgColor="rgba(239, 68, 68, 0.15)"
@@ -186,9 +224,12 @@ export default function Dashboard() {
             gap: 'var(--space-md)',
           }}
         >
-          <h2 className="section-title" style={{ marginBottom: 0 }}>
-            {t('dashboard.aiInsights')}
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+            <Lightbulb size={24} style={{ color: 'var(--primary-500)' }} />
+            <h2 className="section-title" style={{ margin: 0 }}>
+              {t('dashboard.aiInsights')}
+            </h2>
+          </div>
 
           {/* Weather Preview */}
           {weatherData ? (
@@ -203,10 +244,8 @@ export default function Dashboard() {
                 border: '1px solid var(--border-subtle)',
               }}
             >
-              <div style={{ fontSize: '2.2rem' }}>
-                {weatherData.icon === '🌧️' ? '🌧️' :
-                 weatherData.icon === '☁️' ? '☁️' :
-                 weatherData.icon === '❄️' ? '❄️' : '☀️'}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {weatherData.icon}
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
@@ -229,7 +268,7 @@ export default function Dashboard() {
                 border: '1px solid var(--border-subtle)',
               }}
             >
-              <span style={{ fontSize: '1.5rem' }}>🌤️</span>
+              <CloudSun size={24} style={{ color: 'var(--text-muted)' }} />
               <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 {t('dashboard.weatherLoading')}
               </div>
@@ -239,25 +278,26 @@ export default function Dashboard() {
           {/* Quick Smart Tips */}
           {smartTips.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
-              {smartTips.slice(0, 3).map((tip, i) => (
-                <div
-                  key={i}
-                  style={{
-                    display: 'flex',
-                    gap: 'var(--space-sm)',
-                    alignItems: 'flex-start',
-                    padding: '6px 0',
-                    borderBottom: i < Math.min(smartTips.length, 3) - 1 ? '1px solid var(--border-subtle)' : 'none',
-                  }}
-                >
-                  <span style={{ fontSize: '0.82rem', flexShrink: 0 }}>
-                    {['🎯', '📊', '💡'][i % 3]}
-                  </span>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                    {tip}
-                  </span>
-                </div>
-              ))}
+              {smartTips.slice(0, 3).map((tip, i) => {
+                const TipIcon = [Target, BarChart3, Lightbulb][i % 3];
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      gap: 'var(--space-sm)',
+                      alignItems: 'flex-start',
+                      padding: '8px 0',
+                      borderBottom: i < Math.min(smartTips.length, 3) - 1 ? '1px solid var(--border-subtle)' : 'none',
+                    }}
+                  >
+                    <TipIcon size={16} style={{ flexShrink: 0, marginTop: 2, color: 'var(--text-accent)' }} />
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                      {tip}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -287,13 +327,16 @@ export default function Dashboard() {
                 padding: 'var(--space-xl)',
               }}
             >
-              <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>🎙️</div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-sm)' }}>
+                <Mic size={48} style={{ color: 'var(--primary-500)' }} />
+              </div>
               <h3
                 style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: '1.1rem',
                   fontWeight: 700,
                   marginBottom: 'var(--space-xs)',
+                  color: 'var(--text-primary)',
                 }}
               >
                 {t('dashboard.recordSales')}
@@ -314,6 +357,7 @@ export default function Dashboard() {
                 fontFamily: 'var(--font-display)',
                 fontSize: '2rem',
                 fontWeight: 800,
+                color: 'var(--text-primary)',
               }}
             >
               ₹{Math.round(summary?.avgDailyRevenue || 0).toLocaleString('en-IN')}
@@ -323,10 +367,11 @@ export default function Dashboard() {
           {/* PDF Export */}
           <button
             className="btn btn-secondary btn-lg"
-            style={{ width: '100%' }}
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)' }}
             onClick={handleDownloadPDF}
           >
-            📄 {t('dashboard.downloadPDF')}
+            <FileText size={20} />
+            {t('dashboard.downloadPDF')}
           </button>
         </div>
       </div>
@@ -334,7 +379,10 @@ export default function Dashboard() {
       {/* AI Demand Forecast (from Python Prophet ML Service) */}
       {forecast && forecast.topPredictions?.length > 0 && (
         <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <h2 className="section-title">🎯 AI Demand Forecast — Tomorrow</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', marginBottom: 'var(--space-md)' }}>
+            <Target size={24} style={{ color: 'var(--primary-500)' }} />
+            <h2 className="section-title" style={{ margin: 0 }}>AI Demand Forecast — Tomorrow</h2>
+          </div>
           <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 'var(--space-md)', marginTop: -8 }}>
             ML-powered predictions based on your sales history (Prophet model)
           </p>
@@ -358,29 +406,34 @@ export default function Dashboard() {
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'capitalize', color: 'var(--text-primary)' }}>
                     {pred.item}
                   </span>
-                  <span style={{
+                  <div style={{
                     fontSize: '0.72rem',
                     padding: '2px 8px',
                     borderRadius: '999px',
                     fontWeight: 600,
                     background: pred.trend === 'up' ? 'rgba(34,197,94,0.2)' : pred.trend === 'down' ? 'rgba(239,68,68,0.2)' : 'rgba(99,102,241,0.2)',
                     color: pred.trend === 'up' ? '#16a34a' : pred.trend === 'down' ? '#dc2626' : '#6366f1',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 4
                   }}>
-                    {pred.trend === 'up' ? '📈 Trending Up' : pred.trend === 'down' ? '📉 Declining' : '➡️ Stable'}
-                  </span>
+                    {pred.trend === 'up' ? <TrendingUp size={12} /> : pred.trend === 'down' ? <TrendingDown size={12} /> : <Minus size={12} />}
+                    {pred.trend === 'up' ? 'Trending Up' : pred.trend === 'down' ? 'Declining' : 'Stable'}
+                  </div>
                 </div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: 4, color: 'var(--text-primary)' }}>
                   {pred.predictedQty}
                   <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 4 }}>units</span>
                 </div>
                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                   Confidence: {pred.confidence[0]}–{pred.confidence[1]} units
                 </div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  {pred.method === 'prophet' ? '🤖 ML Model' : '📊 Average'}
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {pred.method === 'prophet' ? <Bot size={12} /> : <BarChart3 size={12} />}
+                  {pred.method === 'prophet' ? 'ML Model' : 'Average'}
                 </div>
               </div>
             ))}
@@ -393,25 +446,26 @@ export default function Dashboard() {
         <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
           <h2 className="section-title">{t('dashboard.weeklyObservations')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-            {weeklyPatterns.plainInsights.map((insight, i) => (
-              <div
-                key={i}
-                style={{
-                  display: 'flex',
-                  gap: 'var(--space-sm)',
-                  alignItems: 'flex-start',
-                  padding: 'var(--space-sm) 0',
-                  borderBottom: i < weeklyPatterns.plainInsights.length - 1 ? '1px solid var(--border-subtle)' : 'none',
-                }}
-              >
-                <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>
-                  {['💡', '📊', '🎯'][i % 3]}
-                </span>
-                <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  {insight}
-                </span>
-              </div>
-            ))}
+            {weeklyPatterns.plainInsights.map((insight, i) => {
+              const InsightIcon = [Lightbulb, BarChart3, Target][i % 3];
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: 'flex',
+                    gap: 'var(--space-sm)',
+                    alignItems: 'flex-start',
+                    padding: 'var(--space-sm) 0',
+                    borderBottom: i < weeklyPatterns.plainInsights.length - 1 ? '1px solid var(--border-subtle)' : 'none',
+                  }}
+                >
+                  <InsightIcon size={18} style={{ flexShrink: 0, marginTop: 2, color: 'var(--primary-500)' }} />
+                  <span style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {insight}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -433,7 +487,7 @@ export default function Dashboard() {
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: 600, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                  <span style={{ fontWeight: 600, fontSize: '0.9rem', textTransform: 'capitalize', color: 'var(--text-primary)' }}>
                     {sug.item}
                   </span>
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 8 }}>
@@ -474,6 +528,7 @@ export default function Dashboard() {
                       fontWeight: 700,
                       textTransform: 'capitalize',
                       marginBottom: 4,
+                      color: 'var(--text-primary)'
                     }}
                   >
                     {weeklyPatterns.bestSeller.name}
@@ -509,6 +564,7 @@ export default function Dashboard() {
                       fontSize: '1.2rem',
                       fontWeight: 700,
                       marginBottom: 4,
+                      color: 'var(--text-primary)'
                     }}
                   >
                     {weeklyPatterns.peakDay.dayName}
@@ -596,14 +652,18 @@ export default function Dashboard() {
               key={key}
               style={{
                 display: 'flex',
+                alignItems: 'center',
                 justifyContent: 'space-between',
                 fontSize: '0.78rem',
                 color: 'var(--text-secondary)',
-                padding: '4px 0',
+                padding: '8px 0',
                 borderBottom: '1px solid var(--border-subtle)',
               }}
             >
-              <span>{formatBreakdownLabel(key)}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                {getBreakdownIcon(key)}
+                <span>{formatBreakdownLabel(key)}</span>
+              </div>
               <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
                 {Math.round(val * 10) / 10}
               </span>
@@ -613,30 +673,26 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
 
-  async function handleDownloadPDF() {
-    try {
-      const { pdfAPI } = await import('../api');
-      const res = await pdfAPI.downloadEarnings(state.vendorId, 30);
-      const url = URL.createObjectURL(res.data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'VoiceTrace_Earnings.pdf';
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('PDF download error:', err);
-    }
-  }
+function getBreakdownIcon(key) {
+  const IconMap = {
+    streakScore: <Flame size={14} />,
+    stabilityScore: <TrendingUp size={14} />,
+    revenueScore: <DollarSign size={14} />,
+    expenseScore: <CreditCard size={14} />,
+    profileScore: <User size={14} />,
+  };
+  return IconMap[key] || <FileText size={14} />;
 }
 
 function formatBreakdownLabel(key) {
   const labels = {
-    streakScore: '🔥 Logging Streak',
-    stabilityScore: '📈 Revenue Stability',
-    revenueScore: '💰 Avg Revenue',
-    expenseScore: '💸 Expense Tracking',
-    profileScore: '👤 Profile Complete',
+    streakScore: 'Logging Streak',
+    stabilityScore: 'Revenue Stability',
+    revenueScore: 'Avg Revenue',
+    expenseScore: 'Expense Tracking',
+    profileScore: 'Profile Complete',
   };
   return labels[key] || key;
 }

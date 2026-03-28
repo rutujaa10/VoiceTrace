@@ -12,7 +12,9 @@ import Vapi from '@vapi-ai/web';
 import {
   Mic, MicOff, CheckCircle, Loader2, RotateCcw, Save,
   Phone, PhoneOff, Volume2, Zap, MessageSquare, ArrowRight,
-  IndianRupee, ShoppingBag, TrendingDown, TrendingUp
+  IndianRupee, ShoppingBag, TrendingDown, TrendingUp,
+  ClipboardList, Brain, Layout, AlertTriangle, Trash2,
+  History, Sparkles, PartyPopper, X, Info
 } from 'lucide-react';
 import { useFieldMic } from '../hooks/useFieldMic';
 import { useApp, actionTypes } from '../state/AppContext';
@@ -136,11 +138,11 @@ export default function DailyLogRecorder() {
     });
 
     vapi.on('speech-start', () => {
-      setCallStatus('🔊 AI is speaking...');
+      setCallStatus('AI is speaking...');
     });
 
     vapi.on('speech-end', () => {
-      setCallStatus('🎤 Your turn — speak now...');
+      setCallStatus('Your turn — speak now...');
     });
 
     vapi.on('message', (msg) => {
@@ -490,14 +492,17 @@ IMPORTANT RULES:
       <div className="max-w-lg mx-auto" style={{ paddingTop: '8px' }}>
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
-              style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-            📋 <span className="gradient-text">Daily Log</span>
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
-            Speak naturally — AI detects your sales, expenses & items
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-2"
+                style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
+              <ClipboardList size={28} style={{ color: 'var(--primary-500)' }} />
+              <span className="gradient-text">Daily Log</span>
+            </h1>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+              Speak naturally — AI detects your sales, expenses & items
+            </p>
+          </div>
         </div>
 
         {/* ======== AI CONVERSATION HERO ======== */}
@@ -512,21 +517,30 @@ IMPORTANT RULES:
                   <MessageSquare size={34} className="text-white" />
                 </div>
               </div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>🗣️ AI Conversation</h2>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <Brain size={24} style={{ color: 'var(--primary-500)' }} /> AI Conversation
+              </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto 20px' }}>
-                AI voice assistant will ask you questions one by one in <span style={{ color: 'var(--primary-500)', fontWeight: 600 }}>Hindi, English, or Hinglish</span> and extract your business data automatically.
+                AI voice assistant will ask you questions one by one and extract your business data automatically.
               </p>
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)' }}>🎙️ Voice Guided</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1' }}>🧠 Auto Extract</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b' }}>✏️ Review & Edit</span>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                   <Mic size={12} /> Voice Guided
+                </div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1', display: 'flex', alignItems: 'center', gap: 4 }}>
+                   <Zap size={12} /> Auto Extract
+                </div>
+                <div style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b', display: 'flex', alignItems: 'center', gap: 4 }}>
+                   <Layout size={12} /> Review & Edit
+                </div>
               </div>
               <button onClick={() => { setMode('vapi'); }} className="transition-all duration-300 cursor-pointer border-0 hover:scale-[1.03] active:scale-[0.97]" style={{ background: 'var(--gradient-primary)', color: 'white', padding: '14px 40px', borderRadius: 'var(--radius-lg)', fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.35)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                 <Phone size={18} /> Start Conversation
               </button>
             </div>
-            <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-              💡 Tip: Just answer the AI's questions naturally — it handles the rest!
+            <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Info size={14} style={{ color: 'var(--primary-500)' }} />
+              Tip: Just answer the AI's questions naturally — it handles the rest!
             </div>
           </div>
         )}
@@ -546,7 +560,9 @@ IMPORTANT RULES:
               <p className="text-sm mt-1 max-w-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>Tell everything about your day — sales, expenses, items. AI will detect each part.</p>
             </div>
             <div className="w-full rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-              <p className="text-xs font-semibold mb-2" style={{ color: 'var(--text-muted)' }}>💡 Example</p>
+              <p className="text-xs font-semibold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                <Sparkles size={12} style={{ color: 'var(--primary-500)' }} /> Example
+              </p>
               <p className="text-sm leading-relaxed italic" style={{ color: 'var(--text-secondary)' }}>"Aaj 50 samose beche 10 rupaye mein, chai se 500 rupaye aaye, 200 rupaye ka tel kharida, aur samose shaam ko khatam ho gaye"</p>
             </div>
             <button onClick={() => setMode('choose')} className="text-sm transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)' }}>← Back</button>
@@ -565,7 +581,10 @@ IMPORTANT RULES:
             </div>
             <div className="text-center">
               <p className="text-3xl font-extrabold font-mono" style={{ color: 'var(--danger-400)' }}>{formatTime(recordingTime)}</p>
-              <p className="text-sm mt-1 animate-pulse" style={{ color: 'rgba(239,68,68,0.7)' }}>🔴 Listening... Tap to stop</p>
+              <p className="text-sm mt-1 animate-pulse flex items-center justify-center gap-2" style={{ color: 'rgba(239,68,68,0.7)' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor' }} />
+                Listening... Tap to stop
+              </p>
               <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Speak everything — sales, expenses, items</p>
             </div>
           </div>
@@ -608,8 +627,9 @@ IMPORTANT RULES:
               </div>
               <button onClick={() => setMode('choose')} className="transition-colors cursor-pointer bg-transparent border-0" style={{ color: 'var(--text-muted)', fontSize: '0.82rem', fontWeight: 500 }}>← Back</button>
             </div>
-            <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', maxWidth: '340px' }}>
-              🎙️ Make sure your microphone is enabled — speak in any language you're comfortable with!
+            <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem', maxWidth: '340px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Mic size={14} style={{ color: 'var(--primary-500)' }} />
+              Make sure your microphone is enabled!
             </div>
           </div>
         )}
@@ -626,11 +646,14 @@ IMPORTANT RULES:
             </div>
             <div className="text-center">
               <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>{callStatus}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Speak naturally in Hindi, English, or Hinglish</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>AI understands Hindi and English mixed</p>
             </div>
             {messages.length > 0 && (
               <div className="w-full rounded-2xl p-4 max-h-52 overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-                <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-muted)' }}>💬 Conversation</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare size={13} style={{ color: 'var(--text-muted)' }} />
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Conversation</p>
+                </div>
                 <div className="space-y-2">
                   {messages.slice(-8).map((msg, i) => (
                     <div key={i} className="text-sm px-3 py-2 rounded-xl max-w-[85%]" style={msg.role === 'assistant' ? { background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', marginRight: 'auto', borderBottomLeftRadius: '4px' } : { background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginLeft: 'auto', textAlign: 'right', borderBottomRightRadius: '4px' }}>
@@ -653,7 +676,7 @@ IMPORTANT RULES:
             <Loader2 size={44} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
             <div className="text-center">
               <p className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Extracting your data...</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>AI is parsing items, amounts &amp; expenses from your conversation</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Backend AI is parsing your conversation results</p>
             </div>
           </div>
         )}
@@ -665,8 +688,8 @@ IMPORTANT RULES:
             <div className="flex items-center gap-3 rounded-xl p-3.5 mb-5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 'var(--radius-2xl)' }}>
               <CheckCircle size={18} style={{ color: 'var(--primary-500)' }} className="shrink-0" />
               <div>
-                <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>✅ Data Extracted — Review Before Saving</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below, then confirm to save to ledger. Or discard to start over.</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>Review Before Saving</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below, then confirm to save to ledger.</p>
               </div>
             </div>
 
@@ -680,7 +703,7 @@ IMPORTANT RULES:
                     <div key={i} className="flex justify-between items-center text-sm py-1.5 last:border-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                       <span style={{ color: 'var(--text-primary)' }}>
                         {item.name} <span style={{ color: 'var(--text-muted)' }}>× {item.quantity}</span>
-                        {item.confidence < 0.7 && <span className="ml-1" title="Low confidence">⚠️</span>}
+                        {item.confidence < 0.7 && <AlertTriangle size={12} className="inline ml-1 text-amber-500" />}
                       </span>
                       <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>₹{item.totalPrice}</span>
                     </div>
@@ -699,7 +722,9 @@ IMPORTANT RULES:
                 )}
                 {extractionResult.missedProfits?.length > 0 && (
                   <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                    <h4 className="text-xs font-bold mb-2" style={{ color: 'var(--text-muted)' }}>📉 MISSED PROFITS</h4>
+                    <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                       <TrendingDown size={13} style={{ color: '#f59e0b' }} /> MISSED PROFITS
+                    </h4>
                     {extractionResult.missedProfits.map((mp, i) => (
                       <div key={i} className="text-sm py-1" style={{ color: '#f59e0b' }}>
                         {mp.item}: ~₹{mp.estimatedLoss} <span className="text-xs" style={{ color: 'var(--text-muted)' }}>"{mp.triggerPhrase}"</span>
@@ -724,10 +749,10 @@ IMPORTANT RULES:
 
             <div className="flex gap-3 mt-5">
               <button onClick={handleSave} disabled={!formData.salesAmount || !formData.itemsSold} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" style={{ background: 'var(--gradient-primary)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.3)', borderRadius: 'var(--radius-lg)' }}>
-                <Save size={16} /> ✅ Confirm & Save to Ledger
+                <Save size={16} /> Confirm & Save
               </button>
               <button onClick={handleReset} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--danger-400)', borderRadius: 'var(--radius-lg)' }}>
-                🗑️ Discard
+                <Trash2 size={16} /> Discard
               </button>
               <button onClick={handleReset} className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }} title="Start over">
                 <RotateCcw size={16} />
@@ -749,11 +774,11 @@ IMPORTANT RULES:
         {phase === 'saved' && (
           <div className="flex flex-col items-center gap-5 py-10 animate-[fadeIn_0.4s_ease]">
             <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.1)' }}>
-              <CheckCircle size={40} style={{ color: 'var(--primary-500)' }} />
+              <PartyPopper size={40} style={{ color: 'var(--primary-500)' }} />
             </div>
             <div className="text-center">
-              <p className="font-bold text-xl" style={{ color: 'var(--text-primary)' }}>Saved! 🎉</p>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Your daily log has been recorded.</p>
+              <p className="font-bold text-xl" style={{ color: 'var(--text-primary)' }}>Saved Successfully!</p>
+              <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Your daily log has been recorded to your ledger.</p>
             </div>
             <div className="w-full rounded-2xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
               <div className="grid grid-cols-3 gap-3 text-center">
@@ -767,18 +792,20 @@ IMPORTANT RULES:
                 </div>
                 <div>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Profit</p>
-                  <p className="text-lg font-bold" style={{ color: 'var(--text-accent)' }}>₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}</p>
+                  <p className="text-lg font-bold" style={{ color: '#6366f1' }}>₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}</p>
                 </div>
               </div>
               {formData.itemsSold && (
                 <div className="mt-3 pt-3 text-center" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Items</p>
+                  <p className="text-xs flex items-center justify-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                    <ShoppingBag size={12} /> Items
+                  </p>
                   <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>{formData.itemsSold}</p>
                 </div>
               )}
             </div>
             <button onClick={handleReset} className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-              <RotateCcw size={14} /> Record Another
+              <History size={14} /> Record Another
             </button>
           </div>
         )}
@@ -788,9 +815,11 @@ IMPORTANT RULES:
         {error && (
           <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-96 z-50 rounded-xl p-4 backdrop-blur-lg animate-[fadeIn_0.3s_ease]" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 'var(--radius-2xl)' }}>
             <div className="flex items-start gap-3">
-              <span style={{ color: 'var(--danger-400)' }} className="text-base">⚠️</span>
+              <AlertTriangle size={18} style={{ color: 'var(--danger-400)' }} />
               <p className="flex-1 text-sm" style={{ color: 'var(--danger-400)' }}>{error}</p>
-              <button onClick={() => setError('')} className="cursor-pointer bg-transparent border-0 text-base" style={{ color: 'var(--danger-400)', opacity: 0.7 }}>✕</button>
+              <button onClick={() => setError('')} className="cursor-pointer bg-transparent border-0 text-base flex items-center justify-center" style={{ color: 'var(--danger-400)', opacity: 0.7 }}>
+                <X size={16} />
+              </button>
             </div>
           </div>
         )}
@@ -798,4 +827,3 @@ IMPORTANT RULES:
     </div>
   );
 }
-

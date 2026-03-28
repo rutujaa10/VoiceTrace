@@ -1,7 +1,22 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Mic, ArrowRight, Zap, Globe, Phone, MessageSquare, TableProperties, TrendingUp } from 'lucide-react';
+import { 
+  Mic, 
+  ArrowRight, 
+  Zap, 
+  Globe, 
+  Phone, 
+  MessageSquare, 
+  TableProperties, 
+  TrendingUp,
+  Check,
+  CheckCircle,
+  AlertCircle,
+  ChevronRight,
+  Coffee,
+  UtensilsCrossed
+} from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import useIsMobile from '../../hooks/useIsMobile';
@@ -98,10 +113,10 @@ function TitleFloat({ words, highlightWords, isMobile }) {
 /* ─── 1. Smart Ledger Card ────────────────────────────────── */
 function SmartLedgerCard() {
   const rows = [
-    { item: 'Chai ☕', qty: 200, price: 15, total: 3000, conf: 'High', confColor: '#22c55e', confBg: 'rgba(34,197,94,0.1)' },
-    { item: 'Samosa 🥟', qty: 50, price: 20, total: 1000, conf: 'High', confColor: '#22c55e', confBg: 'rgba(34,197,94,0.1)' },
-    { item: 'Vada Pav', qty: 30, price: 25, total: 750, conf: 'Medium', confColor: '#f59e0b', confBg: 'rgba(245,158,11,0.1)' },
-    { item: 'Pani Puri', qty: '?', price: 10, total: '—', conf: 'Low', confColor: '#ef4444', confBg: 'rgba(239,68,68,0.1)' },
+    { item: 'Chai', icon: <Coffee size={12} />, qty: 200, price: 15, total: 3000, conf: 'High', confColor: '#22c55e', confBg: 'rgba(34,197,94,0.1)' },
+    { item: 'Samosa', icon: <UtensilsCrossed size={12} />, qty: 50, price: 20, total: 1000, conf: 'High', confColor: '#22c55e', confBg: 'rgba(34,197,94,0.1)' },
+    { item: 'Vada Pav', icon: <UtensilsCrossed size={12} />, qty: 30, price: 25, total: 750, conf: 'Medium', confColor: '#f59e0b', confBg: 'rgba(245,158,11,0.1)' },
+    { item: 'Pani Puri', icon: <UtensilsCrossed size={12} />, qty: '?', price: 10, total: '—', conf: 'Low', confColor: '#ef4444', confBg: 'rgba(239,68,68,0.1)' },
   ];
   return (
     <>
@@ -121,7 +136,10 @@ function SmartLedgerCard() {
           <tbody>
             {rows.map((r, i) => (
               <tr key={i} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                <td style={{ padding: '0.6rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{r.item}</td>
+                <td style={{ padding: '0.6rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ opacity: 0.6 }}>{r.icon}</span>
+                  {r.item}
+                </td>
                 <td style={{ padding: '0.6rem', color: 'var(--text-secondary)' }}>{r.qty}</td>
                 <td style={{ padding: '0.6rem', color: 'var(--text-secondary)' }}>₹{r.price}</td>
                 <td style={{ padding: '0.6rem', fontWeight: 700, color: 'var(--text-primary)' }}>{typeof r.total === 'number' ? `₹${r.total}` : r.total}</td>
@@ -153,7 +171,7 @@ function AIAssistantCard() {
         </div>
         <div style={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
           <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '0.6rem 1rem', borderRadius: '1rem 1rem 1rem 0.3rem', fontSize: '0.82rem', lineHeight: 1.5 }}>
-            Got it! 200 chai ☕ & 50 samosa 🥟. What was the price per chai today?
+            Got it! 200 chai & 50 samosa recorded. What was the price today?
           </div>
         </div>
         <div style={{ alignSelf: 'flex-end', maxWidth: '80%' }}>
@@ -162,8 +180,9 @@ function AIAssistantCard() {
           </div>
         </div>
         <div style={{ alignSelf: 'flex-start', maxWidth: '85%' }}>
-          <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '0.6rem 1rem', borderRadius: '1rem 1rem 1rem 0.3rem', fontSize: '0.82rem', lineHeight: 1.5 }}>
-            ✅ Logged! Today's revenue: ₹4,000
+          <div style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)', padding: '0.6rem 1rem', borderRadius: '1rem 1rem 1rem 0.3rem', fontSize: '0.82rem', lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle size={14} style={{ color: '#22c55e' }} />
+            Logged! Today's revenue: ₹4,000
           </div>
         </div>
       </div>
@@ -196,7 +215,11 @@ function WhatsAppCard() {
           </div>
         </div>
         <div style={{ background: 'rgba(34,197,94,0.08)', borderRadius: '0.6rem', padding: '0.5rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)' }}>✈️ Entry logged: 30 vada pav sold ✅</span>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Zap size={12} style={{ color: '#22c55e' }} />
+            Entry logged: 30 vada pav sold
+            <Check size={12} style={{ color: '#22c55e' }} />
+          </span>
         </div>
       </div>
     </>
