@@ -18,6 +18,8 @@ const ledgerRoutes = require('./routes/ledger.routes');
 const insightRoutes = require('./routes/insight.routes');
 const webhookRoutes = require('./routes/webhook.routes');
 const pdfRoutes = require('./routes/pdf.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const assistantRoutes = require('./routes/assistant.routes');
 
 // Cron jobs
 const { initCronJobs } = require('./jobs');
@@ -59,6 +61,8 @@ app.use('/api/ledger', ledgerRoutes);
 app.use('/api/insights', insightRoutes);
 app.use('/api/webhook', webhookRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/assistant', assistantRoutes);
 
 // ---- Error Handling ----
 app.use(notFound);

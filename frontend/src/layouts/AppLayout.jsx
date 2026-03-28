@@ -19,6 +19,7 @@ export default function AppLayout() {
     { path: '/daily-log', icon: '📋', label: 'Daily Log' },
     { path: '/ledger', icon: '📒', label: 'Ledger' },
     { path: '/insights', icon: '💡', label: 'Insights' },
+    { path: '/assistant', icon: '🤖', label: 'AI Assistant' },
   ];
 
   return (

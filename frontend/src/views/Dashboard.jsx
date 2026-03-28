@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
-import { vendorAPI, insightAPI, ledgerAPI } from '../api';
+import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
 import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
@@ -17,6 +17,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [recentInsights, setRecentInsights] = useState([]);
+  const [weeklyPatterns, setWeeklyPatterns] = useState(null);
 
   useEffect(() => {
     if (!state.vendorId) return;
@@ -26,10 +27,11 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const [dashRes, loanRes, insightRes] = await Promise.all([
+      const [dashRes, loanRes, insightRes, analyticsRes] = await Promise.all([
         vendorAPI.getDashboard(state.vendorId),
         vendorAPI.getLoanScore(state.vendorId),
         insightAPI.getUnread(state.vendorId),
+        analyticsAPI.getWeekly(state.vendorId).catch(() => null),
       ]);
 
       const dash = dashRes.data.data;
@@ -37,6 +39,10 @@ export default function Dashboard() {
       dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: loanRes.data.data });
       setSummary(dash.summary);
       setRecentInsights(insightRes.data.data || []);
+
+      if (analyticsRes?.data?.data) {
+        setWeeklyPatterns(analyticsRes.data.data);
+      }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
@@ -197,6 +203,116 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+
+      {/* Weekly Patterns */}
+      {weeklyPatterns && (
+        <div style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">📈 Weekly Patterns</h2>
+          <div className="grid grid-3">
+            {/* Best Seller */}
+            <div
+              className="glass-card"
+              style={{
+                background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05))',
+                borderLeft: '3px solid var(--success-400)',
+              }}
+            >
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                🏆 Best Seller This Week
+              </div>
+              {weeklyPatterns.bestSeller ? (
+                <>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      marginBottom: 4,
+                    }}
+                  >
+                    {weeklyPatterns.bestSeller.name}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    {weeklyPatterns.bestSeller.totalQuantity} units sold · ₹{weeklyPatterns.bestSeller.totalRevenue.toLocaleString('en-IN')} revenue
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    Appeared on {weeklyPatterns.bestSeller.daysAppeared} of 7 days
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+              )}
+            </div>
+
+            {/* Peak Day */}
+            <div
+              className="glass-card"
+              style={{
+                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.05))',
+                borderLeft: '3px solid var(--text-accent)',
+              }}
+            >
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                🔥 Highest Revenue Day
+              </div>
+              {weeklyPatterns.peakDay ? (
+                <>
+                  <div
+                    style={{
+                      fontFamily: 'var(--font-display)',
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {weeklyPatterns.peakDay.dayName}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                    ₹{weeklyPatterns.peakDay.revenue.toLocaleString('en-IN')} revenue · ₹{weeklyPatterns.peakDay.profit.toLocaleString('en-IN')} profit
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    {new Date(weeklyPatterns.peakDay.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+              )}
+            </div>
+
+            {/* Missed Profits */}
+            <div
+              className="glass-card"
+              style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05))',
+                borderLeft: '3px solid var(--danger-400)',
+              }}
+            >
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                📉 Missed Profits This Week
+              </div>
+              <div
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  color: 'var(--danger-400)',
+                  marginBottom: 4,
+                }}
+              >
+                ~₹{(weeklyPatterns.missedProfits?.totalLoss || 0).toLocaleString('en-IN')}
+              </div>
+              {weeklyPatterns.missedProfits?.topMissedItems?.length > 0 ? (
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                  Top: {weeklyPatterns.missedProfits.topMissedItems.slice(0, 2).map((m) => m.item).join(', ')}
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>✅ No missed profits!</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Insights */}
       {recentInsights.length > 0 && (
