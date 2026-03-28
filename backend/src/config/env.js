@@ -21,6 +21,9 @@ const env = {
   // Gemini API
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
 
+  // Groq API (free Whisper transcription)
+  GROQ_API_KEY: process.env.GROQ_API_KEY,
+
   // Local Whisper
   WHISPER_MODEL: process.env.WHISPER_MODEL || 'base',
 
