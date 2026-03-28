@@ -65,6 +65,7 @@ export default function Insights() {
 
   const fetchSmartInsights = async () => {
     setSmartLoading(true);
+    setLoading(false); // Unblock page immediately — smart data loads in background
     try {
       const res = await insightAPI.getSmartInsights(state.vendorId);
       setSmartData(res.data.data);
@@ -72,7 +73,6 @@ export default function Insights() {
       console.error('Smart insights fetch error:', err);
     } finally {
       setSmartLoading(false);
-      setLoading(false);
     }
   };
 

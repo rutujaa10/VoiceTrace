@@ -244,7 +244,11 @@ const getEntries = asyncHandler(async (req, res) => {
   if (startDate || endDate) {
     filter.date = {};
     if (startDate) filter.date.$gte = new Date(startDate);
-    if (endDate) filter.date.$lte = new Date(endDate);
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.date.$lte = end;
+    }
   }
 
   const [entries, total] = await Promise.all([
@@ -528,6 +532,102 @@ const removeExpense = asyncHandler(async (req, res) => {
   res.json({ success: true, data: entry });
 });
 
+/**
+ * POST /api/ledger/:vendorId/manual — Manual structured entry (no AI)
+ * Accepts items[] and expenses[] directly from a typed form.
+ */
+const manualEntry = asyncHandler(async (req, res) => {
+  const vendor = await User.findById(req.params.vendorId);
+  if (!vendor) {
+    const err = new Error('Vendor not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const { items, expenses } = req.body;
+  if ((!items || items.length === 0) && (!expenses || expenses.length === 0)) {
+    const err = new Error('At least one item or expense is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Normalize items
+  const normalizedItems = (items || []).map(it => ({
+    name: it.name,
+    quantity: Number(it.quantity) || 1,
+    unitPrice: Number(it.unitPrice) || 0,
+    totalPrice: Number(it.totalPrice) || (Number(it.quantity) || 1) * (Number(it.unitPrice) || 0),
+    confidence: 1.0,
+    isApproximate: false,
+    needsConfirmation: false,
+  }));
+
+  // Normalize expenses
+  const normalizedExpenses = (expenses || []).map(exp => ({
+    category: exp.category || 'raw_material',
+    description: exp.description,
+    amount: Number(exp.amount) || 0,
+    confidence: 1.0,
+    isApproximate: false,
+    needsConfirmation: false,
+  }));
+
+  // Build a human-readable transcript for record-keeping
+  const transcript = [
+    ...normalizedItems.map(it => `${it.name} x${it.quantity} @ ₹${it.unitPrice} = ₹${it.totalPrice}`),
+    ...normalizedExpenses.map(exp => `Expense: ${exp.description || exp.category} = ₹${exp.amount}`),
+  ].join(', ');
+
+  // Create/append to today's entry
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let entry = await LedgerEntry.findOne({ vendor: vendor._id, date: { $gte: today } });
+
+  if (entry) {
+    entry.items.push(...normalizedItems);
+    entry.expenses.push(...normalizedExpenses);
+    entry.rawTranscript += '\n---\n[Manual Entry] ' + transcript;
+  } else {
+    entry = new LedgerEntry({
+      vendor: vendor._id,
+      date: today,
+      rawTranscript: '[Manual Entry] ' + transcript,
+      language: vendor.preferredLanguage || 'en',
+      items: normalizedItems,
+      expenses: normalizedExpenses,
+      missedProfits: [],
+      source: 'manual',
+      confirmedByVendor: true,
+      location: vendor.location,
+      processingMeta: {
+        llmModel: 'manual',
+        llmTokensUsed: 0,
+        processedAt: new Date(),
+      },
+    });
+  }
+
+  await entry.save();
+
+  // Upsert items into catalog
+  await Item.upsertFromExtraction(vendor._id, normalizedItems, today);
+
+  // Update loan score
+  vendor.updateStreak(today);
+  await loanService.recalculateScore(vendor);
+  await vendor.save();
+
+  res.status(201).json({
+    success: true,
+    data: {
+      entry,
+      extraction: { items: normalizedItems, expenses: normalizedExpenses, missedProfits: [] },
+      loanReadiness: vendor.loanReadiness,
+    },
+  });
+});
+
 module.exports = {
   processAudio,
   processText,
@@ -540,4 +640,5 @@ module.exports = {
   resolveClarification,
   removeItem,
   removeExpense,
+  manualEntry,
 };

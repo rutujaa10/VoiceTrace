@@ -42,7 +42,7 @@ const callWithFallback = async (buildRequest) => {
   const errors = [];
 
   for (const provider of PROVIDERS) {
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
       try {
         if (!provider.apiKey) {
           errors.push(`${provider.label}: no API key`);
@@ -58,9 +58,9 @@ const callWithFallback = async (buildRequest) => {
         errors.push(`${provider.label}: ${err.status} ${err.message || ''}`);
         console.error(`[AI] ${provider.label} error:`, err.status, err.message);
 
-        if (isRetryable && attempt < 3) {
-          const delay = attempt * 5000;
-          console.warn(`[AI] ${provider.label} (${err.status}). Retry ${attempt}/3 in ${delay / 1000}s...`);
+        if (isRetryable && attempt < 2) {
+          const delay = attempt * 1500;
+          console.warn(`[AI] ${provider.label} (${err.status}). Retry ${attempt}/2 in ${delay / 1000}s...`);
           await new Promise((r) => setTimeout(r, delay));
         } else {
           console.warn(`[AI] ${provider.label} exhausted. Trying next provider...`);

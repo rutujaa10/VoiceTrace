@@ -24,6 +24,9 @@ router.post('/:vendorId/extract-only', ledgerController.extractOnly);
 // GET /api/ledger/:vendorId — Get ledger entries (paginated)
 router.get('/:vendorId', validate(ledgerSchemas.query, 'query'), ledgerController.getEntries);
 
+// POST /api/ledger/:vendorId/manual — Manual structured entry (typed form, no AI)
+router.post('/:vendorId/manual', ledgerController.manualEntry);
+
 // GET /api/ledger/:vendorId/summary — Get summary stats
 router.get('/:vendorId/summary', ledgerController.getSummary);
 

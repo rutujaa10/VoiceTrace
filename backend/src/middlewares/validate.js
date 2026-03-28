@@ -67,7 +67,7 @@ const ledgerSchemas = {
     startDate: Joi.date().iso().optional(),
     endDate: Joi.date().iso().optional(),
     page: Joi.number().integer().min(1).default(1),
-    limit: Joi.number().integer().min(1).max(100).default(20),
+    limit: Joi.number().integer().min(1).max(500).default(20),
   }),
 
   confirm: Joi.object({

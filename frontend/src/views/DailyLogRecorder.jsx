@@ -111,6 +111,10 @@ export default function DailyLogRecorder() {
     daySummary: '',
   });
 
+  // Editable item/expense lists for review phase
+  const [reviewItems, setReviewItems] = useState([]);
+  const [reviewExpenses, setReviewExpenses] = useState([]);
+
   // Full extraction result from backend
   const [extractionResult, setExtractionResult] = useState(null);
 
@@ -224,6 +228,21 @@ export default function DailyLogRecorder() {
 
       // Store full extraction for display
       setExtractionResult(extraction);
+
+      // Populate editable review items
+      const items = (extraction.items || []).map(item => ({
+        name: item.name || '',
+        quantity: String(item.quantity || 1),
+        unitPrice: String(item.unitPrice || ''),
+        totalPrice: String(item.totalPrice || 0),
+      }));
+      const expenses = (extraction.expenses || []).map(exp => ({
+        description: exp.description || exp.category || '',
+        category: exp.category || 'raw_material',
+        amount: String(exp.amount || 0),
+      }));
+      setReviewItems(items.length > 0 ? items : [{ name: '', quantity: '1', unitPrice: '', totalPrice: '' }]);
+      setReviewExpenses(expenses.length > 0 ? expenses : [{ description: '', category: 'raw_material', amount: '' }]);
 
       // Compute totals from Gemini's accurate extraction
       const totalSales = (extraction.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
@@ -402,6 +421,21 @@ IMPORTANT RULES:
       // Store full extraction for display
       setExtractionResult(extraction);
 
+      // Populate editable review items
+      const items = (extraction.items || []).map(item => ({
+        name: item.name || '',
+        quantity: String(item.quantity || 1),
+        unitPrice: String(item.unitPrice || ''),
+        totalPrice: String(item.totalPrice || 0),
+      }));
+      const expenses = (extraction.expenses || []).map(exp => ({
+        description: exp.description || exp.category || '',
+        category: exp.category || 'raw_material',
+        amount: String(exp.amount || 0),
+      }));
+      setReviewItems(items.length > 0 ? items : [{ name: '', quantity: '1', unitPrice: '', totalPrice: '' }]);
+      setReviewExpenses(expenses.length > 0 ? expenses : [{ description: '', category: 'raw_material', amount: '' }]);
+
       // Compute totals for the form
       const totalSales = (extraction.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
       const totalExpenses = (extraction.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
@@ -452,10 +486,14 @@ IMPORTANT RULES:
     setPhase('saving');
 
     try {
-      // Build a clean transcript from the reviewed/edited form data
-      const transcript = `Items sold: ${formData.itemsSold}. Total sales: ${formData.salesAmount} rupees. Total expenses: ${formData.expenseAmount} rupees.${formData.daySummary ? ' Day summary: ' + formData.daySummary : ''}`;
+      // Use the edited item-level data via manual entry endpoint
+      const validItems = reviewItems.filter(it => it.name.trim() && Number(it.totalPrice) > 0);
+      const validExpenses = reviewExpenses.filter(ex => ex.description.trim() && Number(ex.amount) > 0);
 
-      const res = await ledgerAPI.submitText(state.vendorId, transcript, 'hi');
+      const res = await ledgerAPI.manualEntry(state.vendorId, {
+        items: validItems,
+        expenses: validExpenses,
+      });
 
       if (res.data.data?.loanReadiness) {
         dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: res.data.data.loanReadiness });
@@ -475,12 +513,44 @@ IMPORTANT RULES:
     setMode('choose');
     setFormData({ salesAmount: '', expenseAmount: '', itemsSold: '', daySummary: '' });
     setExtractionResult(null);
+    setReviewItems([]);
+    setReviewExpenses([]);
     setMessages([]);
     setError('');
     setCallStatus('');
     setRecordingTime(0);
     setIsRecording(false);
   };
+
+  // ---- Review form helpers ----
+  const updateReviewItem = (index, field, value) => {
+    setReviewItems(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      if (field === 'quantity' || field === 'unitPrice') {
+        const qty = Number(field === 'quantity' ? value : updated[index].quantity) || 0;
+        const price = Number(field === 'unitPrice' ? value : updated[index].unitPrice) || 0;
+        updated[index].totalPrice = String(qty * price);
+      }
+      return updated;
+    });
+  };
+  const addReviewItem = () => setReviewItems(prev => [...prev, { name: '', quantity: '1', unitPrice: '', totalPrice: '' }]);
+  const removeReviewItem = (i) => { if (reviewItems.length > 1) setReviewItems(prev => prev.filter((_, idx) => idx !== i)); };
+
+  const updateReviewExpense = (index, field, value) => {
+    setReviewExpenses(prev => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
+    });
+  };
+  const addReviewExpense = () => setReviewExpenses(prev => [...prev, { description: '', category: 'raw_material', amount: '' }]);
+  const removeReviewExpense = (i) => { if (reviewExpenses.length > 1) setReviewExpenses(prev => prev.filter((_, idx) => idx !== i)); };
+
+  const reviewTotalSales = reviewItems.reduce((s, it) => s + (Number(it.totalPrice) || 0), 0);
+  const reviewTotalExpenses = reviewExpenses.reduce((s, ex) => s + (Number(ex.amount) || 0), 0);
+  const reviewProfit = reviewTotalSales - reviewTotalExpenses;
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
@@ -659,78 +729,128 @@ IMPORTANT RULES:
         )}
 
 
-        {/* ======== REVIEW PHASE ======== */}
+        {/* ======== REVIEW PHASE — Editable Item-Level Form ======== */}
         {phase === 'review' && (
           <div className="animate-[fadeIn_0.4s_ease]">
-            <div className="flex items-center gap-3 rounded-xl p-3.5 mb-5" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.15)', borderRadius: 'var(--radius-2xl)' }}>
-              <CheckCircle size={18} style={{ color: 'var(--primary-500)' }} className="shrink-0" />
+            {/* Review banner */}
+            <div className="flex items-center gap-3 rounded-xl p-3.5 mb-5" style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(168,85,247,0.08))', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 'var(--radius-2xl)' }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(99,102,241,0.12)' }}>
+                <CheckCircle size={20} style={{ color: 'var(--text-accent)' }} />
+              </div>
               <div>
-                <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>✅ Data Extracted — Review Before Saving</p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below, then confirm to save to ledger. Or discard to start over.</p>
+                <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>✏️ Review AI Extracted Data</p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Edit any values below if the AI got something wrong, then confirm to save</p>
               </div>
             </div>
 
-            {extractionResult && extractionResult.items?.length > 0 && (
-              <div className="rounded-2xl p-4 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-                <h4 className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                  <ShoppingBag size={13} /> DETECTED ITEMS
+            {/* Items Sold — Editable */}
+            <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <ShoppingBag size={16} style={{ color: 'var(--primary-500)' }} /> Items Sold
                 </h4>
-                <div className="space-y-1.5">
-                  {extractionResult.items.map((item, i) => (
-                    <div key={i} className="flex justify-between items-center text-sm py-1.5 last:border-0" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                      <span style={{ color: 'var(--text-primary)' }}>
-                        {item.name} <span style={{ color: 'var(--text-muted)' }}>× {item.quantity}</span>
-                        {item.confidence < 0.7 && <span className="ml-1" title="Low confidence">⚠️</span>}
-                      </span>
-                      <span className="font-semibold" style={{ color: 'var(--primary-500)' }}>₹{item.totalPrice}</span>
-                    </div>
-                  ))}
-                </div>
-                {extractionResult.expenses?.length > 0 && (
-                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                    <h4 className="text-xs font-bold mb-2 flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}><TrendingDown size={13} /> DETECTED EXPENSES</h4>
-                    {extractionResult.expenses.map((exp, i) => (
-                      <div key={i} className="flex justify-between text-sm py-1">
-                        <span style={{ color: 'var(--text-secondary)' }}>{exp.description || exp.category}</span>
-                        <span className="font-semibold" style={{ color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {extractionResult.missedProfits?.length > 0 && (
-                  <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-                    <h4 className="text-xs font-bold mb-2" style={{ color: 'var(--text-muted)' }}>📉 MISSED PROFITS</h4>
-                    {extractionResult.missedProfits.map((mp, i) => (
-                      <div key={i} className="text-sm py-1" style={{ color: '#f59e0b' }}>
-                        {mp.item}: ~₹{mp.estimatedLoss} <span className="text-xs" style={{ color: 'var(--text-muted)' }}>"{mp.triggerPhrase}"</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <button onClick={addReviewItem} className="transition-all duration-200 cursor-pointer border-0 hover:scale-105" style={{ background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  + Add Item
+                </button>
               </div>
-            )}
 
-            <div className="backdrop-blur-lg rounded-2xl p-5 space-y-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-              <VoiceField id="field-sales" label="Total Sales (₹)" icon={TrendingUp} type="number" value={formData.salesAmount} onChange={(val) => setFormData((p) => ({ ...p, salesAmount: val }))} placeholder="e.g. 1500" prefix="₹" />
-              <VoiceField id="field-expenses" label="Total Expenses (₹)" icon={TrendingDown} type="number" value={formData.expenseAmount} onChange={(val) => setFormData((p) => ({ ...p, expenseAmount: val }))} placeholder="e.g. 400" prefix="₹" />
-              <VoiceField id="field-items" label="Items Sold" icon={ShoppingBag} type="text" value={formData.itemsSold} onChange={(val) => setFormData((p) => ({ ...p, itemsSold: val }))} placeholder="e.g. samosa, chai, pakora" />
-              {formData.salesAmount && (
-                <div className="rounded-xl p-3.5 flex justify-between items-center" style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)', borderRadius: 'var(--radius-lg)' }}>
-                  <span className="text-sm font-medium flex items-center gap-1.5" style={{ color: 'var(--primary-500)' }}><IndianRupee size={14} /> Net Profit</span>
-                  <span className="text-xl font-extrabold" style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>₹{(Number(formData.salesAmount) || 0) - (Number(formData.expenseAmount) || 0)}</span>
+              {/* Column headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px' }}>
+                {['Item Name', 'Qty', 'Unit ₹', 'Total ₹', ''].map(h => (
+                  <span key={h} style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</span>
+                ))}
+              </div>
+
+              {reviewItems.map((item, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
+                  <input type="text" value={item.name} onChange={e => updateReviewItem(i, 'name', e.target.value)} placeholder="e.g. Samosa"
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
+                  <input type="number" value={item.quantity} min="1" onChange={e => updateReviewItem(i, 'quantity', e.target.value)}
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
+                  <input type="number" value={item.unitPrice} min="0" onChange={e => updateReviewItem(i, 'unitPrice', e.target.value)} placeholder="₹"
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
+                  <div style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-500)', textAlign: 'center' }}>
+                    ₹{Number(item.totalPrice) || 0}
+                  </div>
+                  <button onClick={() => removeReviewItem(i)} disabled={reviewItems.length <= 1} className="cursor-pointer border-0 transition-all duration-200 disabled:opacity-20" style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)' }}>
+                    ✕
+                  </button>
                 </div>
-              )}
+              ))}
             </div>
 
-            <div className="flex gap-3 mt-5">
-              <button onClick={handleSave} disabled={!formData.salesAmount || !formData.itemsSold} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" style={{ background: 'var(--gradient-primary)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.3)', borderRadius: 'var(--radius-lg)' }}>
+            {/* Expenses — Editable */}
+            <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', position: 'relative', overflow: 'hidden' }}>
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(135deg, #ef4444, #f97316)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                  <TrendingDown size={16} style={{ color: 'var(--danger-400)' }} /> Expenses
+                </h4>
+                <button onClick={addReviewExpense} className="transition-all duration-200 cursor-pointer border-0 hover:scale-105" style={{ background: 'rgba(239,68,68,0.06)', color: 'var(--danger-400)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  + Add Expense
+                </button>
+              </div>
+
+              {/* Column headers */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px' }}>
+                {['Description', 'Category', 'Amount ₹', ''].map(h => (
+                  <span key={h} style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</span>
+                ))}
+              </div>
+
+              {reviewExpenses.map((exp, i) => (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
+                  <input type="text" value={exp.description} onChange={e => updateReviewExpense(i, 'description', e.target.value)} placeholder="e.g. Oil, Flour"
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
+                  <select value={exp.category} onChange={e => updateReviewExpense(i, 'category', e.target.value)}
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }}>
+                    <option value="raw_material">Raw Material</option>
+                    <option value="transport">Transport</option>
+                    <option value="rent">Rent</option>
+                    <option value="labor">Labor</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <input type="number" value={exp.amount} min="0" onChange={e => updateReviewExpense(i, 'amount', e.target.value)} placeholder="₹200"
+                    style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
+                  <button onClick={() => removeReviewExpense(i)} disabled={reviewExpenses.length <= 1} className="cursor-pointer border-0 transition-all duration-200 disabled:opacity-20" style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)' }}>
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Totals Summary */}
+            <div style={{
+              background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-3xl)', padding: '16px',
+              display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', textAlign: 'center',
+              marginBottom: '16px',
+            }}>
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Total Sales</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary-500)' }}>₹{reviewTotalSales.toLocaleString('en-IN')}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Total Expenses</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, color: 'var(--danger-400)' }}>₹{reviewTotalExpenses.toLocaleString('en-IN')}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '0.68rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '3px' }}>Net Profit</div>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 800, color: reviewProfit >= 0 ? 'var(--primary-500)' : 'var(--danger-400)' }}>
+                  {reviewProfit >= 0 ? '+' : ''}₹{reviewProfit.toLocaleString('en-IN')}
+                </div>
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex gap-3">
+              <button onClick={handleSave} disabled={reviewItems.every(it => !it.name.trim())} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm text-white hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer border-0 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100" style={{ background: 'var(--gradient-primary)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.3)', borderRadius: 'var(--radius-lg)' }}>
                 <Save size={16} /> ✅ Confirm & Save to Ledger
               </button>
-              <button onClick={handleReset} className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--danger-400)', borderRadius: 'var(--radius-lg)' }}>
+              <button onClick={handleReset} className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', color: 'var(--danger-400)', borderRadius: 'var(--radius-lg)' }}>
                 🗑️ Discard
-              </button>
-              <button onClick={handleReset} className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }} title="Start over">
-                <RotateCcw size={16} />
               </button>
             </div>
           </div>

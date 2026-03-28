@@ -20,6 +20,7 @@ import Insights from './views/Insights';
 import Assistant from './views/Assistant';
 import Login from './views/Login';
 import DailyLogRecorder from './views/DailyLogRecorder';
+import Report from './views/Report';
 import './index.css';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
               <Route path="ledger" element={<Ledger />} />
               <Route path="insights" element={<Insights />} />
               <Route path="assistant" element={<Assistant />} />
+              <Route path="report" element={<Report />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

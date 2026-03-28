@@ -50,6 +50,8 @@ export const ledgerAPI = {
   confirmEntry: (entryId, confirmed) =>
     api.put(`/ledger/entry/${entryId}/confirm`, { confirmed }),
   getToday: (vendorId) => api.get(`/ledger/${vendorId}/today`),
+  manualEntry: (vendorId, data) =>
+    api.post(`/ledger/${vendorId}/manual`, data),
 
   // Phase 4 Feature 6: Clarification flow
   getPendingClarifications: (vendorId) =>

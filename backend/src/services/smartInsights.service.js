@@ -466,9 +466,13 @@ const getMatureStageInsights = async (vendor, entries) => {
     data: { growthScore, factors: getGrowthFactors(entries, vendor) },
   });
 
-  // AI-generated actionable tips (if API available)
+  // AI-generated actionable tips (if API available, with 8s timeout)
   try {
-    const aiTips = await generateAIGrowthTips(entries, vendor);
+    const aiTipsPromise = generateAIGrowthTips(entries, vendor);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('AI tips timeout')), 8000)
+    );
+    const aiTips = await Promise.race([aiTipsPromise, timeoutPromise]);
     if (aiTips && aiTips.length > 0) {
       insights.push({
         type: 'ai_growth_tips',
@@ -481,7 +485,20 @@ const getMatureStageInsights = async (vendor, entries) => {
       });
     }
   } catch (err) {
-    console.error('[SmartInsights] AI tips generation error:', err.message);
+    console.error('[SmartInsights] AI tips generation error (fell back to static):', err.message);
+    // Fall back to static tips on timeout or error
+    const staticTips = getStaticGrowthTips(entries, vendor);
+    if (staticTips.length > 0) {
+      insights.push({
+        type: 'ai_growth_tips',
+        priority: 3,
+        icon: '🧠',
+        title: 'AI Growth Recommendations',
+        subtitle: 'Based on your business data',
+        content: staticTips.join('\n\n'),
+        data: { tips: staticTips },
+      });
+    }
   }
 
   // Consistency tracking

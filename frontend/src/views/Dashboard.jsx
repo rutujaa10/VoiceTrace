@@ -38,6 +38,7 @@ export default function Dashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
+      // Phase 1: Critical data — loads fast, unblocks the UI
       const [dashRes, loanRes, insightRes, analyticsRes, todayRes] = await Promise.all([
         vendorAPI.getDashboard(state.vendorId),
         vendorAPI.getLoanScore(state.vendorId),
@@ -59,38 +60,39 @@ export default function Dashboard() {
       if (todayRes?.data?.data?.anomaly?.detected) {
         setTodayAnomaly(todayRes.data.data.anomaly);
       }
-
-      try {
-        const [smartRes, weatherRes] = await Promise.all([
-          insightAPI.getSmartInsights(state.vendorId).catch(() => null),
-          insightAPI.getWeatherForecast().catch(() => null),
-        ]);
-
-        if (weatherRes?.data?.data) {
-          const w = weatherRes.data.data;
-          const temp = Math.round(w.temperature || w.temp || 28);
-          const condition = w.condition || w.description || 'Clear';
-          const icon = condition.toLowerCase().includes('rain') ? '🌧️'
-            : condition.toLowerCase().includes('cloud') ? '☁️'
-            : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
-          const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
-          setWeatherData({ temp, condition, icon, advice });
-        }
-
-        if (smartRes?.data?.data?.insights) {
-          const tips = smartRes.data.data.insights
-            .filter(i => i.type !== 'welcome')
-            .slice(0, 3)
-            .map(i => i.title + (i.subtitle ? ' — ' + i.subtitle : ''));
-          setSmartTips(tips);
-        }
-      } catch (e) {
-        console.warn('Smart insights fetch (non-critical):', e);
-      }
     } catch (err) {
       console.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
+    }
+
+    // Phase 2: Non-critical smart insights — load in background, don't block UI
+    try {
+      const [smartRes, weatherRes] = await Promise.all([
+        insightAPI.getSmartInsights(state.vendorId).catch(() => null),
+        insightAPI.getWeatherForecast().catch(() => null),
+      ]);
+
+      if (weatherRes?.data?.data) {
+        const w = weatherRes.data.data;
+        const temp = Math.round(w.temperature || w.temp || 28);
+        const condition = w.condition || w.description || 'Clear';
+        const icon = condition.toLowerCase().includes('rain') ? '🌧️'
+          : condition.toLowerCase().includes('cloud') ? '☁️'
+          : condition.toLowerCase().includes('snow') ? '❄️' : '☀️';
+        const advice = w.businessAdvice || w.advice || 'Good conditions for business!';
+        setWeatherData({ temp, condition, icon, advice });
+      }
+
+      if (smartRes?.data?.data?.insights) {
+        const tips = smartRes.data.data.insights
+          .filter(i => i.type !== 'welcome')
+          .slice(0, 3)
+          .map(i => i.title + (i.subtitle ? ' — ' + i.subtitle : ''));
+        setSmartTips(tips);
+      }
+    } catch (e) {
+      console.warn('Smart insights fetch (non-critical):', e);
     }
   };
 
