@@ -53,6 +53,10 @@ export const ledgerAPI = {
     api.get(`/ledger/${vendorId}/pending-clarifications`),
   resolveClarification: (entryId, data) =>
     api.put(`/ledger/entry/${entryId}/clarify`, data),
+  removeItem: (entryId, itemId) =>
+    api.delete(`/ledger/entry/${entryId}/item/${itemId}`),
+  removeExpense: (entryId, expenseId) =>
+    api.delete(`/ledger/entry/${entryId}/expense/${expenseId}`),
 };
 
 // ---- Insight APIs ----

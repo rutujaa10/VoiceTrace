@@ -36,4 +36,10 @@ router.put('/entry/:entryId/confirm', validate(ledgerSchemas.confirm), ledgerCon
 // PUT /api/ledger/entry/:entryId/clarify — Phase 4: Resolve a clarification
 router.put('/entry/:entryId/clarify', ledgerController.resolveClarification);
 
+// DELETE /api/ledger/entry/:entryId/item/:itemId — Remove a specific item
+router.delete('/entry/:entryId/item/:itemId', ledgerController.removeItem);
+
+// DELETE /api/ledger/entry/:entryId/expense/:expenseId — Remove a specific expense
+router.delete('/entry/:entryId/expense/:expenseId', ledgerController.removeExpense);
+
 module.exports = router;

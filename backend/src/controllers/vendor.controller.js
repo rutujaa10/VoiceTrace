@@ -13,16 +13,44 @@ const loanService = require('../services/loan.service');
  * Register new vendor or return existing.
  */
 const registerVendor = asyncHandler(async (req, res) => {
-  const { phone, name, businessCategory, preferredLanguage, latitude, longitude } = req.body;
+  const { phone: rawPhone, name, businessCategory, preferredLanguage, latitude, longitude } = req.body;
 
-  let vendor = await User.findOne({ phone });
+  // Normalize phone: try multiple formats to find existing user
+  // WhatsApp stores as +919876543210, web users enter 9876543210
+  const phoneDigits = rawPhone.replace(/\D/g, ''); // strip non-digits
+  const possiblePhones = [
+    rawPhone,                          // as-is
+    phoneDigits,                       // digits only e.g. 9876543210
+    `+${phoneDigits}`,                 // +9876543210
+    `+91${phoneDigits}`,               // +919876543210
+    phoneDigits.replace(/^91/, ''),    // strip leading 91 → 9876543210
+    `+91${phoneDigits.replace(/^91/, '')}`, // ensure +91 prefix
+  ];
+  // De-duplicate
+  const uniquePhones = [...new Set(possiblePhones)];
+
+  let vendor = await User.findOne({ phone: { $in: uniquePhones } });
 
   if (vendor) {
+    // If the vendor was created via WhatsApp with a different phone format,
+    // keep their existing phone so ledger entries stay linked.
+    // Update name if provided and vendor doesn't have one yet.
+    if (name && (!vendor.name || vendor.name === '')) {
+      vendor.name = name;
+      await vendor.save();
+    }
     return res.json({ success: true, data: vendor, isNew: false });
   }
 
+  // New user: store with +91 prefix for consistency
+  const normalizedPhone = phoneDigits.startsWith('91') && phoneDigits.length > 10
+    ? `+${phoneDigits}`
+    : phoneDigits.length === 10
+      ? `+91${phoneDigits}`
+      : rawPhone;
+
   const vendorData = {
-    phone,
+    phone: normalizedPhone,
     name: name || '',
     businessCategory: businessCategory || 'general',
     preferredLanguage: preferredLanguage || 'hi',

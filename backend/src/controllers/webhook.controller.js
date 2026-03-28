@@ -90,10 +90,10 @@ const downloadAudio = async (mediaUrl, mediaContentType) => {
 
   const ext = mediaContentType.includes('ogg') ? '.ogg'
     : mediaContentType.includes('amr') ? '.amr'
-    : mediaContentType.includes('mp4') ? '.mp4'
-    : mediaContentType.includes('3gpp') ? '.3gp'
-    : mediaContentType.includes('webm') ? '.webm'
-    : '.ogg';
+      : mediaContentType.includes('mp4') ? '.mp4'
+        : mediaContentType.includes('3gpp') ? '.3gp'
+          : mediaContentType.includes('webm') ? '.webm'
+            : '.ogg';
 
   const filename = `whatsapp-${Date.now()}${ext}`;
   const filepath = path.join(storagePath, filename);
@@ -250,10 +250,21 @@ const handleWhatsApp = async (req, res) => {
       return;
     }
 
-    // 1. Find or register vendor
+    // 1. Find or register vendor (with phone normalization)
     const phone = from.replace('whatsapp:', '');
-    console.log(`[WhatsApp] 🔍 Looking up vendor: ${phone}`);
-    let vendor = await User.findOne({ phone });
+    const phoneDigits = phone.replace(/\D/g, '');
+    // Try multiple phone formats to find existing user
+    const possiblePhones = [
+      phone,                                     // +919876543210
+      phoneDigits,                               // 919876543210
+      `+${phoneDigits}`,                         // +919876543210
+      phoneDigits.replace(/^91/, ''),            // 9876543210
+      `+91${phoneDigits.replace(/^91/, '')}`,    // +919876543210
+    ];
+    const uniquePhones = [...new Set(possiblePhones)];
+
+    console.log(`[WhatsApp] 🔍 Looking up vendor: ${phone} (trying ${uniquePhones.length} formats)`);
+    let vendor = await User.findOne({ phone: { $in: uniquePhones } });
 
     if (!vendor) {
       console.log(`[WhatsApp] 🆕 New vendor — creating account for ${phone}`);
@@ -270,6 +281,18 @@ const handleWhatsApp = async (req, res) => {
       );
       respondXml(res);
       return;
+    }
+
+    // If vendor was found but doesn't have whatsappId, link it
+    if (!vendor.whatsappId) {
+      vendor.whatsappId = from;
+      // Also normalize phone to +91 format for consistency
+      if (!vendor.phone.startsWith('+')) {
+        const digits = vendor.phone.replace(/\D/g, '');
+        vendor.phone = digits.length === 10 ? `+91${digits}` : `+${digits}`;
+      }
+      await vendor.save();
+      console.log(`[WhatsApp] 🔗 Linked WhatsApp ID to existing web user: ${vendor._id}`);
     }
 
     console.log(`[WhatsApp] ✅ Found vendor: ${vendor.displayName} (${vendor._id})`);
