@@ -25,9 +25,11 @@
     "react": "^18.3.0",
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.3.0",
+    "react-i18next": "^17.0.1",
     "react-router-dom": "^6.28.0",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.2",
+    "translate-google-api": "^1.0.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.0",

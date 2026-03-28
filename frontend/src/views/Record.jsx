@@ -24,8 +24,8 @@ import {
 } from 'lucide-react';
 
 const LANGUAGES = [
-  { code: 'hi-IN', label: '🇮🇳 Hindi', short: 'hi' },
-  { code: 'en-IN', label: '🇬🇧 English', short: 'en' },
+  { code: 'hi-IN', label: 'Hindi', short: 'hi' },
+  { code: 'en-IN', label: 'English', short: 'en' },
 ];
 
 const EMPTY_ITEM = { name: '', quantity: '1', unitPrice: '', totalPrice: '' };
@@ -254,9 +254,12 @@ export default function Record() {
             fontFamily: 'var(--font-display)',
             fontSize: '1.75rem',
             fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
           }}
         >
-          🎙️ <span className="gradient-text">Record Sales</span>
+          <Mic size={28} style={{ color: 'var(--primary-500)' }} /> <span className="gradient-text">Record Sales</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Speak naturally or type your sales manually
@@ -286,17 +289,17 @@ export default function Record() {
             className={`btn btn-sm ${mode === 'speech' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('speech'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            ⚡ Live Speech
+            <Zap size={14} /> Live Speech
           </button>
           <button
             className={`btn btn-sm ${mode === 'audio' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('audio'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            🎵 Audio Upload
+            <Music size={14} /> Audio Upload
           </button>
           <button
             className={`btn btn-sm ${mode === 'manual' ? 'btn-primary' : 'btn-ghost'}`}

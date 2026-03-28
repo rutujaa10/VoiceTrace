@@ -13,14 +13,29 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../state/AppContext';
 import { assistantAPI } from '../api';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { 
+  Bot, 
+  Send, 
+  Mic, 
+  Square, 
+  BarChart3, 
+  Trophy, 
+  TrendingUp, 
+  Target, 
+  CreditCard, 
+  TrendingDown, 
+  Search, 
+  AlertCircle,
+  Clock
+} from 'lucide-react';
 
 const QUICK_QUESTIONS = [
-  '📊 Aaj ka total kitna hai?',
-  '🏆 Sabse zyada kya bikta hai?',
-  '📈 Is hafte ki kamai?',
-  '🎯 Mera loan score kya hai?',
-  '💸 Kal ka kharcha kitna tha?',
-  '📉 Missed profit kitna hai?',
+  { text: 'Aaj ka total kitna hai?', icon: <BarChart3 size={14} /> },
+  { text: 'Sabse zyada kya bikta hai?', icon: <Trophy size={14} /> },
+  { text: 'Is hafte ki kamai?', icon: <TrendingUp size={14} /> },
+  { text: 'Mera loan score kya hai?', icon: <Target size={14} /> },
+  { text: 'Kal ka kharcha kitna tha?', icon: <CreditCard size={14} /> },
+  { text: 'Missed profit kitna hai?', icon: <TrendingDown size={14} /> },
 ];
 
 export default function Assistant() {
@@ -29,7 +44,7 @@ export default function Assistant() {
     {
       id: 'welcome',
       role: 'ai',
-      text: 'Namaste! 🙏 Main aapka AI business assistant hoon. Apne business ke baare mein kuch bhi poochiye — Hindi ya English mein!',
+      text: 'Namaste! Main aapka AI business assistant hoon. Apne business ke baare mein kuch bhi poochiye — Hindi ya English mein!',
       time: new Date(),
     },
   ]);
@@ -83,7 +98,7 @@ export default function Assistant() {
       const errorMsg = {
         id: `err-${Date.now()}`,
         role: 'ai',
-        text: '❌ Maaf kijiye, abhi jawab nahi mil paya. Thodi der baad try karein.',
+        text: 'Maaf kijiye, abhi jawab nahi mil paya. Thodi der baad try karein.',
         time: new Date(),
         isError: true,
       };
@@ -136,12 +151,13 @@ export default function Assistant() {
             gap: 'var(--space-sm)',
           }}
         >
-          🤖 <span className="gradient-text">AI Assistant</span>
+          <Bot size={28} style={{ color: 'var(--primary-500)' }} />
+          <span className="gradient-text">AI Assistant</span>
           <span
             className="badge badge-success"
-            style={{ fontSize: '0.65rem', marginLeft: 'auto' }}
+            style={{ fontSize: '0.65rem', marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            ● Online
+            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor' }} /> Online
           </span>
         </h1>
       </div>
@@ -196,6 +212,7 @@ export default function Assistant() {
                 wordBreak: 'break-word',
               }}
             >
+              {msg.isError && <AlertCircle size={14} style={{ display: 'inline', marginRight: 8, verticalAlign: 'text-bottom' }} />}
               {msg.text}
             </div>
 
@@ -206,9 +223,12 @@ export default function Assistant() {
                 color: 'var(--text-muted)',
                 marginTop: 4,
                 padding: '0 4px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
               }}
             >
-              {msg.role === 'ai' ? '🤖 ' : ''}
+              {msg.role === 'ai' ? <Bot size={10} /> : <Clock size={10} />}
               {formatTime(msg.time)}
             </div>
           </div>
@@ -264,7 +284,8 @@ export default function Assistant() {
               gap: 'var(--space-sm)',
             }}
           >
-            🔴 Listening... {speech.interimText && (
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'currentColor', animation: 'pulse 1s infinite' }} />
+            Listening... {speech.interimText && (
               <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
                 {speech.interimText}
               </span>
@@ -288,19 +309,23 @@ export default function Assistant() {
         >
           {QUICK_QUESTIONS.map((q) => (
             <button
-              key={q}
+              key={q.text}
               className="btn btn-ghost"
               style={{
                 fontSize: '0.75rem',
-                padding: '6px 12px',
+                padding: '8px 14px',
                 borderRadius: '20px',
                 border: '1px solid var(--border-subtle)',
                 whiteSpace: 'nowrap',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}
-              onClick={() => handleSend(q)}
+              onClick={() => handleSend(q.text)}
               disabled={isLoading}
             >
-              {q}
+              {q.icon}
+              {q.text}
             </button>
           ))}
         </div>
@@ -323,15 +348,14 @@ export default function Assistant() {
             onClick={handleMicToggle}
             disabled={isLoading}
             style={{
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
               border: 'none',
               background: speech.isListening
-                ? 'rgba(239, 68, 68, 0.2)'
+                ? 'rgba(239, 68, 68, 0.15)'
                 : 'rgba(99, 102, 241, 0.15)',
               color: speech.isListening ? 'var(--danger-400)' : 'var(--text-accent)',
-              fontSize: '1.1rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -341,7 +365,7 @@ export default function Assistant() {
             }}
             aria-label={speech.isListening ? 'Stop listening' : 'Voice input'}
           >
-            {speech.isListening ? '⏹️' : '🎙️'}
+            {speech.isListening ? <Square size={20} /> : <Mic size={20} />}
           </button>
         )}
 
@@ -370,8 +394,8 @@ export default function Assistant() {
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
           style={{
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
             border: 'none',
             background:
@@ -379,7 +403,6 @@ export default function Assistant() {
                 ? 'linear-gradient(135deg, var(--primary-500), var(--primary-600))'
                 : 'rgba(255, 255, 255, 0.05)',
             color: input.trim() && !isLoading ? '#fff' : 'var(--text-muted)',
-            fontSize: '1.1rem',
             cursor: input.trim() && !isLoading ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
@@ -389,7 +412,7 @@ export default function Assistant() {
           }}
           aria-label="Send message"
         >
-          ➤
+          <Send size={20} />
         </button>
       </div>
     </div>
