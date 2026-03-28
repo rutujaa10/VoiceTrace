@@ -207,7 +207,7 @@ export default function DailyLogRecorder() {
   }, [mode]);
 
   // ---- Vapi Extract: Send conversation transcript to backend Gemini extraction ----
-  // Uses the SAME extraction pipeline as the Record section for accurate parsing
+  // Uses extract-only endpoint — does NOT save to ledger until user confirms
   const handleVapiExtract = async (transcript) => {
     if (!transcript || transcript.trim().length < 3) {
       setError('Could not capture enough data. Please try again.');
@@ -218,14 +218,13 @@ export default function DailyLogRecorder() {
     setPhase('processing');
 
     try {
-      const res = await ledgerAPI.submitText(
+      const res = await ledgerAPI.extractOnly(
         state.vendorId,
         transcript.trim(),
         'hi'
       );
 
-      const data = res.data.data;
-      const extraction = data.extraction;
+      const extraction = res.data.data.extraction;
 
       // Store full extraction for display
       setExtractionResult(extraction);
@@ -233,7 +232,7 @@ export default function DailyLogRecorder() {
       // Compute totals from Gemini's accurate extraction
       const totalSales = (extraction.items || []).reduce((s, i) => s + (i.totalPrice || 0), 0);
       const totalExpenses = (extraction.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
-      const itemNames = (extraction.items || []).map((i) => i.name).join(', ');
+      const itemNames = (extraction.items || []).map((i) => `${i.name} x${i.quantity}`).join(', ');
 
       setFormData({
         salesAmount: String(totalSales),
@@ -241,10 +240,6 @@ export default function DailyLogRecorder() {
         itemsSold: itemNames || '',
         daySummary: '',
       });
-
-      if (data.loanReadiness) {
-        dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: data.loanReadiness });
-      }
 
       setPhase('review');
     } catch (err) {
@@ -435,19 +430,47 @@ IMPORTANT RULES:
     }
   };
 
-  // ---- End Vapi Call ----
+  // ---- End Vapi Call (user pressed End Call) ----
   const endCall = useCallback(() => {
     vapiRef.current?.stop();
-    setPhase('idle');
     setCallStatus('');
+    // Collect all user messages and send for extraction
+    setMessages((prev) => {
+      const userParts = prev
+        .filter((m) => m.role === 'user')
+        .map((m) => m.text)
+        .join('. ');
+      if (userParts.trim().length > 2) {
+        handleVapiExtract(userParts);
+      } else {
+        setPhase('idle');
+        setError('Not enough conversation data. Please try again and answer the questions.');
+      }
+      return prev;
+    });
   }, []);
 
-  // ---- Save to Ledger ----
-  // Both Vapi and Smart modes already saved during extraction.
-  // This just confirms and shows the success screen.
+  // ---- Save to Ledger (user confirmed the reviewed data) ----
   const handleSave = async () => {
     setError('');
-    setPhase('saved');
+    setPhase('saving');
+
+    try {
+      // Build a clean transcript from the reviewed/edited form data
+      const transcript = `Items sold: ${formData.itemsSold}. Total sales: ${formData.salesAmount} rupees. Total expenses: ${formData.expenseAmount} rupees.${formData.daySummary ? ' Day summary: ' + formData.daySummary : ''}`;
+
+      const res = await ledgerAPI.submitText(state.vendorId, transcript, 'hi');
+
+      if (res.data.data?.loanReadiness) {
+        dispatch({ type: actionTypes.SET_LOAN_SCORE, payload: res.data.data.loanReadiness });
+      }
+
+      setPhase('saved');
+    } catch (err) {
+      console.error('[Save] Error:', err);
+      setError(err.response?.data?.error?.message || 'Save failed. Please try again.');
+      setPhase('review');
+    }
   };
 
   // ---- Reset ----
@@ -690,6 +713,18 @@ IMPORTANT RULES:
         )}
 
 
+        {/* ======== PROCESSING PHASE (extracting from transcript) ======== */}
+        {phase === 'processing' && (
+          <div className="flex flex-col items-center gap-5 py-16 animate-[fadeIn_0.3s_ease]">
+            <Loader2 size={44} className="text-indigo-400 animate-spin" />
+            <div className="text-center">
+              <p className="text-white font-semibold text-lg">Extracting your data...</p>
+              <p className="text-slate-400 text-sm mt-1">AI is parsing items, amounts &amp; expenses from your conversation</p>
+            </div>
+          </div>
+        )}
+
+
         {/* ======== REVIEW PHASE (both modes) ======== */}
         {phase === 'review' && (
           <div className="animate-[fadeIn_0.4s_ease]">
@@ -698,8 +733,8 @@ IMPORTANT RULES:
             <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl p-3.5 mb-5">
               <CheckCircle size={18} className="text-green-400 shrink-0" />
               <div>
-                <p className="text-green-400 font-semibold text-sm">✅ Data Extracted!</p>
-                <p className="text-slate-500 text-xs mt-0.5">Review, correct with mic or keyboard, then save.</p>
+                <p className="text-green-400 font-semibold text-sm">✅ Data Extracted — Review Before Saving</p>
+                <p className="text-slate-500 text-xs mt-0.5">Edit any values below, then confirm to save to ledger. Or discard to start over.</p>
               </div>
             </div>
 
@@ -808,7 +843,16 @@ IMPORTANT RULES:
                            disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
                 <Save size={16} />
-                Save to Ledger
+                ✅ Confirm & Save to Ledger
+              </button>
+
+              <button
+                onClick={handleReset}
+                className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm
+                           bg-red-500/10 border border-red-500/20 text-red-400
+                           hover:bg-red-500/20 transition-all duration-200 cursor-pointer"
+              >
+                🗑️ Discard
               </button>
 
               <button

@@ -199,6 +199,42 @@ const processText = asyncHandler(async (req, res) => {
 });
 
 /**
+ * POST /api/ledger/:vendorId/extract-only — Extract entities WITHOUT saving to ledger
+ *
+ * Used by AI Conversation mode to show data for review before the user confirms.
+ */
+const extractOnly = asyncHandler(async (req, res) => {
+  const vendor = await User.findById(req.params.vendorId);
+  if (!vendor) {
+    const err = new Error('Vendor not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const { transcript, language } = req.body;
+  if (!transcript || transcript.trim().length === 0) {
+    const err = new Error('Transcript is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Extract entities only — no ledger save
+  const extraction = await extractionService.extractEntities(
+    transcript.trim(),
+    vendor.businessCategory,
+    language || vendor.preferredLanguage,
+    []
+  );
+
+  res.json({
+    success: true,
+    data: {
+      extraction,
+    },
+  });
+});
+
+/**
  * GET /api/ledger/:vendorId — Paginated entries
  */
 const getEntries = asyncHandler(async (req, res) => {
@@ -495,6 +531,7 @@ const removeExpense = asyncHandler(async (req, res) => {
 module.exports = {
   processAudio,
   processText,
+  extractOnly,
   getEntries,
   getSummary,
   confirmEntry,

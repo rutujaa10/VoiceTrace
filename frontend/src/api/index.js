@@ -41,6 +41,8 @@ export const ledgerAPI = {
   },
   submitText: (vendorId, transcript, language = 'hi') =>
     api.post(`/ledger/${vendorId}/text`, { transcript, language }),
+  extractOnly: (vendorId, transcript, language = 'hi') =>
+    api.post(`/ledger/${vendorId}/extract-only`, { transcript, language }),
   getEntries: (vendorId, params = {}) =>
     api.get(`/ledger/${vendorId}`, { params }),
   getSummary: (vendorId, days = 30) =>

@@ -18,6 +18,9 @@ router.post('/:vendorId/audio', uploadAudio.single('audio'), ledgerController.pr
 // POST /api/ledger/:vendorId/text — Process pre-transcribed text
 router.post('/:vendorId/text', ledgerController.processText);
 
+// POST /api/ledger/:vendorId/extract-only — Extract without saving (for review)
+router.post('/:vendorId/extract-only', ledgerController.extractOnly);
+
 // GET /api/ledger/:vendorId — Get ledger entries (paginated)
 router.get('/:vendorId', validate(ledgerSchemas.query, 'query'), ledgerController.getEntries);
 
