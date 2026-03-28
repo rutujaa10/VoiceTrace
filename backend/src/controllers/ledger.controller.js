@@ -404,6 +404,94 @@ const resolveClarification = asyncHandler(async (req, res) => {
   res.json({ success: true, data: entry });
 });
 
+/**
+ * Helper: Check if an entry is still within the editable window (36 hours from entry date at 00:00).
+ */
+const isEditable = (entry) => {
+  const entryDate = new Date(entry.date);
+  entryDate.setHours(0, 0, 0, 0);
+  const cutoff = new Date(entryDate.getTime() + 36 * 60 * 60 * 1000); // 36 hours later
+  return new Date() < cutoff;
+};
+
+/**
+ * DELETE /api/ledger/entry/:entryId/item/:itemId
+ * Remove a specific item from a ledger entry.
+ * - Blocked after 36 hours from entry date
+ * - Auto-deletes the entire entry if no items AND no expenses remain
+ */
+const removeItem = asyncHandler(async (req, res) => {
+  const entry = await LedgerEntry.findById(req.params.entryId);
+  if (!entry) {
+    const err = new Error('Entry not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!isEditable(entry)) {
+    const err = new Error('Edit window expired. Items can only be removed within 36 hours.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const item = entry.items.id(req.params.itemId);
+  if (!item) {
+    const err = new Error('Item not found in entry');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  entry.items.pull(req.params.itemId);
+
+  // Auto-delete entry if completely empty
+  if (entry.items.length === 0 && entry.expenses.length === 0 && entry.missedProfits.length === 0) {
+    await LedgerEntry.findByIdAndDelete(entry._id);
+    return res.json({ success: true, data: null, deleted: true });
+  }
+
+  await entry.save();
+  res.json({ success: true, data: entry });
+});
+
+/**
+ * DELETE /api/ledger/entry/:entryId/expense/:expenseId
+ * Remove a specific expense from a ledger entry.
+ * - Blocked after 36 hours from entry date
+ * - Auto-deletes the entire entry if no items AND no expenses remain
+ */
+const removeExpense = asyncHandler(async (req, res) => {
+  const entry = await LedgerEntry.findById(req.params.entryId);
+  if (!entry) {
+    const err = new Error('Entry not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  if (!isEditable(entry)) {
+    const err = new Error('Edit window expired. Expenses can only be removed within 36 hours.');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const expense = entry.expenses.id(req.params.expenseId);
+  if (!expense) {
+    const err = new Error('Expense not found in entry');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  entry.expenses.pull(req.params.expenseId);
+
+  // Auto-delete entry if completely empty
+  if (entry.items.length === 0 && entry.expenses.length === 0 && entry.missedProfits.length === 0) {
+    await LedgerEntry.findByIdAndDelete(entry._id);
+    return res.json({ success: true, data: null, deleted: true });
+  }
+
+  await entry.save();
+  res.json({ success: true, data: entry });
+});
+
 module.exports = {
   processAudio,
   processText,
@@ -413,4 +501,6 @@ module.exports = {
   getTodayEntry,
   getPendingClarifications,
   resolveClarification,
+  removeItem,
+  removeExpense,
 };

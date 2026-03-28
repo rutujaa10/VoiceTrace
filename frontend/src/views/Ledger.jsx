@@ -51,6 +51,51 @@ export default function Ledger() {
     }
   };
 
+  const handleRemoveItem = async (entryId, itemId) => {
+    try {
+      const res = await ledgerAPI.removeItem(entryId, itemId);
+      if (res.data.deleted) {
+        // Entry was auto-deleted because it became empty
+        setEntries((prev) => prev.filter((e) => e._id !== entryId));
+      } else {
+        setEntries((prev) =>
+          prev.map((e) => (e._id === entryId ? res.data.data : e))
+        );
+      }
+    } catch (err) {
+      if (err.response?.status === 403) {
+        alert('⏰ Edit window expired! Items can only be removed within 36 hours.');
+      }
+      console.error('Remove item error:', err);
+    }
+  };
+
+  const handleRemoveExpense = async (entryId, expenseId) => {
+    try {
+      const res = await ledgerAPI.removeExpense(entryId, expenseId);
+      if (res.data.deleted) {
+        setEntries((prev) => prev.filter((e) => e._id !== entryId));
+      } else {
+        setEntries((prev) =>
+          prev.map((e) => (e._id === entryId ? res.data.data : e))
+        );
+      }
+    } catch (err) {
+      if (err.response?.status === 403) {
+        alert('⏰ Edit window expired! Expenses can only be removed within 36 hours.');
+      }
+      console.error('Remove expense error:', err);
+    }
+  };
+
+  // Check if an entry is within the 36-hour edit window
+  const isEntryEditable = (entry) => {
+    const entryDate = new Date(entry.date);
+    entryDate.setHours(0, 0, 0, 0);
+    const cutoff = new Date(entryDate.getTime() + 36 * 60 * 60 * 1000);
+    return new Date() < cutoff;
+  };
+
   const formatDate = (date) =>
     new Date(date).toLocaleDateString('en-IN', {
       weekday: 'short',
@@ -90,8 +135,11 @@ export default function Ledger() {
                 key={entry._id}
                 entry={entry}
                 isExpanded={expandedEntry === entry._id}
+                isEditable={isEntryEditable(entry)}
                 onToggle={() => setExpandedEntry(expandedEntry === entry._id ? null : entry._id)}
                 onConfirm={() => handleConfirm(entry._id)}
+                onRemoveItem={(itemId) => handleRemoveItem(entry._id, itemId)}
+                onRemoveExpense={(expenseId) => handleRemoveExpense(entry._id, expenseId)}
                 formatDate={formatDate}
               />
             ))}
@@ -128,9 +176,10 @@ export default function Ledger() {
 /**
  * LedgerEntryCard — Individual entry with expandable details + audio playback
  */
-function LedgerEntryCard({ entry, isExpanded, onToggle, onConfirm, formatDate }) {
+function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, onRemoveItem, onRemoveExpense, formatDate }) {
   // Phase 4 Feature 8: Audio playback hook for this entry
   const audioPlayback = useAudioPlayback(entry.audioUrl);
+  const [removingId, setRemovingId] = useState(null);
 
   return (
     <div className="glass-card" style={{ padding: 'var(--space-md) var(--space-lg)' }}>
@@ -167,11 +216,15 @@ function LedgerEntryCard({ entry, isExpanded, onToggle, onConfirm, formatDate })
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-xs)', marginBottom: 'var(--space-sm)' }}>
           {entry.items.slice(0, isExpanded ? 999 : 5).map((item, i) => (
             <span
-              key={i}
+              key={item._id || i}
               className={`badge ${item.isApproximate ? 'badge-warning' : item.needsConfirmation ? 'badge-info' : 'badge-info'}`}
               style={{
                 cursor: audioPlayback.hasAudio && item.audioTimestamp?.startTime != null ? 'pointer' : 'default',
                 background: audioPlayback.currentItemId === `item-${entry._id}-${i}` ? 'rgba(99,102,241,0.3)' : undefined,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                paddingRight: '4px',
               }}
               onClick={(e) => {
                 e.stopPropagation();
@@ -193,6 +246,35 @@ function LedgerEntryCard({ entry, isExpanded, onToggle, onConfirm, formatDate })
               {item.name} × {item.quantity}
               {item.isApproximate ? ' ~' : ''}
               {item.needsConfirmation ? ' ?' : ''}
+              {isEditable && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (removingId === (item._id || i)) return;
+                  setRemovingId(item._id || i);
+                  onRemoveItem(item._id).finally(() => setRemovingId(null));
+                }}
+                disabled={removingId === (item._id || i)}
+                title="Remove this item"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--danger-400)',
+                  cursor: 'pointer',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  padding: '0 2px',
+                  marginLeft: '2px',
+                  lineHeight: 1,
+                  opacity: removingId === (item._id || i) ? 0.4 : 0.7,
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => e.target.style.opacity = 1}
+                onMouseLeave={(e) => e.target.style.opacity = 0.7}
+              >
+                {removingId === (item._id || i) ? '...' : '✕'}
+              </button>
+              )}
             </span>
           ))}
           {!isExpanded && entry.items.length > 5 && (
@@ -209,12 +291,41 @@ function LedgerEntryCard({ entry, isExpanded, onToggle, onConfirm, formatDate })
             <div style={{ marginBottom: 'var(--space-sm)' }}>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>💸 Expenses</div>
               {entry.expenses.map((exp, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', padding: '3px 0' }}>
+                <div key={exp._id || i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.82rem', padding: '3px 0' }}>
                   <span>
                     {exp.description || exp.category}
                     {exp.isApproximate && <span style={{ color: 'var(--warning-400)' }}> ~</span>}
                   </span>
-                  <span style={{ color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
+                    {isEditable && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (removingId === exp._id) return;
+                        setRemovingId(exp._id);
+                        onRemoveExpense(exp._id).finally(() => setRemovingId(null));
+                      }}
+                      disabled={removingId === exp._id}
+                      title="Remove this expense"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--danger-400)',
+                        cursor: 'pointer',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        padding: '2px 4px',
+                        opacity: removingId === exp._id ? 0.4 : 0.6,
+                        transition: 'opacity 0.2s',
+                      }}
+                      onMouseEnter={(e) => e.target.style.opacity = 1}
+                      onMouseLeave={(e) => e.target.style.opacity = 0.6}
+                    >
+                      {removingId === exp._id ? '...' : '✕'}
+                    </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
