@@ -14,12 +14,11 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/', icon: '📊', label: 'Dashboard' },
-    { path: '/record', icon: '🎙️', label: 'Record' },
-    { path: '/daily-log', icon: '📋', label: 'Daily Log' },
-    { path: '/ledger', icon: '📒', label: 'Ledger' },
-    { path: '/insights', icon: '💡', label: 'Insights' },
-    { path: '/assistant', icon: '🤖', label: 'AI Assistant' },
+    { path: '/app', icon: '📊', label: 'Dashboard' },
+    { path: '/app/record', icon: '🎙️', label: 'Record' },
+    { path: '/app/ledger', icon: '📒', label: 'Ledger' },
+    { path: '/app/insights', icon: '💡', label: 'Insights' },
+    { path: '/app/assistant', icon: '🤖', label: 'AI Assistant' },
   ];
 
   return (
@@ -60,7 +59,7 @@ export default function AppLayout() {
               <li key={item.path}>
                 <NavLink
                   to={item.path}
-                  end={item.path === '/'}
+                  end={item.path === '/app'}
                   className={({ isActive }) =>
                     `nav-link ${isActive ? 'active' : ''}`
                   }
