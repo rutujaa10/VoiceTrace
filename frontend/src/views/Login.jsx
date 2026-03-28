@@ -33,7 +33,7 @@ export default function Login() {
 
       dispatch({ type: actionTypes.SET_VENDOR, payload: vendor });
       dispatch({ type: actionTypes.SET_VENDOR_ID, payload: vendor._id });
-      navigate('/', { replace: true });
+      navigate('/app', { replace: true });
     } catch (err) {
       setError(err.response?.data?.error?.message || 'Registration failed');
     } finally {
