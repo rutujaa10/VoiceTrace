@@ -1,14 +1,18 @@
 /**
  * VoiceTrace — App Entry Point
  *
- * React Router setup with AppProvider wrapping.
+ * React Router setup with AppProvider + ThemeProvider wrapping.
+ * Landing page at "/" (public), app dashboard at "/app/*" (auth required).
  */
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './state/AppContext';
+import { ThemeProvider } from './state/ThemeContext';
 import AppLayout from './layouts/AppLayout';
+import Landing from './views/Landing';
+import LandingNavbar from './components/landing/LandingNavbar';
 import Dashboard from './views/Dashboard';
 import Record from './views/Record';
 import Ledger from './views/Ledger';
@@ -19,21 +23,38 @@ import './index.css';
 
 function App() {
   return (
-    <AppProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/record" element={<Record />} />
-            <Route path="/ledger" element={<Ledger />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/assistant" element={<Assistant />} />
-          </Route>
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AppProvider>
+    <ThemeProvider>
+      <AppProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public landing page */}
+            <Route
+              path="/"
+              element={
+                <>
+                  <LandingNavbar />
+                  <Landing />
+                </>
+              }
+            />
+
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+
+            {/* App dashboard (protected by AppLayout) */}
+            <Route path="/app" element={<AppLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="record" element={<Record />} />
+              <Route path="ledger" element={<Ledger />} />
+              <Route path="insights" element={<Insights />} />
+              <Route path="assistant" element={<Assistant />} />
+            </Route>
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AppProvider>
+    </ThemeProvider>
   );
 }
 
