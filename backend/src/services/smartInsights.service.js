@@ -466,19 +466,36 @@ const getMatureStageInsights = async (vendor, entries) => {
     data: { growthScore, factors: getGrowthFactors(entries, vendor) },
   });
 
-  // AI-generated actionable tips (if API available)
+  // AI-generated deep predictions (if API available)
   try {
     const aiTips = await generateAIGrowthTips(entries, vendor);
     if (aiTips && aiTips.length > 0) {
-      insights.push({
-        type: 'ai_growth_tips',
-        priority: 3,
-        icon: '🧠',
-        title: 'AI Growth Recommendations',
-        subtitle: 'Personalized advice to grow your business',
-        content: aiTips.join('\n\n'),
-        data: { tips: aiTips },
-      });
+      // Check if new structured format (array of objects) or old format (array of strings)
+      if (typeof aiTips[0] === 'object') {
+        // New structured format: each tip becomes its own insight card
+        aiTips.forEach((tip, i) => {
+          insights.push({
+            type: `ai_prediction_${tip.type || 'tip'}`,
+            priority: 3 + i * 0.1,
+            icon: tip.icon || '🧠',
+            title: tip.title || 'AI Insight',
+            subtitle: `AI ${(tip.type || 'insight').charAt(0).toUpperCase() + (tip.type || 'insight').slice(1)}`,
+            content: tip.detail || '',
+            data: { aiType: tip.type, index: i },
+          });
+        });
+      } else {
+        // Legacy format: array of strings
+        insights.push({
+          type: 'ai_growth_tips',
+          priority: 3,
+          icon: '🧠',
+          title: 'AI Growth Recommendations',
+          subtitle: 'Personalized advice to grow your business',
+          content: aiTips.join('\n\n'),
+          data: { tips: aiTips },
+        });
+      }
     }
   } catch (err) {
     console.error('[SmartInsights] AI tips generation error:', err.message);
@@ -571,7 +588,105 @@ const getGrowthFactors = (entries, vendor) => {
 };
 
 /**
- * Use AI to generate personalized growth tips.
+ * Build a dense, rich data context string from raw daily entries.
+ * This feeds the LLM with day-by-day granular data so it can find
+ * hidden patterns, cross-correlations, and non-obvious insights.
+ */
+const buildRichDataContext = (entries, vendor) => {
+  const sorted = [...entries].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const category = vendor.businessCategory || 'general';
+
+  // --- Summary stats ---
+  const totalRevenue = entries.reduce((s, e) => s + (e.totalRevenue || 0), 0);
+  const totalExpenses = entries.reduce((s, e) => s + (e.totalExpenses || 0), 0);
+  const totalProfit = entries.reduce((s, e) => s + (e.netProfit || 0), 0);
+  const avgRevenue = entries.length > 0 ? Math.round(totalRevenue / entries.length) : 0;
+
+  // --- Item-level aggregation ---
+  const itemMap = {};
+  const dayOfWeekRevenue = {};
+  entries.forEach(e => {
+    const dayName = WEEKDAY_NAMES[new Date(e.date).getDay()];
+    if (!dayOfWeekRevenue[dayName]) dayOfWeekRevenue[dayName] = { total: 0, count: 0 };
+    dayOfWeekRevenue[dayName].total += e.totalRevenue || 0;
+    dayOfWeekRevenue[dayName].count += 1;
+
+    (e.items || []).forEach(item => {
+      const name = item.name?.toLowerCase().trim() || 'unknown';
+      if (!itemMap[name]) itemMap[name] = { qty: 0, revenue: 0, days: 0, prices: [] };
+      itemMap[name].qty += item.quantity || 0;
+      itemMap[name].revenue += item.totalPrice || 0;
+      itemMap[name].days += 1;
+      if (item.unitPrice) itemMap[name].prices.push(item.unitPrice);
+    });
+  });
+
+  // --- Build the raw daily log ---
+  let dailyLog = '';
+  sorted.forEach((e, i) => {
+    const d = new Date(e.date);
+    const dayName = WEEKDAY_NAMES[d.getDay()];
+    const dateStr = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+
+    const itemStrs = (e.items || []).map(it =>
+      `${it.name}×${it.quantity}@₹${it.unitPrice}=₹${it.totalPrice}`
+    ).join(', ');
+
+    const expStrs = (e.expenses || []).map(ex =>
+      `${ex.description || ex.category}:₹${ex.amount}`
+    ).join(', ');
+
+    const missedStrs = (e.missedProfits || []).map(mp =>
+      `${mp.item}(lost ~₹${mp.estimatedLoss})`
+    ).join(', ');
+
+    dailyLog += `Day ${i + 1} (${dayName}, ${dateStr}): `;
+    dailyLog += itemStrs || 'no items';
+    if (expStrs) dailyLog += ` | Expenses: ${expStrs}`;
+    if (missedStrs) dailyLog += ` | RAN OUT: ${missedStrs}`;
+    dailyLog += ` | Revenue:₹${e.totalRevenue} Profit:₹${e.netProfit}\n`;
+  });
+
+  // --- Day-of-week summary ---
+  const dowSummary = Object.entries(dayOfWeekRevenue)
+    .map(([day, d]) => `${day}: avg ₹${Math.round(d.total / d.count)} (${d.count} days)`)
+    .join(', ');
+
+  // --- Top items with price variance ---
+  const topItems = Object.entries(itemMap)
+    .sort((a, b) => b[1].revenue - a[1].revenue)
+    .slice(0, 8)
+    .map(([name, d]) => {
+      const avgPrice = d.prices.length > 0 ? Math.round(d.prices.reduce((a, b) => a + b, 0) / d.prices.length) : 0;
+      const minPrice = d.prices.length > 0 ? Math.min(...d.prices) : 0;
+      const maxPrice = d.prices.length > 0 ? Math.max(...d.prices) : 0;
+      return `${name}: ${d.qty} units, ₹${d.revenue} revenue, sold on ${d.days}/${entries.length} days, price range ₹${minPrice}-₹${maxPrice}`;
+    }).join('\n');
+
+  return `=== VENDOR PROFILE ===
+Business: ${formatCategory(category)} vendor
+Name: ${vendor.name || 'Unknown'}
+Total days logged: ${entries.length}
+Logging streak: ${vendor.loanReadiness?.streak || 0} consecutive days
+Loan readiness score: ${vendor.loanReadiness?.score || 0}/100
+
+=== 30-DAY TOTALS ===
+Revenue: ₹${totalRevenue} | Expenses: ₹${totalExpenses} | Profit: ₹${totalProfit}
+Avg daily revenue: ₹${avgRevenue} | Profit margin: ${totalRevenue > 0 ? Math.round(totalProfit / totalRevenue * 100) : 0}%
+
+=== DAY-OF-WEEK PATTERN ===
+${dowSummary}
+
+=== TOP ITEMS (with price analysis) ===
+${topItems}
+
+=== RAW DAILY LOG (chronological) ===
+${dailyLog}`;
+};
+
+/**
+ * Use AI to generate personalized growth tips — UPGRADED.
+ * Now feeds the full daily timeseries to find hidden cross-correlations.
  */
 const generateAIGrowthTips = async (entries, vendor) => {
   // Check if any AI model is available
@@ -579,28 +694,7 @@ const generateAIGrowthTips = async (entries, vendor) => {
     return getStaticGrowthTips(entries, vendor);
   }
 
-  const totalRevenue = entries.reduce((s, e) => s + (e.totalRevenue || 0), 0);
-  const totalProfit = entries.reduce((s, e) => s + (e.netProfit || 0), 0);
-  const itemMap = {};
-  entries.forEach(e => {
-    (e.items || []).forEach(item => {
-      const name = item.name?.toLowerCase().trim() || 'unknown';
-      if (!itemMap[name]) itemMap[name] = { qty: 0, revenue: 0 };
-      itemMap[name].qty += item.quantity || 0;
-      itemMap[name].revenue += item.totalPrice || 0;
-    });
-  });
-
-  const topItems = Object.entries(itemMap).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 5);
-  const category = vendor.businessCategory || 'general';
-
-  const dataStr = `Business: ${formatCategory(category)} vendor
-Days logged: ${entries.length}
-Total Revenue: ₹${totalRevenue}
-Total Profit: ₹${totalProfit}
-Profit Margin: ${totalRevenue > 0 ? Math.round(totalProfit / totalRevenue * 100) : 0}%
-Top items: ${topItems.map(([n, d]) => `${n} (₹${d.revenue}, ${d.qty} units)`).join(', ')}
-Streak: ${vendor.loanReadiness?.streak || 0} days`;
+  const richContext = buildRichDataContext(entries, vendor);
 
   try {
     const response = await callWithFallback((model) => ({
@@ -608,32 +702,64 @@ Streak: ${vendor.loanReadiness?.streak || 0} days`;
       messages: [
         {
           role: 'system',
-          content: `You are a business growth advisor for Indian street vendors.
-Given the vendor data below, provide EXACTLY 3 specific, actionable growth tips.
+          content: `You are an elite business data scientist analyzing sales data for an Indian street vendor.
+You have access to their COMPLETE daily sales log below. Your job is to find HIDDEN PATTERNS, NON-OBVIOUS CORRELATIONS, and SPECIFIC PREDICTIONS that the vendor would never notice on their own.
 
-RULES:
-- Each tip is 1-2 sentences max.
-- Be specific with numbers and item names.
-- Focus on: revenue optimization, stock management, customer retention, and timing.
-- Respond in English.
-- Return ONLY a JSON array of 3 strings.
-- NO markdown, no code fences.`,
+ANALYSIS REQUIREMENTS:
+1. CROSS-CORRELATIONS: Find relationships between items, days, weather, and timing.
+   Example: "Your chai sales jump 60% on days when samosa sales are high — always bundle them together"
+2. DAY-OF-WEEK PATTERNS: Which days are strong/weak and WHY.
+   Example: "Fridays are your weakest day (₹800 avg vs ₹1,400 on Mondays). Consider a Friday-only discount to boost traffic"
+3. PRICE SENSITIVITY: If items were priced differently on different days, what happened.
+   Example: "When you priced vada pav at ₹15 instead of ₹12, you sold 30% fewer but made 10% more revenue — keep the higher price"
+4. STOCK-OUT PREDICTION: Items that consistently run out and exact quantities to stock.
+   Example: "You ran out of samosa on 3 of 7 days. Based on your sell-through rate of 55/day, stock exactly 70 samosas tomorrow"
+5. ANOMALY ALERTS: Days that broke the pattern and why.
+   Example: "Day 5 had 2x your normal revenue despite being a Tuesday — investigate what you did differently"
+
+OUTPUT FORMAT:
+Return EXACTLY 5 insights as a JSON array of objects:
+[
+  {"type": "correlation", "icon": "🔗", "title": "short title", "detail": "1-2 sentence specific insight with exact numbers"},
+  {"type": "prediction", "icon": "🎯", "title": "short title", "detail": "..."},
+  {"type": "anomaly", "icon": "⚡", "title": "short title", "detail": "..."},
+  {"type": "optimization", "icon": "💰", "title": "short title", "detail": "..."},
+  {"type": "action", "icon": "🚀", "title": "short title", "detail": "..."}
+]
+
+CRITICAL RULES:
+- Use EXACT numbers from the data. Never make up numbers.
+- Each insight must reference specific items, days, or quantities from the log.
+- Be surprising and specific — generic advice like "sell more" is BANNED.
+- If data is too limited (few days), still find the best patterns you can.
+- Return ONLY valid JSON. No markdown, no code fences.`,
         },
-        { role: 'user', content: `VENDOR DATA:\n${dataStr}` },
+        { role: 'user', content: richContext },
       ],
-      temperature: 0.6,
-      max_tokens: 300,
+      temperature: 0.7,
+      max_tokens: 800,
     }));
 
     const content = response.choices[0].message.content;
     const jsonStr = content.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
-    const tips = JSON.parse(jsonStr);
-    return Array.isArray(tips) ? tips.slice(0, 3) : [];
+    const parsed = JSON.parse(jsonStr);
+
+    if (Array.isArray(parsed)) {
+      // Return as structured insight objects
+      return parsed.slice(0, 5).map(p => ({
+        type: p.type || 'tip',
+        icon: p.icon || '💡',
+        title: p.title || 'Insight',
+        detail: p.detail || '',
+      }));
+    }
+    return [];
   } catch (err) {
-    console.error('[SmartInsights] AI tips error:', err.message);
+    console.error('[SmartInsights] AI deep analysis error:', err.message);
     return getStaticGrowthTips(entries, vendor);
   }
 };
+
 
 /**
  * Fallback static growth tips when AI is unavailable.
@@ -800,6 +926,14 @@ const generateSmartInsights = async (vendorId) => {
   const allInsights = [weatherInsight, ...stageInsights]
     .sort((a, b) => a.priority - b.priority);
 
+  // Try to get demand forecast from Python ML service
+  let forecast = null;
+  try {
+    forecast = await getDemandForecast(entries, vendor);
+  } catch (err) {
+    console.warn('[SmartInsights] ML forecast unavailable:', err.message);
+  }
+
   return {
     maturity,
     entryCount: entries.length,
@@ -813,7 +947,64 @@ const generateSmartInsights = async (vendorId) => {
     },
     weather: weatherInsight,
     insights: allInsights,
+    forecast,
   };
 };
 
-module.exports = { generateSmartInsights };
+/**
+ * Call the Python ML microservice for demand forecasting.
+ * Falls back gracefully if the service is unavailable.
+ */
+const getDemandForecast = async (entries, vendor) => {
+  const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+
+  try {
+    // Prepare entries for the Python service
+    const payload = {
+      entries: entries.map(e => ({
+        date: e.date instanceof Date ? e.date.toISOString() : String(e.date),
+        items: (e.items || []).map(i => ({
+          name: i.name || 'unknown',
+          quantity: i.quantity || 0,
+          unitPrice: i.unitPrice || 0,
+          totalPrice: i.totalPrice || 0,
+        })),
+        expenses: (e.expenses || []).map(ex => ({
+          category: ex.category || 'other',
+          amount: ex.amount || 0,
+          description: ex.description || '',
+        })),
+        missedProfits: (e.missedProfits || []).map(mp => ({
+          item: mp.item || 'unknown',
+          estimatedLoss: mp.estimatedLoss || 0,
+        })),
+        totalRevenue: e.totalRevenue || 0,
+        totalExpenses: e.totalExpenses || 0,
+        netProfit: e.netProfit || 0,
+      })),
+      forecastDays: 7,
+      vendorName: vendor.name || 'Unknown',
+      businessCategory: vendor.businessCategory || 'general',
+    };
+
+    const response = await fetch(`${ML_SERVICE_URL}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000), // 15s timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`ML service returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.success ? result.data : null;
+  } catch (err) {
+    // Don't throw — forecast is optional
+    console.warn('[SmartInsights] ML forecast error:', err.message);
+    return null;
+  }
+};
+
+module.exports = { generateSmartInsights, getDemandForecast };

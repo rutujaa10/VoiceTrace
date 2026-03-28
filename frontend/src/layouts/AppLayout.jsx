@@ -4,10 +4,13 @@
 
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 export default function AppLayout() {
   const { state, dispatch } = useApp();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   // Redirect to login if no vendor
   if (!state.vendorId) {
@@ -15,12 +18,12 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/app', icon: '📊', label: 'Dashboard' },
-    { path: '/app/record', icon: '🎙️', label: 'Record' },
-    { path: '/app/daily-log', icon: '📝', label: 'Daily Log' },
-    { path: '/app/ledger', icon: '📒', label: 'Ledger' },
-    { path: '/app/insights', icon: '💡', label: 'Insights' },
-    { path: '/app/assistant', icon: '🤖', label: 'AI Assistant' },
+    { path: '/app', icon: '📊', label: t('nav.dashboard') },
+    { path: '/app/record', icon: '🎙️', label: t('nav.record') },
+    { path: '/app/daily-log', icon: '📝', label: t('nav.dailyLog') },
+    { path: '/app/ledger', icon: '📒', label: t('nav.ledger') },
+    { path: '/app/insights', icon: '💡', label: t('nav.insights') },
+    { path: '/app/assistant', icon: '🤖', label: t('nav.assistant') },
   ];
 
   const handleLogout = () => {
@@ -71,13 +74,15 @@ export default function AppLayout() {
             </div>
           )}
 
+          <LanguageSwitcher />
+
           <button
             id="btn-logout"
             className="topbar-btn topbar-btn-danger"
             onClick={handleLogout}
-            title="Logout"
+            title={t('common.logout')}
           >
-            🚪 <span className="topbar-btn-label">Logout</span>
+            🚪 <span className="topbar-btn-label">{t('common.logout')}</span>
           </button>
         </div>
       </header>

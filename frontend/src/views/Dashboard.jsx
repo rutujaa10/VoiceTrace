@@ -12,6 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
 import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
@@ -22,6 +23,7 @@ import ClarificationBanner from '../components/common/ClarificationBanner';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [recentInsights, setRecentInsights] = useState([]);
@@ -29,6 +31,7 @@ export default function Dashboard() {
   const [todayAnomaly, setTodayAnomaly] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [smartTips, setSmartTips] = useState([]);
+  const [forecast, setForecast] = useState(null);
 
   useEffect(() => {
     if (!state.vendorId) return;
@@ -86,6 +89,11 @@ export default function Dashboard() {
             .map(i => i.title + (i.subtitle ? ' — ' + i.subtitle : ''));
           setSmartTips(tips);
         }
+
+        // Extract demand forecast from ML service
+        if (smartRes?.data?.data?.forecast?.topPredictions?.length > 0) {
+          setForecast(smartRes.data.data.forecast);
+        }
       } catch (e) {
         // Non-critical — dashboard still works without insights
         console.warn('Smart insights fetch (non-critical):', e);
@@ -100,7 +108,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="stagger-children">
-        <div className="section-title">Dashboard</div>
+        <div className="section-title">{t('nav.dashboard')}</div>
         <div className="grid grid-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="skeleton" style={{ height: 100, borderRadius: 'var(--radius-lg)' }} />
@@ -129,7 +137,7 @@ export default function Dashboard() {
           Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span> 👋
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-          Here&apos;s your business at a glance
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
@@ -141,25 +149,25 @@ export default function Dashboard() {
         <StatCard
           icon="💰"
           value={`₹${(summary?.totalRevenue || 0).toLocaleString('en-IN')}`}
-          label="30-Day Revenue"
+          label={t('dashboard.revenue30d')}
           bgColor="rgba(34, 197, 94, 0.15)"
         />
         <StatCard
           icon="📊"
           value={`₹${(summary?.totalProfit || 0).toLocaleString('en-IN')}`}
-          label="30-Day Profit"
+          label={t('dashboard.profit30d')}
           bgColor="rgba(99, 102, 241, 0.15)"
         />
         <StatCard
           icon="📅"
           value={summary?.entryCount || 0}
-          label="Days Logged"
+          label={t('dashboard.daysLogged')}
           bgColor="rgba(168, 85, 247, 0.15)"
         />
         <StatCard
           icon="📉"
           value={`₹${(summary?.totalMissedRevenue || 0).toLocaleString('en-IN')}`}
-          label="Missed Revenue"
+          label={t('dashboard.missedRevenue')}
           bgColor="rgba(239, 68, 68, 0.15)"
         />
       </div>
@@ -179,7 +187,7 @@ export default function Dashboard() {
           }}
         >
           <h2 className="section-title" style={{ marginBottom: 0 }}>
-            💡 AI Insights
+            {t('dashboard.aiInsights')}
           </h2>
 
           {/* Weather Preview */}
@@ -223,7 +231,7 @@ export default function Dashboard() {
             >
               <span style={{ fontSize: '1.5rem' }}>🌤️</span>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                Loading weather forecast...
+                {t('dashboard.weatherLoading')}
               </div>
             </div>
           )}
@@ -253,7 +261,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              Log your first day to unlock personalized insights!
+              {t('dashboard.logFirst')}
             </div>
           )}
 
@@ -262,7 +270,7 @@ export default function Dashboard() {
             className="btn btn-primary"
             style={{ fontSize: '0.82rem', textDecoration: 'none', textAlign: 'center', marginTop: 'auto' }}
           >
-            View Full Insights →
+            {t('dashboard.viewInsights')}
           </Link>
         </div>
 
@@ -288,10 +296,10 @@ export default function Dashboard() {
                   marginBottom: 'var(--space-xs)',
                 }}
               >
-                Record Today&apos;s Sales
+                {t('dashboard.recordSales')}
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                Tap and speak — your voice becomes business data
+                {t('dashboard.recordSubtitle')}
               </p>
             </div>
           </Link>
@@ -299,7 +307,7 @@ export default function Dashboard() {
           {/* Avg Daily Revenue */}
           <div className="glass-card">
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 4 }}>
-              Avg Daily Revenue
+              {t('dashboard.avgDailyRevenue')}
             </div>
             <div
               style={{
@@ -318,15 +326,72 @@ export default function Dashboard() {
             style={{ width: '100%' }}
             onClick={handleDownloadPDF}
           >
-            📄 Download Earnings PDF
+            📄 {t('dashboard.downloadPDF')}
           </button>
         </div>
       </div>
 
+      {/* AI Demand Forecast (from Python Prophet ML Service) */}
+      {forecast && forecast.topPredictions?.length > 0 && (
+        <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
+          <h2 className="section-title">🎯 AI Demand Forecast — Tomorrow</h2>
+          <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 'var(--space-md)', marginTop: -8 }}>
+            ML-powered predictions based on your sales history (Prophet model)
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 'var(--space-md)' }}>
+            {forecast.topPredictions.slice(0, 6).map((pred, i) => (
+              <div
+                key={i}
+                style={{
+                  background: pred.trend === 'up'
+                    ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.06))'
+                    : pred.trend === 'down'
+                      ? 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(220,38,38,0.06))'
+                      : 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(79,70,229,0.06))',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: 'var(--space-md)',
+                  border: '1px solid var(--border-subtle)',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                  cursor: 'default',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontWeight: 700, fontSize: '0.9rem', textTransform: 'capitalize' }}>
+                    {pred.item}
+                  </span>
+                  <span style={{
+                    fontSize: '0.72rem',
+                    padding: '2px 8px',
+                    borderRadius: '999px',
+                    fontWeight: 600,
+                    background: pred.trend === 'up' ? 'rgba(34,197,94,0.2)' : pred.trend === 'down' ? 'rgba(239,68,68,0.2)' : 'rgba(99,102,241,0.2)',
+                    color: pred.trend === 'up' ? '#16a34a' : pred.trend === 'down' ? '#dc2626' : '#6366f1',
+                  }}>
+                    {pred.trend === 'up' ? '📈 Trending Up' : pred.trend === 'down' ? '📉 Declining' : '➡️ Stable'}
+                  </span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: 800, marginBottom: 4 }}>
+                  {pred.predictedQty}
+                  <span style={{ fontSize: '0.8rem', fontWeight: 400, color: 'var(--text-secondary)', marginLeft: 4 }}>units</span>
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                  Confidence: {pred.confidence[0]}–{pred.confidence[1]} units
+                </div>
+                <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  {pred.method === 'prophet' ? '🤖 ML Model' : '📊 Average'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Phase 2 Feature 3: LLM Plain-Language Weekly Insights */}
       {weeklyPatterns?.plainInsights?.length > 0 && (
         <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <h2 className="section-title">🧠 Weekly Observations</h2>
+          <h2 className="section-title">{t('dashboard.weeklyObservations')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
             {weeklyPatterns.plainInsights.map((insight, i) => (
               <div
@@ -354,7 +419,7 @@ export default function Dashboard() {
       {/* Phase 2 Feature 4: Next-Day Stock Suggestions */}
       {weeklyPatterns?.stockSuggestions?.length > 0 && (
         <div className="glass-card" style={{ marginBottom: 'var(--space-xl)' }}>
-          <h2 className="section-title">📦 Tomorrow&apos;s Stock Suggestions</h2>
+          <h2 className="section-title">{t('dashboard.stockSuggestions')}</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xs)' }}>
             {weeklyPatterns.stockSuggestions.map((sug, i) => (
               <div
@@ -387,7 +452,7 @@ export default function Dashboard() {
       {/* Weekly Patterns */}
       {weeklyPatterns && (
         <div style={{ marginBottom: 'var(--space-xl)' }}>
-          <h2 className="section-title">📈 Weekly Patterns</h2>
+          <h2 className="section-title">{t('dashboard.weeklyPatterns')}</h2>
           <div className="grid grid-3">
             {/* Best Seller */}
             <div
@@ -398,7 +463,7 @@ export default function Dashboard() {
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                🏆 Best Seller This Week
+                {t('dashboard.bestSeller')}
               </div>
               {weeklyPatterns.bestSeller ? (
                 <>
@@ -421,7 +486,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
@@ -434,7 +499,7 @@ export default function Dashboard() {
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                🔥 Highest Revenue Day
+                {t('dashboard.peakDay')}
               </div>
               {weeklyPatterns.peakDay ? (
                 <>
@@ -456,7 +521,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
@@ -469,7 +534,7 @@ export default function Dashboard() {
               }}
             >
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                📉 Missed Profits This Week
+                {t('dashboard.missedProfits')}
               </div>
               <div
                 style={{
@@ -487,7 +552,7 @@ export default function Dashboard() {
                   Top: {weeklyPatterns.missedProfits.topMissedItems.slice(0, 2).map((m) => m.item).join(', ')}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>✅ No missed profits!</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}>{t('dashboard.noMissedProfits')}</div>
               )}
             </div>
           </div>
@@ -499,10 +564,10 @@ export default function Dashboard() {
         <div style={{ marginBottom: 'var(--space-xl)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
             <h2 className="section-title" style={{ margin: 0 }}>
-              💡 Latest Insights
+              {t('dashboard.latestInsights')}
             </h2>
             <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem' }}>
-              View All →
+              {t('common.viewAll')}
             </Link>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -516,7 +581,7 @@ export default function Dashboard() {
       {/* Micro-Loan Readiness (moved to bottom) */}
       <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-md)' }}>
         <h2 className="section-title" style={{ marginBottom: 0 }}>
-          🎯 Micro-Loan Readiness
+          {t('dashboard.loanReadiness')}
         </h2>
         <LoanGauge
           score={loan.score || 0}
