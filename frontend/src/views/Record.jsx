@@ -1,23 +1,22 @@
 /**
- * Record View — Voice-to-Ledger with dual mode
+ * Record View — Voice-to-Ledger with dual mode (Enhanced)
  *
  * Mode 1 (default): Web Speech API — free, real-time browser transcription
- * Mode 2 (fallback): Audio Recording → Whisper — better accuracy, costs per call
+ * Mode 2 (fallback): Audio Recording → Whisper — better accuracy, word timestamps
  *
- * Features:
- * - Massive mic button with pulse animation when active
- * - Live transcript preview (Web Speech mode)
- * - Language toggle (Hindi / English)
- * - Timer display
- * - Auto-process on stop
- * - Shows extracted data after processing
+ * Enhanced features:
+ * - Phase 4 Feature 6: Shows isApproximate / needsConfirmation flags on extracted items
+ * - Phase 4 Feature 7: Shows anomaly alerts after processing
+ * - Phase 4 Feature 8: Audio playback button per extracted item (Whisper mode)
  */
 
 import { useState, useCallback } from 'react';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
+import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { ledgerAPI } from '../api';
+import AnomalyAlert from '../components/common/AnomalyAlert';
 
 const LANGUAGES = [
   { code: 'hi-IN', label: '🇮🇳 Hindi', short: 'hi' },
@@ -41,6 +40,9 @@ export default function Record() {
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+
+  // Phase 4 Feature 8: Audio playback for items
+  const audioPlayback = useAudioPlayback(result?.entry?.audioUrl);
 
   const isActive = mode === 'speech' ? speech.isListening : recorder.isRecording;
 
@@ -390,6 +392,9 @@ export default function Record() {
         <div className="glass-card animate-fadeInUp">
           <h3 className="section-title">✅ Extracted Data</h3>
 
+          {/* Phase 4 Feature 7: Anomaly Alert */}
+          {result.anomaly && <AnomalyAlert anomaly={result.anomaly} />}
+
           {/* Items */}
           {result.extraction.items?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-lg)' }}>
@@ -402,16 +407,66 @@ export default function Record() {
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
+                    alignItems: 'center',
                     padding: '8px 0',
                     borderBottom: '1px solid var(--border-subtle)',
                     fontSize: '0.88rem',
                   }}
                 >
-                  <span>
-                    {item.name} × {item.quantity}
-                    {item.confidence < 0.7 && <span title="Low confidence"> ⚠️</span>}
-                  </span>
-                  <span style={{ fontWeight: 600 }}>₹{item.totalPrice}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                    <span>
+                      {item.name} × {item.quantity}
+                    </span>
+                    {/* Phase 4 Feature 6: Confidence flags */}
+                    {item.isApproximate && (
+                      <span
+                        className="badge badge-warning"
+                        style={{ fontSize: '0.6rem', padding: '2px 5px' }}
+                        title={item.clarificationNeeded || 'Approximate value'}
+                      >
+                        ~approx
+                      </span>
+                    )}
+                    {item.needsConfirmation && (
+                      <span
+                        className="badge badge-info"
+                        style={{ fontSize: '0.6rem', padding: '2px 5px' }}
+                        title={item.clarificationNeeded || 'Needs confirmation'}
+                      >
+                        ?
+                      </span>
+                    )}
+                    {item.confidence < 0.7 && !item.isApproximate && (
+                      <span title="Low confidence"> ⚠️</span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                    <span style={{ fontWeight: 600 }}>₹{item.totalPrice}</span>
+
+                    {/* Phase 4 Feature 8: Audio playback button */}
+                    {audioPlayback.hasAudio && item.audioTimestamp?.startTime != null && (
+                      <button
+                        onClick={() => audioPlayback.play(
+                          `item-${i}`,
+                          item.audioTimestamp.startTime,
+                          item.audioTimestamp.endTime
+                        )}
+                        style={{
+                          background: audioPlayback.currentItemId === `item-${i}` ? 'rgba(99,102,241,0.2)' : 'none',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '2px 6px',
+                          cursor: 'pointer',
+                          fontSize: '0.72rem',
+                          color: 'var(--text-accent)',
+                        }}
+                        title={`Hear: "${item.audioTimestamp.sourcePhrase || item.sourcePhrase || ''}"`}
+                      >
+                        {audioPlayback.currentItemId === `item-${i}` ? '⏸' : '🔊'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -429,13 +484,44 @@ export default function Record() {
                   style={{
                     display: 'flex',
                     justifyContent: 'space-between',
+                    alignItems: 'center',
                     padding: '8px 0',
                     borderBottom: '1px solid var(--border-subtle)',
                     fontSize: '0.88rem',
                   }}
                 >
-                  <span>{exp.description || exp.category}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-xs)' }}>
+                    <span>{exp.description || exp.category}</span>
+                    {exp.isApproximate && (
+                      <span className="badge badge-warning" style={{ fontSize: '0.6rem', padding: '2px 5px' }}>~approx</span>
+                    )}
+                    {exp.needsConfirmation && (
+                      <span className="badge badge-info" style={{ fontSize: '0.6rem', padding: '2px 5px' }}>?</span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--danger-400)' }}>-₹{exp.amount}</span>
+                    {audioPlayback.hasAudio && exp.audioTimestamp?.startTime != null && (
+                      <button
+                        onClick={() => audioPlayback.play(
+                          `exp-${i}`,
+                          exp.audioTimestamp.startTime,
+                          exp.audioTimestamp.endTime
+                        )}
+                        style={{
+                          background: audioPlayback.currentItemId === `exp-${i}` ? 'rgba(99,102,241,0.2)' : 'none',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: 'var(--radius-sm)',
+                          padding: '2px 6px',
+                          cursor: 'pointer',
+                          fontSize: '0.72rem',
+                          color: 'var(--text-accent)',
+                        }}
+                      >
+                        {audioPlayback.currentItemId === `exp-${i}` ? '⏸' : '🔊'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -495,6 +581,21 @@ export default function Record() {
               </div>
             </div>
           </div>
+
+          {/* Clarification hint */}
+          {result.entry?.hasPendingClarifications && (
+            <div style={{
+              marginTop: 'var(--space-md)',
+              padding: 'var(--space-sm) var(--space-md)',
+              background: 'rgba(245, 158, 11, 0.1)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '0.78rem',
+              color: 'var(--warning-400)',
+              textAlign: 'center',
+            }}>
+              🔍 Some items were approximate — we&apos;ll ask you to confirm next time you open the app
+            </div>
+          )}
 
           {/* Record another */}
           <div style={{ textAlign: 'center', marginTop: 'var(--space-lg)' }}>

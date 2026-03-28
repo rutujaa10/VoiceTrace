@@ -1,5 +1,11 @@
 /**
- * Ledger Controller
+ * Ledger Controller — Enhanced
+ *
+ * Handles audio/text processing with:
+ *  - Phase 1: Entity extraction with ambiguity flags
+ *  - Phase 4 Feature 6: Clarification resolution endpoint
+ *  - Phase 4 Feature 7: Anomaly detection on entry save
+ *  - Phase 4 Feature 8: Word-level timestamps storage
  */
 
 const LedgerEntry = require('../models/LedgerEntry');
@@ -9,9 +15,13 @@ const { asyncHandler } = require('../middlewares/errorHandler');
 const whisperService = require('../services/whisper.service');
 const extractionService = require('../services/extraction.service');
 const loanService = require('../services/loan.service');
+const anomalyService = require('../services/anomaly.service');
 
 /**
  * POST /api/ledger/:vendorId/audio — Process audio from PWA
+ *
+ * Enhanced: stores word-level timestamps for audio playback mapping,
+ * runs anomaly detection, preserves ambiguity flags from extraction.
  */
 const processAudio = asyncHandler(async (req, res) => {
   const vendor = await User.findById(req.params.vendorId);
@@ -27,14 +37,15 @@ const processAudio = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  // Transcribe
+  // Transcribe (now returns word-level timestamps)
   const transcription = await whisperService.transcribe(req.file.path);
 
-  // Extract entities
+  // Extract entities with word timestamps for audio mapping
   const extraction = await extractionService.extractEntities(
     transcription.text,
     vendor.businessCategory,
-    vendor.preferredLanguage
+    vendor.preferredLanguage,
+    transcription.words || [] // Phase 4 Feature 8: pass word timestamps
   );
 
   // Create/append to today's entry
@@ -48,6 +59,10 @@ const processAudio = asyncHandler(async (req, res) => {
     entry.expenses.push(...extraction.expenses);
     entry.missedProfits.push(...extraction.missedProfits);
     entry.rawTranscript += '\n---\n' + transcription.text;
+    // Append word timestamps
+    if (transcription.words?.length > 0) {
+      entry.wordTimestamps = [...(entry.wordTimestamps || []), ...transcription.words];
+    }
   } else {
     entry = new LedgerEntry({
       vendor: vendor._id,
@@ -58,6 +73,7 @@ const processAudio = asyncHandler(async (req, res) => {
       expenses: extraction.expenses,
       missedProfits: extraction.missedProfits,
       audioUrl: req.file.filename,
+      wordTimestamps: transcription.words || [],
       location: vendor.location,
       processingMeta: {
         whisperDuration: transcription.duration,
@@ -69,6 +85,13 @@ const processAudio = asyncHandler(async (req, res) => {
   }
 
   await entry.save();
+
+  // Phase 4 Feature 7: Run anomaly detection
+  const anomaly = await anomalyService.detectAnomaly(vendor._id, entry);
+  if (anomaly) {
+    entry.anomaly = anomaly;
+    await entry.save();
+  }
 
   // Upsert items into the auto-updated catalog
   await Item.upsertFromExtraction(vendor._id, extraction.items, today);
@@ -84,6 +107,93 @@ const processAudio = asyncHandler(async (req, res) => {
       entry,
       extraction,
       loanReadiness: vendor.loanReadiness,
+      anomaly: anomaly || null,
+    },
+  });
+});
+
+/**
+ * POST /api/ledger/:vendorId/text — Process pre-transcribed text (from Web Speech API)
+ *
+ * Enhanced: supports ambiguity flags, anomaly detection.
+ */
+const processText = asyncHandler(async (req, res) => {
+  const vendor = await User.findById(req.params.vendorId);
+  if (!vendor) {
+    const err = new Error('Vendor not found');
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const { transcript, language } = req.body;
+  if (!transcript || transcript.trim().length === 0) {
+    const err = new Error('Transcript is required');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Extract entities (no word timestamps from Web Speech API, so pass empty array)
+  const extraction = await extractionService.extractEntities(
+    transcript.trim(),
+    vendor.businessCategory,
+    language || vendor.preferredLanguage,
+    [] // Web Speech API doesn't provide word timestamps
+  );
+
+  // Create/append to today's entry
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let entry = await LedgerEntry.findOne({ vendor: vendor._id, date: { $gte: today } });
+
+  if (entry) {
+    entry.items.push(...extraction.items);
+    entry.expenses.push(...extraction.expenses);
+    entry.missedProfits.push(...extraction.missedProfits);
+    entry.rawTranscript += '\n---\n' + transcript.trim();
+  } else {
+    entry = new LedgerEntry({
+      vendor: vendor._id,
+      date: today,
+      rawTranscript: transcript.trim(),
+      language: language || vendor.preferredLanguage,
+      items: extraction.items,
+      expenses: extraction.expenses,
+      missedProfits: extraction.missedProfits,
+      source: 'web_speech_api',
+      location: vendor.location,
+      processingMeta: {
+        llmModel: extraction.model,
+        llmTokensUsed: extraction.tokensUsed,
+        processedAt: new Date(),
+      },
+    });
+  }
+
+  await entry.save();
+
+  // Phase 4 Feature 7: Run anomaly detection
+  const anomaly = await anomalyService.detectAnomaly(vendor._id, entry);
+  if (anomaly) {
+    entry.anomaly = anomaly;
+    await entry.save();
+  }
+
+  // Upsert items into catalog
+  await Item.upsertFromExtraction(vendor._id, extraction.items, today);
+
+  // Update loan score
+  vendor.updateStreak(today);
+  await loanService.recalculateScore(vendor);
+  await vendor.save();
+
+  res.status(201).json({
+    success: true,
+    data: {
+      entry,
+      extraction,
+      loanReadiness: vendor.loanReadiness,
+      anomaly: anomaly || null,
     },
   });
 });
@@ -104,8 +214,8 @@ const getEntries = asyncHandler(async (req, res) => {
   const [entries, total] = await Promise.all([
     LedgerEntry.find(filter)
       .sort({ date: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
+      .skip(((page || 1) - 1) * (limit || 10))
+      .limit(limit || 10)
       .lean(),
     LedgerEntry.countDocuments(filter),
   ]);
@@ -114,10 +224,10 @@ const getEntries = asyncHandler(async (req, res) => {
     success: true,
     data: entries,
     pagination: {
-      page,
-      limit,
+      page: page || 1,
+      limit: limit || 10,
       total,
-      pages: Math.ceil(total / limit),
+      pages: Math.ceil(total / (limit || 10)),
     },
   });
 });
@@ -164,79 +274,143 @@ const getTodayEntry = asyncHandler(async (req, res) => {
 });
 
 /**
- * POST /api/ledger/:vendorId/text — Process pre-transcribed text (from Web Speech API)
+ * GET /api/ledger/:vendorId/pending-clarifications
+ *
+ * Phase 4 Feature 6: Returns recent entries with items/expenses that need clarification.
+ * Frontend uses this to show a non-intrusive modal on app open.
  */
-const processText = asyncHandler(async (req, res) => {
-  const vendor = await User.findById(req.params.vendorId);
-  if (!vendor) {
-    const err = new Error('Vendor not found');
+const getPendingClarifications = asyncHandler(async (req, res) => {
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+  const entries = await LedgerEntry.find({
+    vendor: req.params.vendorId,
+    hasPendingClarifications: true,
+    date: { $gte: threeDaysAgo },
+  })
+    .sort({ date: -1 })
+    .limit(5)
+    .lean();
+
+  // Flatten all items/expenses that need clarification
+  const clarifications = [];
+
+  entries.forEach((entry) => {
+    (entry.items || []).forEach((item) => {
+      if (item.needsConfirmation || item.isApproximate) {
+        clarifications.push({
+          entryId: entry._id,
+          entryDate: entry.date,
+          type: 'item',
+          itemId: item._id,
+          name: item.name,
+          currentValue: { quantity: item.quantity, unitPrice: item.unitPrice, totalPrice: item.totalPrice },
+          confidence: item.confidence,
+          isApproximate: item.isApproximate,
+          clarificationNeeded: item.clarificationNeeded,
+          sourcePhrase: item.audioTimestamp?.sourcePhrase || item.sourcePhrase || null,
+        });
+      }
+    });
+
+    (entry.expenses || []).forEach((exp) => {
+      if (exp.needsConfirmation || exp.isApproximate) {
+        clarifications.push({
+          entryId: entry._id,
+          entryDate: entry.date,
+          type: 'expense',
+          itemId: exp._id,
+          name: exp.description || exp.category,
+          currentValue: { amount: exp.amount, category: exp.category },
+          confidence: exp.confidence,
+          isApproximate: exp.isApproximate,
+          clarificationNeeded: exp.clarificationNeeded,
+          sourcePhrase: exp.audioTimestamp?.sourcePhrase || exp.sourcePhrase || null,
+        });
+      }
+    });
+  });
+
+  res.json({ success: true, data: clarifications });
+});
+
+/**
+ * PUT /api/ledger/entry/:entryId/clarify
+ *
+ * Phase 4 Feature 6: Resolve a clarification for an item or expense.
+ * Body: { itemId, type: 'item'|'expense', resolvedValue: { quantity?, unitPrice?, totalPrice?, amount? } }
+ */
+const resolveClarification = asyncHandler(async (req, res) => {
+  const { itemId, type, resolvedValue, action } = req.body;
+  const entry = await LedgerEntry.findById(req.params.entryId);
+
+  if (!entry) {
+    const err = new Error('Entry not found');
     err.statusCode = 404;
     throw err;
   }
 
-  const { transcript, language } = req.body;
-  if (!transcript || transcript.trim().length === 0) {
-    const err = new Error('Transcript is required');
-    err.statusCode = 400;
-    throw err;
-  }
+  if (type === 'item') {
+    const item = entry.items.id(itemId);
+    if (!item) {
+      const err = new Error('Item not found in entry');
+      err.statusCode = 404;
+      throw err;
+    }
 
-  // Extract entities (same LLM call, but no Whisper cost)
-  const extraction = await extractionService.extractEntities(
-    transcript.trim(),
-    vendor.businessCategory,
-    language || vendor.preferredLanguage
-  );
+    if (action === 'confirm') {
+      // Vendor confirms the AI guess is correct
+      item.needsConfirmation = false;
+      item.isApproximate = false;
+      item.confidence = Math.max(item.confidence, 0.8);
+      item.clarificationNeeded = null;
+    } else if (action === 'update' && resolvedValue) {
+      // Vendor provides corrected values
+      item.resolvedValue = resolvedValue;
+      if (resolvedValue.quantity != null) item.quantity = resolvedValue.quantity;
+      if (resolvedValue.unitPrice != null) item.unitPrice = resolvedValue.unitPrice;
+      if (resolvedValue.totalPrice != null) item.totalPrice = resolvedValue.totalPrice;
+      item.needsConfirmation = false;
+      item.isApproximate = false;
+      item.confidence = 1.0;
+      item.clarificationNeeded = null;
+    }
+  } else if (type === 'expense') {
+    const expense = entry.expenses.id(itemId);
+    if (!expense) {
+      const err = new Error('Expense not found in entry');
+      err.statusCode = 404;
+      throw err;
+    }
 
-  // Create/append to today's entry
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  let entry = await LedgerEntry.findOne({ vendor: vendor._id, date: { $gte: today } });
-
-  if (entry) {
-    entry.items.push(...extraction.items);
-    entry.expenses.push(...extraction.expenses);
-    entry.missedProfits.push(...extraction.missedProfits);
-    entry.rawTranscript += '\n---\n' + transcript.trim();
-  } else {
-    entry = new LedgerEntry({
-      vendor: vendor._id,
-      date: today,
-      rawTranscript: transcript.trim(),
-      language: language || vendor.preferredLanguage,
-      items: extraction.items,
-      expenses: extraction.expenses,
-      missedProfits: extraction.missedProfits,
-      source: 'web_speech_api',
-      location: vendor.location,
-      processingMeta: {
-        llmModel: extraction.model,
-        llmTokensUsed: extraction.tokensUsed,
-        processedAt: new Date(),
-      },
-    });
+    if (action === 'confirm') {
+      expense.needsConfirmation = false;
+      expense.isApproximate = false;
+      expense.confidence = Math.max(expense.confidence, 0.8);
+      expense.clarificationNeeded = null;
+    } else if (action === 'update' && resolvedValue) {
+      expense.resolvedValue = resolvedValue;
+      if (resolvedValue.amount != null) expense.amount = resolvedValue.amount;
+      if (resolvedValue.category) expense.category = resolvedValue.category;
+      expense.needsConfirmation = false;
+      expense.isApproximate = false;
+      expense.confidence = 1.0;
+      expense.clarificationNeeded = null;
+    }
   }
 
   await entry.save();
 
-  // Upsert items into catalog
-  await Item.upsertFromExtraction(vendor._id, extraction.items, today);
-
-  // Update loan score
-  vendor.updateStreak(today);
-  await loanService.recalculateScore(vendor);
-  await vendor.save();
-
-  res.status(201).json({
-    success: true,
-    data: {
-      entry,
-      extraction,
-      loanReadiness: vendor.loanReadiness,
-    },
-  });
+  res.json({ success: true, data: entry });
 });
 
-module.exports = { processAudio, processText, getEntries, getSummary, confirmEntry, getTodayEntry };
-
+module.exports = {
+  processAudio,
+  processText,
+  getEntries,
+  getSummary,
+  confirmEntry,
+  getTodayEntry,
+  getPendingClarifications,
+  resolveClarification,
+};

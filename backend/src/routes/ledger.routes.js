@@ -1,5 +1,9 @@
 /**
- * Ledger API Routes
+ * Ledger API Routes — Enhanced
+ *
+ * New endpoints:
+ *  - GET  /:vendorId/pending-clarifications — Phase 4 Feature 6
+ *  - PUT  /entry/:entryId/clarify           — Phase 4 Feature 6
  */
 
 const express = require('express');
@@ -20,10 +24,16 @@ router.get('/:vendorId', validate(ledgerSchemas.query, 'query'), ledgerControlle
 // GET /api/ledger/:vendorId/summary — Get summary stats
 router.get('/:vendorId/summary', ledgerController.getSummary);
 
+// GET /api/ledger/:vendorId/today — Get today's entry
+router.get('/:vendorId/today', ledgerController.getTodayEntry);
+
+// GET /api/ledger/:vendorId/pending-clarifications — Phase 4: Items needing clarification
+router.get('/:vendorId/pending-clarifications', ledgerController.getPendingClarifications);
+
 // PUT /api/ledger/entry/:entryId/confirm — Confirm daily entry
 router.put('/entry/:entryId/confirm', validate(ledgerSchemas.confirm), ledgerController.confirmEntry);
 
-// GET /api/ledger/:vendorId/today — Get today's entry
-router.get('/:vendorId/today', ledgerController.getTodayEntry);
+// PUT /api/ledger/entry/:entryId/clarify — Phase 4: Resolve a clarification
+router.put('/entry/:entryId/clarify', ledgerController.resolveClarification);
 
 module.exports = router;
