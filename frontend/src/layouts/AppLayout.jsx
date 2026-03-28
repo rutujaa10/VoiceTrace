@@ -16,6 +16,7 @@ export default function AppLayout() {
   const navItems = [
     { path: '/', icon: '📊', label: 'Dashboard' },
     { path: '/record', icon: '🎙️', label: 'Record' },
+    { path: '/daily-log', icon: '📋', label: 'Daily Log' },
     { path: '/ledger', icon: '📒', label: 'Ledger' },
     { path: '/insights', icon: '💡', label: 'Insights' },
   ];
