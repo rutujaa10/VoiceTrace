@@ -11,8 +11,9 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useApp } from '../state/AppContext';
-import { assistantAPI } from '../api';
+import { assistantAPI, ledgerAPI } from '../api';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import ReviewForm from '../components/ledger/ReviewForm';
 
 const QUICK_QUESTIONS = [
   '📊 Aaj ka total kitna hai?',
@@ -75,7 +76,9 @@ export default function Assistant() {
       const aiMsg = {
         id: `ai-${Date.now()}`,
         role: 'ai',
-        text: res.data.data.reply,
+        text: res.data.data.type === 'logging' ? 'Maine aapki bataayi gayi jaankari nikaal li hai. Kripya niche review karein aur save karein:' : res.data.data.reply,
+        type: res.data.data.type || 'query',
+        extraction: res.data.data.extraction,
         time: new Date(),
       };
       setMessages((prev) => [...prev, aiMsg]);
@@ -93,6 +96,33 @@ export default function Assistant() {
       inputRef.current?.focus();
     }
   }, [input, isLoading, state.vendorId]);
+
+  // Handle save from inline ReviewForm
+  const handleSaveLogging = async (msgId, data) => {
+    setIsLoading(true);
+    try {
+      await ledgerAPI.manualEntry(state.vendorId, data);
+      setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isSaved: true } : m));
+      setMessages(prev => [...prev, {
+        id: `ai-${Date.now()}`,
+        role: 'ai',
+        type: 'query',
+        text: 'Aapka data ledger mein save ho gaya hai! 🎉',
+        time: new Date(),
+      }]);
+    } catch (err) {
+      setMessages(prev => [...prev, {
+        id: `err-${Date.now()}`,
+        role: 'ai',
+        text: '❌ Save fail ho gaya. Kripya dubara koshish karein.',
+        time: new Date(),
+        isError: true,
+      }]);
+    } finally {
+      setIsLoading(false);
+      inputRef.current?.focus();
+    }
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -198,6 +228,27 @@ export default function Assistant() {
             >
               {msg.text}
             </div>
+
+            {/* Inline Review Form for logging intents */}
+            {msg.type === 'logging' && msg.extraction && !msg.isSaved && (
+              <div style={{ marginTop: '12px', width: '100%' }}>
+                <ReviewForm
+                  initialItems={msg.extraction.items || []}
+                  initialExpenses={msg.extraction.expenses || []}
+                  reviewSource="assistant"
+                  reviewMode={true}
+                  processing={isLoading}
+                  onSave={(data) => handleSaveLogging(msg.id, data)}
+                  onDiscard={() => setMessages(prev => prev.filter(m => m.id !== msg.id))}
+                />
+              </div>
+            )}
+            
+            {msg.type === 'logging' && msg.isSaved && (
+              <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--success-500)', fontWeight: 600 }}>
+                ✅ Entry Saved Successfully
+              </div>
+            )}
 
             {/* Timestamp */}
             <div

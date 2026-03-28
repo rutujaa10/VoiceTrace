@@ -48,6 +48,18 @@ const processAudio = asyncHandler(async (req, res) => {
     transcription.words || [] // Phase 4 Feature 8: pass word timestamps
   );
 
+  if (req.query.save === 'false') {
+    return res.status(200).json({
+      success: true,
+      data: {
+        extraction,
+        audioUrl: req.file.filename,
+        wordTimestamps: transcription.words || [],
+        loanReadiness: vendor.loanReadiness,
+      },
+    });
+  }
+
   // Create/append to today's entry
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -544,7 +556,7 @@ const manualEntry = asyncHandler(async (req, res) => {
     throw err;
   }
 
-  const { items, expenses } = req.body;
+  const { items, expenses, audioUrl, wordTimestamps } = req.body;
   if ((!items || items.length === 0) && (!expenses || expenses.length === 0)) {
     const err = new Error('At least one item or expense is required');
     err.statusCode = 400;
@@ -560,6 +572,7 @@ const manualEntry = asyncHandler(async (req, res) => {
     confidence: 1.0,
     isApproximate: false,
     needsConfirmation: false,
+    audioTimestamp: it.audioTimestamp || undefined, // Keep if passed from review form
   }));
 
   // Normalize expenses
@@ -570,6 +583,7 @@ const manualEntry = asyncHandler(async (req, res) => {
     confidence: 1.0,
     isApproximate: false,
     needsConfirmation: false,
+    audioTimestamp: exp.audioTimestamp || undefined, // Keep if passed from review form
   }));
 
   // Build a human-readable transcript for record-keeping
@@ -588,6 +602,9 @@ const manualEntry = asyncHandler(async (req, res) => {
     entry.items.push(...normalizedItems);
     entry.expenses.push(...normalizedExpenses);
     entry.rawTranscript += '\n---\n[Manual Entry] ' + transcript;
+    if (wordTimestamps?.length > 0) {
+      entry.wordTimestamps = [...(entry.wordTimestamps || []), ...wordTimestamps];
+    }
   } else {
     entry = new LedgerEntry({
       vendor: vendor._id,
@@ -597,6 +614,8 @@ const manualEntry = asyncHandler(async (req, res) => {
       items: normalizedItems,
       expenses: normalizedExpenses,
       missedProfits: [],
+      audioUrl: audioUrl || null,
+      wordTimestamps: wordTimestamps || [],
       source: 'manual',
       confirmedByVendor: true,
       location: vendor.location,

@@ -34,7 +34,7 @@ export const ledgerAPI = {
   uploadAudio: (vendorId, audioBlob) => {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
-    return api.post(`/ledger/${vendorId}/audio`, formData, {
+    return api.post(`/ledger/${vendorId}/audio?save=false`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 60000,
     });

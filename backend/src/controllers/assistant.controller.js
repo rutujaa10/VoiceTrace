@@ -45,6 +45,26 @@ const chat = asyncHandler(async (req, res) => {
     LedgerEntry.getVendorSummary(vendor._id, 7),
   ]);
 
+  const intentResult = await extractionService.classifyIntent(message.trim(), vendor.preferredLanguage);
+
+  if (intentResult.intent === 'logging') {
+    const extraction = await extractionService.extractEntities(
+      message.trim(),
+      vendor.businessCategory,
+      vendor.preferredLanguage,
+      []
+    );
+
+    return res.json({
+      success: true,
+      data: {
+        type: 'logging',
+        extraction: extraction,
+        tokensUsed: extraction.tokensUsed,
+      },
+    });
+  }
+
   const vendorContext = {
     name: vendor.displayName || vendor.name || 'Vendor',
     category: vendor.businessCategory,
@@ -62,6 +82,7 @@ const chat = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     data: {
+      type: 'query',
       reply: answer,
       tokensUsed,
     },
