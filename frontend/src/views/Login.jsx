@@ -6,21 +6,22 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { vendorAPI } from '../api';
+import { LogIn, UserPlus, Phone, User, Store, AlertTriangle, CheckCircle, Loader, Mic, ArrowLeft, Apple, Carrot, Popcorn, CupSoda, UtensilsCrossed, Candy, Milk, Flower2, ShoppingBag, Package } from 'lucide-react';
 
 const CATEGORIES = [
-  { value: 'fruits', label: '🍎 Fruits', emoji: '🍎' },
-  { value: 'vegetables', label: '🥬 Vegetables', emoji: '🥬' },
-  { value: 'snacks', label: '🍿 Snacks', emoji: '🍿' },
-  { value: 'beverages', label: '🥤 Beverages', emoji: '🥤' },
-  { value: 'street_food', label: '🌮 Street Food', emoji: '🌮' },
-  { value: 'sweets', label: '🍬 Sweets', emoji: '🍬' },
-  { value: 'dairy', label: '🥛 Dairy', emoji: '🥛' },
-  { value: 'flowers', label: '🌸 Flowers', emoji: '🌸' },
-  { value: 'general', label: '🏪 General', emoji: '🏪' },
-  { value: 'other', label: '📦 Other', emoji: '📦' },
+  { value: 'fruits', label: 'Fruits', icon: Apple },
+  { value: 'vegetables', label: 'Vegetables', icon: Carrot },
+  { value: 'snacks', label: 'Snacks', icon: Popcorn },
+  { value: 'beverages', label: 'Beverages', icon: CupSoda },
+  { value: 'street_food', label: 'Street Food', icon: UtensilsCrossed },
+  { value: 'sweets', label: 'Sweets', icon: Candy },
+  { value: 'dairy', label: 'Dairy', icon: Milk },
+  { value: 'flowers', label: 'Flowers', icon: Flower2 },
+  { value: 'general', label: 'General', icon: ShoppingBag },
+  { value: 'other', label: 'Other', icon: Package },
 ];
 
 export default function Login() {
@@ -150,10 +151,49 @@ export default function Login() {
           maxWidth: 440,
           padding: 'var(--space-2xl)',
           textAlign: 'center',
+          position: 'relative',
         }}
       >
+        {/* Home Button */}
+        <Link
+          to="/"
+          style={{
+            position: 'absolute',
+            top: 'var(--space-md)',
+            left: 'var(--space-md)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '8px 14px',
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid var(--border-glass)',
+            borderRadius: 'var(--radius-md)',
+            color: 'var(--text-secondary)',
+            fontSize: '0.82rem',
+            fontWeight: 600,
+            textDecoration: 'none',
+            transition: 'all 0.25s ease',
+            cursor: 'pointer',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(34, 197, 94, 0.1)';
+            e.currentTarget.style.borderColor = 'var(--primary-500)';
+            e.currentTarget.style.color = 'var(--text-accent)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+            e.currentTarget.style.borderColor = 'var(--border-glass)';
+            e.currentTarget.style.color = 'var(--text-secondary)';
+          }}
+        >
+          <ArrowLeft size={16} />
+          Home
+        </Link>
+
         {/* Logo */}
-        <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>🎙️</div>
+        <div style={{ fontSize: '3rem', marginBottom: 'var(--space-sm)' }}>
+          <Mic size={42} style={{ color: 'var(--primary-500)' }} />
+        </div>
         <h1
           style={{
             fontFamily: 'var(--font-display)',
@@ -199,7 +239,7 @@ export default function Login() {
               boxShadow: mode === 'login' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            🔑 Login
+            <LogIn size={15} style={{ marginRight: 4 }} /> Login
           </button>
           <button
             id="tab-register"
@@ -219,7 +259,7 @@ export default function Login() {
               boxShadow: mode === 'register' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            ✨ Register
+            <UserPlus size={15} style={{ marginRight: 4 }} /> Register
           </button>
         </div>
 
@@ -238,7 +278,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                📱 Phone Number
+                <Phone size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> Phone Number
               </label>
               <input
                 id="login-phone"
@@ -272,7 +312,7 @@ export default function Login() {
                   textAlign: 'left',
                 }}
               >
-                ⚠️ {error}
+                <AlertTriangle size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> {error}
                 {error.includes('No account') && (
                   <button
                     type="button"
@@ -308,7 +348,7 @@ export default function Login() {
                   marginBottom: 'var(--space-md)',
                 }}
               >
-                ✅ {successMsg}
+                <CheckCircle size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> {successMsg}
               </div>
             )}
 
@@ -319,7 +359,7 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? '⏳ Logging in...' : '🔑 Login to My Account'}
+              {loading ? <><Loader size={16} style={{ marginRight: 4, animation: 'spin 1s linear infinite' }} /> Logging in...</> : <><LogIn size={16} style={{ marginRight: 4 }} /> Login to My Account</>}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>
@@ -359,7 +399,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                📱 Phone Number *
+                <Phone size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> Phone Number *
               </label>
               <input
                 id="register-phone"
@@ -392,7 +432,7 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                👤 Your Name *
+                <User size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> Your Name *
               </label>
               <input
                 id="register-name"
@@ -424,7 +464,7 @@ export default function Login() {
                   marginBottom: 8,
                 }}
               >
-                🏪 Business Category
+                <Store size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> Business Category
               </label>
               <div
                 style={{
@@ -456,13 +496,13 @@ export default function Login() {
                       gap: 2,
                     }}
                   >
-                    <span style={{ fontSize: '1.2rem' }}>{cat.emoji}</span>
+                    <cat.icon size={20} style={{ color: category === cat.value ? 'var(--primary-500)' : 'var(--text-muted)' }} />
                     <span style={{
                       fontSize: '0.62rem',
                       fontWeight: 600,
                       color: category === cat.value ? 'var(--text-accent)' : 'var(--text-muted)',
                     }}>
-                      {cat.label.split(' ')[1]}
+                      {cat.label}
                     </span>
                   </button>
                 ))}
@@ -482,7 +522,7 @@ export default function Login() {
                   textAlign: 'left',
                 }}
               >
-                ⚠️ {error}
+                <AlertTriangle size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> {error}
               </div>
             )}
 
@@ -498,7 +538,7 @@ export default function Login() {
                   marginBottom: 'var(--space-md)',
                 }}
               >
-                ✅ {successMsg}
+                <CheckCircle size={14} style={{ marginRight: 4, verticalAlign: '-2px' }} /> {successMsg}
               </div>
             )}
 
@@ -509,7 +549,7 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? '⏳ Creating Account...' : '✨ Create My Account'}
+              {loading ? <><Loader size={16} style={{ marginRight: 4, animation: 'spin 1s linear infinite' }} /> Creating Account...</> : <><UserPlus size={16} style={{ marginRight: 4 }} /> Create My Account</>}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>

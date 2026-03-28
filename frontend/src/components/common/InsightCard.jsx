@@ -8,19 +8,22 @@
  * - Hover scale + shadow expansion
  */
 
+import { CloudSun, Package, TrendingDown, BookOpen, Map, CloudLightning, Target, BookOpenCheck, Lightbulb } from 'lucide-react';
+
 export default function InsightCard({ insight }) {
   const typeConfig = {
-    prediction: { icon: '🌦️', color: 'rgba(59, 130, 246, 0.12)' },
-    stock_advice: { icon: '📦', color: 'rgba(99, 102, 241, 0.12)' },
-    missed_profit: { icon: '📉', color: 'rgba(239, 68, 68, 0.12)' },
-    weekly_story: { icon: '📖', color: 'rgba(168, 85, 247, 0.12)' },
-    csi: { icon: '🗺️', color: 'rgba(34, 197, 94, 0.12)' },
-    weather_alert: { icon: '⛈️', color: 'rgba(245, 158, 11, 0.12)' },
-    loan_milestone: { icon: '🎯', color: 'rgba(236, 72, 153, 0.12)' },
-    daily_summary: { icon: '📒', color: 'rgba(99, 102, 241, 0.12)' },
+    prediction: { icon: CloudSun, color: 'rgba(59, 130, 246, 0.12)' },
+    stock_advice: { icon: Package, color: 'rgba(99, 102, 241, 0.12)' },
+    missed_profit: { icon: TrendingDown, color: 'rgba(239, 68, 68, 0.12)' },
+    weekly_story: { icon: BookOpen, color: 'rgba(168, 85, 247, 0.12)' },
+    csi: { icon: Map, color: 'rgba(34, 197, 94, 0.12)' },
+    weather_alert: { icon: CloudLightning, color: 'rgba(245, 158, 11, 0.12)' },
+    loan_milestone: { icon: Target, color: 'rgba(236, 72, 153, 0.12)' },
+    daily_summary: { icon: BookOpenCheck, color: 'rgba(99, 102, 241, 0.12)' },
   };
 
-  const config = typeConfig[insight.type] || { icon: '💡', color: 'rgba(99, 102, 241, 0.12)' };
+  const config = typeConfig[insight.type] || { icon: Lightbulb, color: 'rgba(99, 102, 241, 0.12)' };
+  const IconComponent = config.icon;
 
   const timeAgo = (date) => {
     if (!date) return '';
@@ -64,11 +67,10 @@ export default function InsightCard({ insight }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '1.4rem',
           flexShrink: 0,
         }}
       >
-        {config.icon}
+        <IconComponent size={22} />
       </div>
 
       {/* Content */}

@@ -17,10 +17,11 @@ import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { ledgerAPI } from '../api';
 import AnomalyAlert from '../components/common/AnomalyAlert';
+import { Mic, Square, Zap, Music, Send, Trash2, Settings, XCircle, AlertTriangle, Lightbulb, CheckCircle, FileText, DollarSign, CreditCard, TrendingDown, Search, Volume2, Pause, Loader } from 'lucide-react';
 
 const LANGUAGES = [
-  { code: 'hi-IN', label: '🇮🇳 Hindi', short: 'hi' },
-  { code: 'en-IN', label: '🇬🇧 English', short: 'en' },
+  { code: 'hi-IN', label: 'Hindi', short: 'hi' },
+  { code: 'en-IN', label: 'English', short: 'en' },
 ];
 
 export default function Record() {
@@ -145,9 +146,12 @@ export default function Record() {
             fontFamily: 'var(--font-display)',
             fontSize: '1.75rem',
             fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-sm)',
           }}
         >
-          🎙️ <span className="gradient-text">Record Sales</span>
+          <Mic size={28} style={{ color: 'var(--primary-500)' }} /> <span className="gradient-text">Record Sales</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           Speak naturally — Hindi, English, or Hinglish
@@ -177,17 +181,17 @@ export default function Record() {
             className={`btn btn-sm ${mode === 'speech' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('speech'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            ⚡ Live Speech
+            <Zap size={14} /> Live Speech
           </button>
           <button
             className={`btn btn-sm ${mode === 'audio' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('audio'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.78rem', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: 4 }}
           >
-            🎵 Audio Upload
+            <Music size={14} /> Audio Upload
           </button>
         </div>
 
@@ -221,7 +225,7 @@ export default function Record() {
           className={`badge ${mode === 'speech' ? 'badge-success' : 'badge-warning'}`}
           style={{ alignSelf: 'center', fontSize: '0.7rem' }}
         >
-          {mode === 'speech' ? '💸 Free — Browser STT' : '🤖 Whisper API — Higher accuracy'}
+          {mode === 'speech' ? 'Free — Browser STT' : 'Whisper API — Higher accuracy'}
         </span>
       </div>
 
@@ -244,7 +248,7 @@ export default function Record() {
           disabled={processing}
           aria-label={isActive ? 'Stop recording' : 'Start recording'}
         >
-          {isActive ? '⏹️' : '🎙️'}
+          {isActive ? <Square size={32} /> : <Mic size={32} />}
         </button>
 
         {/* Timer */}
@@ -252,16 +256,20 @@ export default function Record() {
           {isActive ? (
             <>
               <div className="mic-timer">{formattedTime}</div>
-              <div className="mic-status" style={{ color: 'var(--danger-400)' }}>
-                🔴 {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
+              <div className="mic-status" style={{ color: 'var(--danger-400)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--danger-400)', display: 'inline-block', animation: 'pulse 1s infinite' }} />
+                {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
               </div>
             </>
           ) : (
-            <div className="mic-status">
+            <div className="mic-status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
               {hasData
-                ? mode === 'speech'
-                  ? `✅ Transcribed ${formattedTime} — Ready to process`
-                  : `✅ Recorded ${formattedTime} — Ready to upload`
+                ? <>
+                    <CheckCircle size={16} style={{ color: 'var(--success-400)' }} />
+                    {mode === 'speech'
+                      ? `Transcribed ${formattedTime} — Ready to process`
+                      : `Recorded ${formattedTime} — Ready to upload`}
+                  </>
                 : `Tap the mic to start ${mode === 'speech' ? 'listening' : 'recording'}`}
             </div>
           )}
@@ -283,8 +291,8 @@ export default function Record() {
               lineHeight: 1.6,
             }}
           >
-            <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: 6 }}>
-              📝 Live Transcript
+            <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+              <FileText size={12} /> Live Transcript
             </div>
             <span style={{ color: 'var(--text-primary)' }}>{speech.transcript}</span>
             {speech.interimText && (
@@ -306,11 +314,12 @@ export default function Record() {
             <button
               className="btn btn-primary btn-lg"
               onClick={mode === 'speech' ? handleSubmitText : handleUploadAudio}
+              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
             >
-              🚀 {mode === 'speech' ? 'Process Text' : 'Process Recording'}
+              <Send size={16} /> {mode === 'speech' ? 'Process Text' : 'Process Recording'}
             </button>
-            <button className="btn btn-secondary btn-lg" onClick={handleDiscard}>
-              🗑️ Discard
+            <button className="btn btn-secondary btn-lg" onClick={handleDiscard} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Trash2 size={16} /> Discard
             </button>
           </div>
         )}
@@ -324,7 +333,7 @@ export default function Record() {
               color: 'var(--text-accent)',
             }}
           >
-            <div style={{ fontSize: '2rem', animation: 'spin 1s linear infinite', display: 'inline-block' }}>⚙️</div>
+            <div style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}><Loader size={32} /></div>
             <p style={{ marginTop: 'var(--space-sm)', fontSize: '0.9rem' }}>
               {mode === 'speech'
                 ? 'Extracting business data from text...'
@@ -341,9 +350,13 @@ export default function Record() {
               color: 'var(--danger-400)',
               fontSize: '0.85rem',
               textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
             }}
           >
-            ❌ {error || hookError}
+            <XCircle size={16} /> {error || hookError}
           </div>
         )}
 
@@ -359,9 +372,13 @@ export default function Record() {
               fontSize: '0.82rem',
               color: 'var(--warning-400)',
               textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
             }}
           >
-            ⚠️ Web Speech API not supported. Switch to <b>Audio Upload</b> mode
+            <AlertTriangle size={16} /> Web Speech API not supported. Switch to <b>Audio Upload</b> mode
             or use Chrome / Edge browser.
           </div>
         )}
@@ -370,16 +387,16 @@ export default function Record() {
       {/* Tips */}
       {!result && (
         <div className="glass-card">
-          <h3 className="section-title">💡 Tips for Best Results</h3>
+          <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Lightbulb size={18} style={{ color: 'var(--primary-500)' }} /> Tips for Best Results</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
             {[
-              { emoji: '🗣️', text: 'Speak clearly with item names and prices' },
-              { emoji: '📋', text: '"50 samose beche 10 rupaye mein"' },
-              { emoji: '💸', text: 'Mention expenses: "200 ka tel kharida"' },
-              { emoji: '📉', text: 'Say "khatam ho gaya" for sold-out items' },
+              { icon: Mic, text: 'Speak clearly with item names and prices' },
+              { icon: FileText, text: '"50 samose beche 10 rupaye mein"' },
+              { icon: CreditCard, text: 'Mention expenses: "200 ka tel kharida"' },
+              { icon: TrendingDown, text: 'Say "khatam ho gaya" for sold-out items' },
             ].map((tip) => (
               <div key={tip.text} style={{ display: 'flex', gap: 'var(--space-sm)', alignItems: 'flex-start' }}>
-                <span style={{ fontSize: '1.3rem' }}>{tip.emoji}</span>
+                <tip.icon size={20} style={{ color: 'var(--primary-500)', flexShrink: 0, marginTop: 2 }} />
                 <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>{tip.text}</span>
               </div>
             ))}
@@ -390,7 +407,7 @@ export default function Record() {
       {/* Result */}
       {result && result.extraction && (
         <div className="glass-card animate-fadeInUp">
-          <h3 className="section-title">✅ Extracted Data</h3>
+          <h3 className="section-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}><CheckCircle size={18} style={{ color: 'var(--success-400)' }} /> Extracted Data</h3>
 
           {/* Phase 4 Feature 7: Anomaly Alert */}
           {result.anomaly && <AnomalyAlert anomaly={result.anomaly} />}
@@ -398,8 +415,8 @@ export default function Record() {
           {/* Items */}
           {result.extraction.items?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-lg)' }}>
-              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                💰 Items Sold
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <DollarSign size={14} /> Items Sold
               </h4>
               {result.extraction.items.map((item, i) => (
                 <div
@@ -437,7 +454,7 @@ export default function Record() {
                       </span>
                     )}
                     {item.confidence < 0.7 && !item.isApproximate && (
-                      <span title="Low confidence"> ⚠️</span>
+                      <AlertTriangle size={14} style={{ color: 'var(--warning-400)' }} title="Low confidence" />
                     )}
                   </div>
 
@@ -463,7 +480,7 @@ export default function Record() {
                         }}
                         title={`Hear: "${item.audioTimestamp.sourcePhrase || item.sourcePhrase || ''}"`}
                       >
-                        {audioPlayback.currentItemId === `item-${i}` ? '⏸' : '🔊'}
+                        {audioPlayback.currentItemId === `item-${i}` ? <Pause size={12} /> : <Volume2 size={12} />}
                       </button>
                     )}
                   </div>
@@ -475,8 +492,8 @@ export default function Record() {
           {/* Expenses */}
           {result.extraction.expenses?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-lg)' }}>
-              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                💸 Expenses
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <CreditCard size={14} /> Expenses
               </h4>
               {result.extraction.expenses.map((exp, i) => (
                 <div
@@ -518,7 +535,7 @@ export default function Record() {
                           color: 'var(--text-accent)',
                         }}
                       >
-                        {audioPlayback.currentItemId === `exp-${i}` ? '⏸' : '🔊'}
+                        {audioPlayback.currentItemId === `exp-${i}` ? <Pause size={12} /> : <Volume2 size={12} />}
                       </button>
                     )}
                   </div>
@@ -530,8 +547,8 @@ export default function Record() {
           {/* Missed Profits */}
           {result.extraction.missedProfits?.length > 0 && (
             <div style={{ marginBottom: 'var(--space-lg)' }}>
-              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)' }}>
-                📉 Missed Profits
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 'var(--space-sm)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <TrendingDown size={14} /> Missed Profits
               </h4>
               {result.extraction.missedProfits.map((mp, i) => (
                 <div
@@ -592,8 +609,12 @@ export default function Record() {
               fontSize: '0.78rem',
               color: 'var(--warning-400)',
               textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 6,
             }}>
-              🔍 Some items were approximate — we&apos;ll ask you to confirm next time you open the app
+              <Search size={14} /> Some items were approximate — we&apos;ll ask you to confirm next time you open the app
             </div>
           )}
 
@@ -605,8 +626,9 @@ export default function Record() {
                 setResult(null);
                 setError('');
               }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              🎙️ Record Another
+              <Mic size={16} /> Record Another
             </button>
           </div>
         </div>

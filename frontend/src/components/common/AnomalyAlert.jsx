@@ -8,6 +8,8 @@
  *   <AnomalyAlert anomaly={entry.anomaly} />
  */
 
+import { TrendingUp, TrendingDown, AlertTriangle, AlertCircle, CreditCard, BarChart3 } from 'lucide-react';
+
 export default function AnomalyAlert({ anomaly }) {
   if (!anomaly || !anomaly.detected) return null;
 
@@ -23,17 +25,17 @@ export default function AnomalyAlert({ anomaly }) {
     alert: 'rgba(239, 68, 68, 0.3)',
   };
 
-  const icons = {
-    info: '📈',
-    warning: '⚠️',
-    alert: '🚨',
-    revenue_high: '📈',
-    revenue_low: '📉',
-    expense_high: '💸',
-    expense_low: '💰',
+  const iconMap = {
+    info: TrendingUp,
+    warning: AlertTriangle,
+    alert: AlertCircle,
+    revenue_high: TrendingUp,
+    revenue_low: TrendingDown,
+    expense_high: CreditCard,
+    expense_low: BarChart3,
   };
 
-  const icon = icons[anomaly.type] || icons[anomaly.severity] || '📊';
+  const IconComponent = iconMap[anomaly.type] || iconMap[anomaly.severity] || BarChart3;
 
   return (
     <div
@@ -49,7 +51,7 @@ export default function AnomalyAlert({ anomaly }) {
         gap: 'var(--space-sm)',
       }}
     >
-      <span style={{ fontSize: '1.2rem', flexShrink: 0 }}>{icon}</span>
+      <IconComponent size={20} style={{ flexShrink: 0 }} />
       <span style={{ fontSize: '0.85rem', color: 'var(--text-primary)', lineHeight: 1.4 }}>
         {anomaly.message}
       </span>

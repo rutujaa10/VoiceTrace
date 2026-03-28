@@ -6,6 +6,7 @@ import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/common/LanguageSwitcher';
+import { LayoutDashboard, Mic, FileText, BookOpen, Lightbulb, Bot, Home, LogOut, Menu, CheckCircle, RefreshCw } from 'lucide-react';
 
 export default function AppLayout() {
   const { state, dispatch } = useApp();
@@ -18,12 +19,12 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/app', icon: '📊', label: t('nav.dashboard') },
-    { path: '/app/record', icon: '🎙️', label: t('nav.record') },
-    { path: '/app/daily-log', icon: '📝', label: t('nav.dailyLog') },
-    { path: '/app/ledger', icon: '📒', label: t('nav.ledger') },
-    { path: '/app/insights', icon: '💡', label: t('nav.insights') },
-    { path: '/app/assistant', icon: '🤖', label: t('nav.assistant') },
+    { path: '/app', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { path: '/app/record', icon: Mic, label: t('nav.record') },
+    { path: '/app/daily-log', icon: FileText, label: t('nav.dailyLog') },
+    { path: '/app/ledger', icon: BookOpen, label: t('nav.ledger') },
+    { path: '/app/insights', icon: Lightbulb, label: t('nav.insights') },
+    { path: '/app/assistant', icon: Bot, label: t('nav.assistant') },
   ];
 
   const handleLogout = () => {
@@ -47,10 +48,10 @@ export default function AppLayout() {
             onClick={() => dispatch({ type: actionTypes.TOGGLE_SIDEBAR })}
             aria-label="Toggle menu"
           >
-            ☰
+            <Menu size={20} />
           </button>
           <NavLink to="/app" className="topbar-brand">
-            <span className="topbar-logo">🎙️</span>
+            <span className="topbar-logo"><Mic size={20} /></span>
             <span className="topbar-brand-text gradient-text">VoiceTrace</span>
           </NavLink>
         </div>
@@ -62,7 +63,7 @@ export default function AppLayout() {
             onClick={handleGoHome}
             title="Go to Home Page"
           >
-            🏠 <span className="topbar-btn-label">Home</span>
+            <Home size={16} /> <span className="topbar-btn-label">Home</span>
           </button>
 
           {vendorName && (
@@ -82,22 +83,22 @@ export default function AppLayout() {
             onClick={handleLogout}
             title={t('common.logout')}
           >
-            🚪 <span className="topbar-btn-label">{t('common.logout')}</span>
+            <LogOut size={16} /> <span className="topbar-btn-label">{t('common.logout')}</span>
           </button>
         </div>
       </header>
 
-      {/* Mobile Header (legacy — hidden on desktop, shown on narrow devices) */}
+      {/* Mobile Header */}
       <header className="mobile-header">
         <button
           className="hamburger"
           onClick={() => dispatch({ type: actionTypes.TOGGLE_SIDEBAR })}
           aria-label="Toggle menu"
         >
-          ☰
+          <Menu size={20} />
         </button>
-        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>
-          🎙️ VoiceTrace
+        <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Mic size={18} /> VoiceTrace
         </span>
         <button
           className="hamburger"
@@ -105,7 +106,7 @@ export default function AppLayout() {
           aria-label="Logout"
           style={{ fontSize: '1.2rem' }}
         >
-          🚪
+          <LogOut size={18} />
         </button>
       </header>
 
@@ -120,7 +121,7 @@ export default function AppLayout() {
       {/* Sidebar */}
       <aside className={`app-sidebar ${state.sidebarOpen ? 'open' : ''}`}>
         <div className="nav-logo">
-          <span className="logo-icon">🎙️</span>
+          <span className="logo-icon"><Mic size={22} /></span>
           <span className="gradient-text">VoiceTrace</span>
         </div>
 
@@ -140,7 +141,7 @@ export default function AppLayout() {
                     }
                   }}
                 >
-                  <span className="nav-icon">{item.icon}</span>
+                  <span className="nav-icon"><item.icon size={18} /></span>
                   {item.label}
                 </NavLink>
               </li>
@@ -170,9 +171,9 @@ export default function AppLayout() {
               className={`badge ${
                 state.loanScore?.isLoanReady ? 'badge-success' : 'badge-warning'
               }`}
-              style={{ marginTop: 8 }}
+              style={{ marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
             >
-              {state.loanScore?.isLoanReady ? '✅ Loan Ready' : '🔄 Building...'}
+              {state.loanScore?.isLoanReady ? <><CheckCircle size={14} /> Loan Ready</> : <><RefreshCw size={14} /> Building...</>}
             </div>
           </div>
         </div>
