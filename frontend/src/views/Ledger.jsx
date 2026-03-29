@@ -1,7 +1,9 @@
 /**
- * Ledger View — Daily business entries list (Enhanced)
+ * Ledger View — Daily business entries list (Mobile-First)
  *
  * Enhanced with:
+ * - Fully responsive mobile-first layout
+ * - Card-based layout on mobile, grid on desktop
  * - Phase 4 Feature 6: Shows approximate/needsConfirmation badges on items
  * - Phase 4 Feature 7: Anomaly alert per entry
  * - Phase 4 Feature 8: Audio playback per item (tap to hear original audio)
@@ -12,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
-import { BookOpen, Volume2, TrendingDown, CheckCircle, Clock } from 'lucide-react';
+import { BookOpen, Volume2, TrendingDown, CheckCircle, Clock, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 export default function Ledger() {
   const { state } = useApp();
@@ -31,79 +33,7 @@ export default function Ledger() {
     setLoading(true);
     try {
       const res = await ledgerAPI.getEntries(state.vendorId, { page, limit: 10 });
-      const realEntries = res.data.data || [];
-      
-      // Inject dummy data for demonstration
-      const dummyEntries = [
-        {
-          _id: 'dummy1',
-          date: new Date().toISOString(),
-          language: 'hi',
-          totalRevenue: 1250,
-          netProfit: 900,
-          confirmedByVendor: true,
-          items: [
-            { _id: 'i1', name: 'Samosa', quantity: 50, isApproximate: false, needsConfirmation: false },
-            { _id: 'i2', name: 'Chai', quantity: 30, isApproximate: false, needsConfirmation: false },
-            { _id: 'i3', name: 'Vada Pav', quantity: 20, isApproximate: true, needsConfirmation: true }
-          ],
-          expenses: [
-            { _id: 'e1', description: 'Oil & Spices', amount: 250, isApproximate: false },
-            { _id: 'e2', description: 'Tea leaves', amount: 100, isApproximate: false },
-          ],
-          rawTranscript: "Aaj maine 50 samosa aur 30 chai bechi. Vada pav shayad 20 bik gaye honge. Kharcha bas tel masale ka 250 aur chai patti ka 100 hua.",
-          hasPendingClarifications: true
-        },
-        {
-          _id: 'dummy2',
-          date: new Date(Date.now() - 86400000).toISOString(),
-          language: 'hi',
-          totalRevenue: 950,
-          netProfit: 600,
-          confirmedByVendor: true,
-          items: [
-            { _id: 'i4', name: 'Kachori', quantity: 40, isApproximate: false, needsConfirmation: false },
-            { _id: 'i5', name: 'Chai', quantity: 25, isApproximate: false, needsConfirmation: false }
-          ],
-          expenses: [
-            { _id: 'e3', description: 'Flour', amount: 350, isApproximate: false }
-          ],
-          rawTranscript: "Kal kachori 40 biki, chai 25 cup. Aur maida laya 350 ka.",
-          hasPendingClarifications: false
-        },
-        {
-          _id: 'dummy3',
-          date: new Date(Date.now() - 86400000 * 2).toISOString(),
-          language: 'en',
-          totalRevenue: 2800,
-          netProfit: 2100,
-          confirmedByVendor: false,
-          items: [
-            { _id: 'i6', name: 'Samosa', quantity: 150, isApproximate: false, needsConfirmation: false },
-            { _id: 'i7', name: 'Jalebi', quantity: 2, isApproximate: true, needsConfirmation: true }
-          ],
-          expenses: [
-            { _id: 'e4', description: 'Sugar & Oil', amount: 700, isApproximate: false }
-          ],
-          anomaly: {
-             detected: true,
-             reason: "Unusually high sales volume for Samosa compared to your average.",
-             severity: "info"
-          },
-          rawTranscript: "Today was very busy. Sold 150 samosas and around 2 kilos of Jalebi. Expenses for sugar and oil were 700 rupees.",
-          hasPendingClarifications: true
-        }
-      ];
-
-      const combined = [...realEntries];
-      if (realEntries.length < 3) {
-        const existingIds = new Set(realEntries.map(e => e._id));
-        dummyEntries.forEach(d => {
-          if (!existingIds.has(d._id)) combined.push(d);
-        });
-      }
-
-      setEntries(combined);
+      setEntries(res.data.data || []);
       setPagination(res.data.pagination || { pages: 1 });
     } catch (err) {
       console.error('Ledger fetch error:', err);
@@ -129,7 +59,6 @@ export default function Ledger() {
     try {
       const res = await ledgerAPI.removeItem(entryId, itemId);
       if (res.data.deleted) {
-        // Entry was auto-deleted because it became empty
         setEntries((prev) => prev.filter((e) => e._id !== entryId));
       } else {
         setEntries((prev) =>
@@ -162,7 +91,6 @@ export default function Ledger() {
     }
   };
 
-  // Check if an entry is within the 36-hour edit window
   const isEntryEditable = (entry) => {
     const entryDate = new Date(entry.date);
     entryDate.setHours(0, 0, 0, 0);
@@ -178,12 +106,13 @@ export default function Ledger() {
     });
 
   return (
-    <div className="max-w-4xl mx-auto px-4 stagger-children">
-      <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          <BookOpen size={24} style={{ display: 'inline', color: 'var(--text-primary)', verticalAlign: 'text-bottom', marginRight: '8px' }} /><span className="gradient-text">{t('ledger.title')}</span>
+    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '0 4px' }}>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.2rem, 5vw, 1.75rem)', fontWeight: 800 }}>
+          <BookOpen size={22} style={{ display: 'inline', color: 'var(--text-primary)', verticalAlign: 'text-bottom', marginRight: '6px' }} />
+          <span className="gradient-text">{t('ledger.title')}</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>
           {t('ledger.subtitle')}
         </p>
       </div>
@@ -196,23 +125,13 @@ export default function Ledger() {
         </div>
       ) : entries.length === 0 ? (
         <div className="empty-state glass-card">
-          <div className="empty-icon"><BookOpen size={40} style={{ color: 'var(--text-muted)' }} /></div>
+          <div><BookOpen size={40} style={{ color: 'var(--text-muted)' }} /></div>
           <h3>{t('ledger.noEntries')}</h3>
           <p>{t('ledger.noEntriesHint')}</p>
         </div>
       ) : (
         <>
-          {/* Entries as Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-            
-            {/* Main Table Header Row */}
-            <div className="hidden md:grid gap-4 px-6 text-[0.68rem] font-bold text-muted uppercase tracking-wider" style={{ gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1.2fr', marginBottom: '2px' }}>
-              <div>DATE</div>
-              <div>OVERVIEW</div>
-              <div style={{ textAlign: 'left' }}>STATUS</div>
-              <div>BALANCE</div>
-              <div style={{ textAlign: 'right' }}>ACTIONS</div>
-            </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {entries.map((entry) => (
               <LedgerEntryCard
                 key={entry._id}
@@ -230,21 +149,23 @@ export default function Ledger() {
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-sm)', marginTop: 'var(--space-xl)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-sm)', marginTop: 'var(--space-xl)', flexWrap: 'wrap' }}>
               <button
                 className="btn btn-secondary"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
+                style={{ fontSize: '0.82rem' }}
               >
                 ← {t('common.previous')}
               </button>
-              <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+              <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
                 {t('common.pageOf', { page, pages: pagination.pages })}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={page === pagination.pages}
                 onClick={() => setPage((p) => p + 1)}
+                style={{ fontSize: '0.82rem' }}
               >
                 {t('common.next')} →
               </button>
@@ -257,14 +178,13 @@ export default function Ledger() {
 }
 
 /**
- * LedgerEntryCard — Individual entry with expandable details + audio playback
+ * LedgerEntryCard — Mobile-first entry card with expandable details
  */
 function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, onRemoveItem, onRemoveExpense, formatDate }) {
-  // Phase 4 Feature 8: Audio playback hook for this entry
+  const { t } = useTranslation();
   const audioPlayback = useAudioPlayback(entry.audioUrl);
   const [removingId, setRemovingId] = useState(null);
 
-  // Play audio helper for the entire entry or specific item
   const handlePlayAudio = (e, index, startTime, endTime) => {
     e.stopPropagation();
     if (audioPlayback.hasAudio && startTime != null) {
@@ -274,182 +194,157 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
 
   return (
     <div style={{
-      padding: 0, borderRadius: '14px', overflow: 'hidden',
+      borderRadius: '14px', overflow: 'hidden',
       border: isExpanded ? '1px solid rgba(34,197,94,0.2)' : '1px solid var(--border-subtle)',
       boxShadow: isExpanded ? '0 8px 24px -4px rgba(34,197,94,0.08)' : '0 1px 4px rgba(0,0,0,0.02)',
       transition: 'all 0.3s ease',
-      position: 'relative'
+      position: 'relative',
+      background: 'var(--bg-card)',
     }}>
       {/* Left accent bar for expanded state */}
       {isExpanded && (
         <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '3px', background: 'var(--gradient-primary)', zIndex: 1 }} />
       )}
 
-      {/* ═══ Main Table Row ═══ */}
+      {/* ═══ Main Card Row ═══ */}
       <div
-        className="flex flex-col md:grid md:items-center gap-4 px-6 py-4 cursor-pointer"
-        style={{
-          gridTemplateColumns: '1.2fr 2fr 1.5fr 1.5fr 1.2fr',
-          background: isExpanded ? 'rgba(34,197,94,0.02)' : 'var(--bg-card)',
-          transition: 'background 0.2s ease'
-        }}
         onClick={onToggle}
-        onMouseEnter={(e) => { if (!isExpanded) e.currentTarget.style.background = 'rgba(0,0,0,0.008)' }}
-        onMouseLeave={(e) => { if (!isExpanded) e.currentTarget.style.background = 'var(--bg-card)' }}
+        style={{
+          padding: '14px 16px',
+          background: isExpanded ? 'rgba(34,197,94,0.02)' : 'var(--bg-card)',
+          cursor: 'pointer',
+          transition: 'background 0.2s ease',
+        }}
       >
-        {/* Col 1: Date */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-            {formatDate(entry.date)}
-          </div>
-        </div>
-
-        {/* Col 2: Overview */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: '10px',
-            background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.08))',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--success-500)', flexShrink: 0
-          }}>
-            <BookOpen size={15} />
-          </div>
-          <div>
-            <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-              {entry.items?.length || 0} Items
+        {/* Top row: Date + Status + Amount */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+            <div style={{
+              width: 28, height: 28, borderRadius: '8px', flexShrink: 0,
+              background: 'linear-gradient(135deg, rgba(34,197,94,0.1), rgba(16,185,129,0.08))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--success-500)',
+            }}>
+              <BookOpen size={13} />
             </div>
+            <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-primary)' }}>
+              {formatDate(entry.date)}
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)' }}>
+              ₹{(entry.totalRevenue || 0).toLocaleString('en-IN')}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: '#16a34a', fontWeight: 600 }}>
+              +₹{(entry.netProfit || 0).toLocaleString('en-IN')} profit
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom row: Info + Status + Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+              {entry.items?.length || 0} Items
+            </span>
             {audioPlayback.hasAudio && (
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '1px' }}>
+              <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
                 <Volume2 size={10} /> Audio
-              </div>
+              </span>
             )}
+            {/* Status badge */}
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: '4px',
+              padding: '3px 10px', borderRadius: '20px',
+              fontSize: '0.68rem', fontWeight: 600,
+              background: entry.confirmedByVendor
+                ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08))'
+                : 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,179,8,0.08))',
+              color: entry.confirmedByVendor ? '#16a34a' : '#d97706',
+              border: entry.confirmedByVendor ? '1px solid rgba(34,197,94,0.15)' : '1px solid rgba(245,158,11,0.15)',
+            }}>
+              <div style={{ width: 4, height: 4, borderRadius: '50%', background: entry.confirmedByVendor ? '#22c55e' : '#f59e0b' }} />
+              {entry.confirmedByVendor ? t('ledger.confirmed') : t('ledger.pending')}
+            </div>
           </div>
-        </div>
 
-        {/* Col 3: Status */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '5px',
-            padding: '5px 14px', borderRadius: '20px',
-            fontSize: '0.72rem', fontWeight: 600,
-            background: entry.confirmedByVendor
-              ? 'linear-gradient(135deg, rgba(34,197,94,0.12), rgba(16,185,129,0.08))'
-              : 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(234,179,8,0.08))',
-            color: entry.confirmedByVendor ? '#16a34a' : '#d97706',
-            border: entry.confirmedByVendor ? '1px solid rgba(34,197,94,0.15)' : '1px solid rgba(245,158,11,0.15)'
-          }}>
-            <div style={{ width: 5, height: 5, borderRadius: '50%', background: entry.confirmedByVendor ? '#22c55e' : '#f59e0b' }} />
-            {entry.confirmedByVendor ? t('ledger.confirmed') : t('ledger.pending')}
-          </div>
-        </div>
-
-        {/* Col 4: Balance */}
-        <div>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: 'var(--text-primary)', letterSpacing: '-0.01em' }}>
-            ₹{(entry.totalRevenue || 0).toLocaleString('en-IN')}
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 600, marginTop: '1px' }}>
-            +₹{(entry.netProfit || 0).toLocaleString('en-IN')} profit
-          </div>
-        </div>
-
-        {/* Col 5: Actions */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
-          {!entry.confirmedByVendor && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {!entry.confirmedByVendor && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onConfirm(); }}
+                style={{
+                  background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', border: 'none',
+                  borderRadius: '8px', padding: '5px 12px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer',
+                  transition: 'all 0.2s', boxShadow: '0 2px 8px -2px rgba(34,197,94,0.3)',
+                }}
+              >
+                ✓ Verify
+              </button>
+            )}
             <button
-              onClick={(e) => { e.stopPropagation(); onConfirm(); }}
+              onClick={(e) => { e.stopPropagation(); onToggle(); }}
               style={{
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)', color: '#fff', border: 'none',
-                borderRadius: '10px', padding: '7px 16px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
-                transition: 'all 0.2s', boxShadow: '0 2px 8px -2px rgba(34,197,94,0.3)'
+                background: isExpanded ? 'var(--bg-secondary)' : 'transparent',
+                color: isExpanded ? 'var(--text-primary)' : 'var(--text-muted)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px', padding: '5px 10px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
+                transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '3px',
               }}
-              onMouseEnter={(e) => { e.target.style.transform = 'translateY(-1px)'; e.target.style.boxShadow = '0 4px 12px -2px rgba(34,197,94,0.4)' }}
-              onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 2px 8px -2px rgba(34,197,94,0.3)' }}
             >
-              ✓ Verify
+              {isExpanded ? <><ChevronUp size={12} /> Close</> : <><ChevronDown size={12} /> View</>}
             </button>
-          )}
-          <button
-            style={{
-              background: isExpanded ? 'var(--bg-secondary)' : 'transparent',
-              color: isExpanded ? 'var(--text-primary)' : 'var(--text-muted)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: '10px', padding: '7px 14px', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => { e.target.style.background = 'var(--bg-secondary)'; e.target.style.color = 'var(--text-primary)' }}
-            onMouseLeave={(e) => { if (!isExpanded) { e.target.style.background = 'transparent'; e.target.style.color = 'var(--text-muted)' } }}
-          >
-            {isExpanded ? '✕ Close' : '→ View'}
-          </button>
+          </div>
         </div>
       </div>
 
-      {/* ═══ Expanded Items Table ═══ */}
+      {/* ═══ Expanded Details ═══ */}
       {isExpanded && (
-        <div style={{ padding: '20px 28px 24px', borderTop: '1px solid rgba(34,197,94,0.1)', background: 'rgba(34,197,94,0.01)' }}>
+        <div style={{ padding: '16px', borderTop: '1px solid rgba(34,197,94,0.1)', background: 'rgba(34,197,94,0.01)' }}>
 
-          {/* Section title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <div style={{ width: 4, height: 16, borderRadius: '2px', background: 'var(--gradient-primary)' }} />
-            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Itemized Breakdown
+          {/* Items Section */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+            <div style={{ width: 3, height: 14, borderRadius: '2px', background: 'var(--gradient-primary)' }} />
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+              Items Breakdown
             </span>
           </div>
 
-          {/* Items Header */}
-          <div className="hidden md:grid gap-4 text-[0.65rem] text-muted mb-2 px-3 uppercase tracking-wider" style={{ gridTemplateColumns: '2fr 1fr 1.5fr 1fr', fontWeight: 700, color: 'var(--text-muted)' }}>
-            <div>ITEM</div>
-            <div>QTY</div>
-            <div>STATUS</div>
-            <div style={{ textAlign: 'right' }}>ACTION</div>
-          </div>
-
-          {/* Items Rows */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
             {entry.items?.map((item, i) => (
               <div
                 key={item._id || i}
-                className="grid items-center gap-4 px-3 py-3"
                 style={{
-                  gridTemplateColumns: '2fr 1fr 1.5fr 1fr',
-                  borderRadius: '10px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '10px 12px', borderRadius: '10px', gap: '8px', flexWrap: 'wrap',
                   background: i % 2 === 0 ? 'rgba(0,0,0,0.015)' : 'transparent',
-                  transition: 'background 0.15s ease'
+                  cursor: audioPlayback.hasAudio ? 'pointer' : 'default',
                 }}
-                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(34,197,94,0.04)'}
-                onMouseLeave={(e) => e.currentTarget.style.background = i % 2 === 0 ? 'rgba(0,0,0,0.015)' : 'transparent'}
+                onClick={(e) => handlePlayAudio(e, i, item.audioTimestamp?.startTime, item.audioTimestamp?.endTime)}
               >
-                {/* Item Name */}
-                <div
-                   style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem', cursor: audioPlayback.hasAudio ? 'pointer' : 'default' }}
-                   onClick={(e) => handlePlayAudio(e, i, item.audioTimestamp?.startTime, item.audioTimestamp?.endTime)}
-                >
-                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 0 6px rgba(34,197,94,0.3)' }} />
-                  <span style={{ textTransform: 'capitalize' }}>{item.name}</span>
-                  {audioPlayback.currentItemId === `item-${entry._id}-${i}` && <Volume2 size={12} style={{ color: 'var(--success-500)' }} />}
+                {/* Item name + quantity */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: '1 1 auto', minWidth: '120px' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'linear-gradient(135deg, #22c55e, #16a34a)', boxShadow: '0 0 4px rgba(34,197,94,0.3)', flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)', textTransform: 'capitalize' }}>
+                    {item.name}
+                  </span>
+                  {audioPlayback.currentItemId === `item-${entry._id}-${i}` && <Volume2 size={11} style={{ color: 'var(--success-500)' }} />}
+                  <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    ×{item.quantity}
+                  </span>
                 </div>
 
-                {/* Quantity */}
-                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  {item.quantity} <span style={{ fontSize: '0.7rem', fontWeight: 400, color: 'var(--text-muted)' }}>units</span>
-                </div>
-
-                {/* Status */}
-                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                {/* Status + Remove */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
                   {item.isApproximate ? (
-                    <span style={{ color: '#d97706', fontSize: '0.68rem', fontWeight: 600, background: 'rgba(245,158,11,0.1)', padding: '3px 10px', borderRadius: '20px', border: '1px solid rgba(245,158,11,0.1)' }}>
+                    <span style={{ color: '#d97706', fontSize: '0.65rem', fontWeight: 600, background: 'rgba(245,158,11,0.1)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(245,158,11,0.1)' }}>
                       ≈ Approx
                     </span>
                   ) : (
-                    <span style={{ color: '#16a34a', fontSize: '0.68rem', fontWeight: 600, background: 'rgba(34,197,94,0.08)', padding: '3px 10px', borderRadius: '20px', border: '1px solid rgba(34,197,94,0.1)' }}>
+                    <span style={{ color: '#16a34a', fontSize: '0.65rem', fontWeight: 600, background: 'rgba(34,197,94,0.08)', padding: '2px 8px', borderRadius: '12px', border: '1px solid rgba(34,197,94,0.1)' }}>
                       ✓ Exact
                     </span>
                   )}
-                </div>
-
-                {/* Remove Action */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                   {isEditable && (
                     <button
                       onClick={(e) => {
@@ -461,13 +356,12 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
                       disabled={removingId === (item._id || i)}
                       style={{
                         color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.15)',
-                        padding: '4px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer',
-                        opacity: removingId === (item._id || i) ? 0.5 : 1, transition: 'all 0.2s'
+                        padding: '3px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 600, cursor: 'pointer',
+                        opacity: removingId === (item._id || i) ? 0.5 : 1, transition: 'all 0.2s',
+                        display: 'inline-flex', alignItems: 'center', gap: '3px',
                       }}
-                      onMouseEnter={(e) => { e.target.style.background = 'rgba(239, 68, 68, 0.06)'; e.target.style.borderColor = 'rgba(239, 68, 68, 0.25)' }}
-                      onMouseLeave={(e) => { e.target.style.background = 'transparent'; e.target.style.borderColor = 'rgba(239, 68, 68, 0.15)' }}
                     >
-                      {removingId === (item._id || i) ? '...' : 'Remove'}
+                      <Trash2 size={10} /> {removingId === (item._id || i) ? '...' : 'Remove'}
                     </button>
                   )}
                 </div>
@@ -475,54 +369,55 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
             ))}
           </div>
 
-          {/* Expenses Breakdown */}
+          {/* Expenses */}
           {entry.expenses?.length > 0 && (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', marginTop: '8px' }}>
-                <div style={{ width: 4, height: 16, borderRadius: '2px', background: 'linear-gradient(135deg, #ef4444, #f97316)' }} />
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', marginTop: '4px' }}>
+                <div style={{ width: 3, height: 14, borderRadius: '2px', background: 'linear-gradient(135deg, #ef4444, #f97316)' }} />
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Expenses
                 </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px' }}>
                 {entry.expenses.map((exp, i) => (
-                  <div key={exp._id || i} className="grid items-center gap-4 px-3 py-3" style={{
-                    gridTemplateColumns: '2fr 1fr 1.5fr 1fr', borderRadius: '10px',
-                    background: 'rgba(239,68,68,0.02)', border: '1px solid rgba(239,68,68,0.06)'
+                  <div key={exp._id || i} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 12px', borderRadius: '10px', gap: '8px', flexWrap: 'wrap',
+                    background: 'rgba(239,68,68,0.02)', border: '1px solid rgba(239,68,68,0.06)',
                   }}>
-                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary)', fontWeight: 600, fontSize: '0.85rem' }}>
-                       <TrendingDown size={13} style={{ color: '#ef4444' }} /> {exp.description || exp.category}
-                     </div>
-                     <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#ef4444' }}>-₹{exp.amount}</div>
-                     <div>
-                       <span style={{ color: '#dc2626', fontSize: '0.68rem', fontWeight: 600, background: 'rgba(239,68,68,0.08)', padding: '3px 10px', borderRadius: '20px' }}>Expense</span>
-                     </div>
-                     <div style={{ textAlign: 'right' }}>
-                       {isEditable && (
-                         <button
-                           onClick={(e) => { e.stopPropagation(); setRemovingId(exp._id); onRemoveExpense(exp._id).finally(() => setRemovingId(null)); }}
-                           style={{ color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.15)', padding: '4px 10px', borderRadius: '8px', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
-                           onMouseEnter={(e) => e.target.style.background = 'rgba(239,68,68,0.06)'}
-                           onMouseLeave={(e) => e.target.style.background = 'transparent'}
-                         >Remove</button>
-                       )}
-                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: '1 1 auto', minWidth: '100px' }}>
+                      <TrendingDown size={12} style={{ color: '#ef4444', flexShrink: 0 }} />
+                      <span style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-primary)' }}>
+                        {exp.description || exp.category}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                      <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ef4444' }}>-₹{exp.amount}</span>
+                      {isEditable && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setRemovingId(exp._id); onRemoveExpense(exp._id).finally(() => setRemovingId(null)); }}
+                          style={{ color: '#ef4444', background: 'transparent', border: '1px solid rgba(239,68,68,0.15)', padding: '3px 8px', borderRadius: '6px', fontSize: '0.68rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '3px' }}
+                        >
+                          <Trash2 size={10} /> Remove
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* Transcript Details */}
+          {/* Transcript */}
           {entry.rawTranscript && (
              <div style={{
-               fontSize: '0.82rem', color: 'var(--text-secondary)', fontStyle: 'italic',
+               fontSize: '0.78rem', color: 'var(--text-secondary)', fontStyle: 'italic',
                background: 'linear-gradient(135deg, rgba(34,197,94,0.03), rgba(16,185,129,0.02))',
-               padding: '16px 20px', borderRadius: '12px',
-               marginTop: '8px', border: '1px solid rgba(34,197,94,0.08)'
+               padding: '12px 14px', borderRadius: '10px',
+               marginTop: '6px', border: '1px solid rgba(34,197,94,0.08)',
              }}>
-               <div style={{ fontWeight: 700, color: 'var(--success-500)', marginBottom: '6px', fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.04em', fontStyle: 'normal', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                 <Volume2 size={12} /> Original Transcript
+               <div style={{ fontWeight: 700, color: 'var(--success-500)', marginBottom: '4px', fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.04em', fontStyle: 'normal', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                 <Volume2 size={11} /> Original Transcript
                </div>
                &quot;{entry.rawTranscript}&quot;
              </div>

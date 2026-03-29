@@ -239,17 +239,17 @@ export default function Record() {
   return (
     <div className="stagger-children">
       {/* Header */}
-      <div style={{ marginBottom: 'var(--space-xl)' }}>
+      <div style={{ marginBottom: 'var(--space-lg)' }}>
         <h1
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: '1.75rem',
+            fontSize: 'clamp(1.2rem, 5vw, 1.75rem)',
             fontWeight: 800,
           }}
         >
-          <Mic size={28} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">Record Sales</span>
+          <Mic size={24} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '6px' }} /> <span className="gradient-text">Record Sales</span>
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
           Speak naturally or type your sales manually
         </p>
       </div>
@@ -267,7 +267,8 @@ export default function Record() {
         <div
           className="glass-card"
           style={{
-            display: 'inline-flex',
+            display: 'flex',
+            flexWrap: 'wrap',
             padding: '4px',
             borderRadius: 'var(--radius-lg)',
             gap: '2px',
@@ -277,25 +278,25 @@ export default function Record() {
             className={`btn btn-sm ${mode === 'speech' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('speech'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.75rem', padding: '6px 10px', flex: '1 1 auto', minWidth: '0' }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Zap size={14} /> Live Speech</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Zap size={13} /> Live Speech</span>
           </button>
           <button
             className={`btn btn-sm ${mode === 'audio' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('audio'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.75rem', padding: '6px 10px', flex: '1 1 auto', minWidth: '0' }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><FileAudio size={14} /> Audio Upload</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><FileAudio size={13} /> Audio</span>
           </button>
           <button
             className={`btn btn-sm ${mode === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
             onClick={() => { setMode('manual'); handleDiscard(); }}
             disabled={isActive}
-            style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+            style={{ fontSize: '0.75rem', padding: '6px 10px', flex: '1 1 auto', minWidth: '0' }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit3 size={14} /> Manual Entry</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}><Edit3 size={13} /> Manual</span>
           </button>
         </div>
 
@@ -304,10 +305,13 @@ export default function Record() {
           <div
             className="glass-card"
             style={{
-              display: 'inline-flex',
+              display: 'flex',
+              flexWrap: 'wrap',
               padding: '4px',
               borderRadius: 'var(--radius-lg)',
               gap: '2px',
+              overflowX: 'auto',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
             {LANGUAGES.map((l) => (
@@ -316,7 +320,7 @@ export default function Record() {
                 className={`btn btn-sm ${lang.code === l.code ? 'btn-primary' : 'btn-ghost'}`}
                 onClick={() => setLang(l)}
                 disabled={speech.isListening}
-                style={{ fontSize: '0.78rem', padding: '6px 12px' }}
+                style={{ fontSize: '0.72rem', padding: '5px 8px', whiteSpace: 'nowrap' }}
               >
                 {l.label}
               </button>
@@ -554,7 +558,7 @@ export default function Record() {
           {!result && (
             <div className="glass-card">
               <h3 className="section-title"><span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Lightbulb size={20} style={{ color: 'var(--primary-500)' }} /> Tips for Best Results</span></h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: 'var(--space-md)' }}>
                 {[
                   { icon: <MessageSquare size={20} />, text: 'Speak clearly with item names and prices' },
                   { icon: <FileText size={20} />, text: '"50 samose beche 10 rupaye mein"' },

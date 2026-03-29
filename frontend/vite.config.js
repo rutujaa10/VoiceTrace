@@ -2,11 +2,13 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import tailwindcss from '@tailwindcss/vite';
+import basicSsl from '@vitejs/plugin-basic-ssl';
 
 export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
@@ -40,6 +42,7 @@ export default defineConfig({
   ],
   server: {
     port: 5173,
+    https: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',

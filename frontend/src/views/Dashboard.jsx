@@ -75,66 +75,7 @@ export default function Dashboard() {
       setRecentInsights(insightRes.data.data || []);
 
       if (analyticsRes?.data?.data) {
-        const patterns = analyticsRes.data.data;
-        // Inject dummy data to 'unlock' weekly insights for demo purposes
-        if (!patterns.plainInsights || patterns.plainInsights.some(i => i.toLowerCase().includes('unlock'))) {
-          setWeeklyPatterns({
-            plainInsights: [
-              "Weekend sales (Sat-Sun) are consistently 32% higher than weekdays — plan inventory accordingly.",
-              "Tea and Samosas are your most successful combo, appearing together in 45% of morning orders.",
-              "Revenue peaks sharply between 4 PM and 7 PM. Ensure you have maximum stock ready by 3:30 PM."
-            ],
-            stockSuggestions: [
-              { item: 'Samosa', suggestion: 'Prepare 30 extra', reason: 'High weekend demand predicted' },
-              { item: 'Chai Leaves', suggestion: 'Stock 2kg more', reason: 'High correlation with evening snacks' }
-            ],
-            bestSeller: {
-              name: 'Samosa',
-              totalQuantity: 142,
-              totalRevenue: 2840,
-              daysAppeared: 7
-            },
-            peakDay: {
-              dayName: 'Sunday',
-              revenue: 5420,
-              date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-            },
-            missedProfits: {
-              totalLoss: 850,
-              topMissedItems: [{ item: 'Patties' }, { item: 'Cold Drink' }]
-            }
-          });
-        } else {
-          setWeeklyPatterns(patterns);
-        }
-      } else {
-        // Force dummy data if there's no result
-        setWeeklyPatterns({
-          plainInsights: [
-            "Weekend sales (Sat-Sun) are consistently 32% higher than weekdays — plan inventory accordingly.",
-            "Tea and Samosas are your most successful combo, appearing together in 45% of morning orders.",
-            "Revenue peaks sharply between 4 PM and 7 PM. Ensure you have maximum stock ready by 3:30 PM."
-          ],
-          stockSuggestions: [
-            { item: 'Samosa', suggestion: 'Prepare 30 extra', reason: 'High weekend demand predicted' },
-            { item: 'Chai Leaves', suggestion: 'Stock 2kg more', reason: 'High correlation with evening snacks' }
-          ],
-          bestSeller: {
-            name: 'Samosa',
-            totalQuantity: 142,
-            totalRevenue: 2840,
-            daysAppeared: 7
-          },
-          peakDay: {
-            dayName: 'Sunday',
-            revenue: 5420,
-            date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
-          },
-          missedProfits: {
-            totalLoss: 850,
-            topMissedItems: [{ item: 'Patties' }, { item: 'Cold Drink' }]
-          }
-        });
+        setWeeklyPatterns(analyticsRes.data.data);
       }
 
       if (todayRes?.data?.data?.anomaly?.detected) {
@@ -204,7 +145,7 @@ export default function Dashboard() {
     return (
       <div style={{ paddingTop: 'var(--space-lg)' }}>
         <div className="section-title">{t('nav.dashboard')}</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(200px, 100%), 1fr))', gap: '20px' }}>
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="skeleton" style={{ height: 100, borderRadius: 'var(--radius-3xl)' }} />
           ))}
@@ -297,7 +238,7 @@ export default function Dashboard() {
 
 
       {/* ═══════════ PARALLEL INSIGHTS ROW ═══════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '20px', marginBottom: '24px' }}>
         {/* ═══════════ WEEKLY OBSERVATIONS ═══════════ */}
         {weeklyPatterns?.plainInsights?.length > 0 && (
           <div
@@ -890,6 +831,13 @@ export default function Dashboard() {
           .bento-actions-grid { grid-template-columns: 1fr !important; }
           .bento-patterns-grid { grid-template-columns: 1fr !important; }
           .action-buttons-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 430px) {
+          .bento-stat-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          .bento-actions-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          .bento-patterns-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          .action-buttons-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+          .loan-readiness-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
         }
       `}</style>
     </div>

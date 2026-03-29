@@ -438,7 +438,7 @@ export default function Insights() {
               ))}
             </div>
           ) : smartData?.insights?.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 'var(--space-md)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(320px, 100%), 1fr))', gap: 'var(--space-md)' }}>
               {smartData.insights
                 .filter(ins => ins.type !== 'weather_forecast') // weather shown in hero
                 .map((insight, idx) => (

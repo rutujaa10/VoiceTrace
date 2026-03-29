@@ -50,7 +50,13 @@ export function useVoiceRecorder({
 
   const startListening = useCallback(() => {
     if (!SpeechRecognition) {
-      setError('Speech Recognition is not supported in this browser. Use Chrome or Edge.');
+      setError('Speech Recognition is not supported in this browser. Switch to "Audio Upload" mode — it works on all browsers including Safari.');
+      return;
+    }
+
+    // Secure context check (mic requires HTTPS on mobile)
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      setError('Microphone requires HTTPS. Switch to "Audio Upload" mode or use localhost.');
       return;
     }
 

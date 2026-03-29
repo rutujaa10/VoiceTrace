@@ -560,13 +560,12 @@ IMPORTANT RULES:
       <div className="max-w-4xl mx-auto" style={{ paddingTop: '8px' }}>
 
         {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight flex items-center gap-3"
-              style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-            <FileText size={32} style={{ color: 'var(--primary-500)' }} /> 
-            <span className="gradient-text" style={{ paddingBottom: '4px' }}>Daily Log</span>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.2rem, 5vw, 1.75rem)', fontWeight: 800, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileText size={24} style={{ color: 'var(--primary-500)', flexShrink: 0 }} /> 
+            <span className="gradient-text" style={{ paddingBottom: '2px' }}>Daily Log</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '6px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>
             Speak naturally — AI detects your sales, expenses & items
           </p>
         </div>
@@ -839,26 +838,28 @@ IMPORTANT RULES:
             </div>
 
             {/* Items Sold — Editable */}
-            <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '16px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
               <div className="flex justify-between items-center mb-4">
                 <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                  <ShoppingBag size={16} style={{ color: 'var(--primary-500)' }} /> Items Sold
+                  <ShoppingBag size={15} style={{ color: 'var(--primary-500)' }} /> Items Sold
                 </h4>
-                <button onClick={addReviewItem} className="transition-all duration-200 cursor-pointer border-0 hover:scale-105" style={{ background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button onClick={addReviewItem} style={{ background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.72rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', border: 'none', cursor: 'pointer' }}>
                   + Add Item
                 </button>
               </div>
 
+              {/* Scrollable grid for mobile */}
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               {/* Column headers */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px', minWidth: '400px' }}>
                 {['Item Name', 'Qty', 'Unit ₹', 'Total ₹', ''].map(h => (
                   <span key={h} style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</span>
                 ))}
               </div>
 
               {reviewItems.map((item, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center', minWidth: '400px' }}>
                   <input type="text" value={item.name} onChange={e => updateReviewItem(i, 'name', e.target.value)} placeholder="e.g. Samosa"
                     style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
                   <input type="number" value={item.quantity} min="1" onChange={e => updateReviewItem(i, 'quantity', e.target.value)}
@@ -868,34 +869,37 @@ IMPORTANT RULES:
                   <div style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.12)', fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary-500)', textAlign: 'center' }}>
                     ₹{Number(item.totalPrice) || 0}
                   </div>
-                  <button onClick={() => removeReviewItem(i)} disabled={reviewItems.length <= 1} className="cursor-pointer border-0 transition-all duration-200 disabled:opacity-20" style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)' }}>
+                  <button onClick={() => removeReviewItem(i)} disabled={reviewItems.length <= 1} style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)', border: 'none', cursor: 'pointer', opacity: reviewItems.length <= 1 ? 0.2 : 1 }}>
                     ✕
                   </button>
                 </div>
               ))}
+              </div>
             </div>
+            <div style={{ height: '12px' }} />
 
             {/* Expenses — Editable */}
-            <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '16px', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(135deg, #ef4444, #f97316)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-sm font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                  <TrendingDown size={16} style={{ color: 'var(--danger-400)' }} /> Expenses
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-primary)' }}>
+                  <TrendingDown size={15} style={{ color: 'var(--danger-400)' }} /> Expenses
                 </h4>
-                <button onClick={addReviewExpense} className="transition-all duration-200 cursor-pointer border-0 hover:scale-105" style={{ background: 'rgba(239,68,68,0.06)', color: 'var(--danger-400)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button onClick={addReviewExpense} style={{ background: 'rgba(239,68,68,0.06)', color: 'var(--danger-400)', padding: '5px 12px', borderRadius: 'var(--radius-full)', fontSize: '0.72rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px', border: 'none', cursor: 'pointer' }}>
                   + Add Expense
                 </button>
               </div>
 
-              {/* Column headers */}
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px' }}>
+              {/* Scrollable grid for mobile */}
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '6px', padding: '0 2px', minWidth: '360px' }}>
                 {['Description', 'Category', 'Amount ₹', ''].map(h => (
                   <span key={h} style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</span>
                 ))}
               </div>
 
               {reviewExpenses.map((exp, i) => (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center' }}>
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 36px', gap: '6px', marginBottom: '8px', alignItems: 'center', minWidth: '360px' }}>
                   <input type="text" value={exp.description} onChange={e => updateReviewExpense(i, 'description', e.target.value)} placeholder="e.g. Oil, Flour"
                     style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
                   <select value={exp.category} onChange={e => updateReviewExpense(i, 'category', e.target.value)}
@@ -909,12 +913,14 @@ IMPORTANT RULES:
                   </select>
                   <input type="number" value={exp.amount} min="0" onChange={e => updateReviewExpense(i, 'amount', e.target.value)} placeholder="₹200"
                     style={{ padding: '9px 10px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-subtle)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', fontSize: '0.82rem', fontFamily: 'var(--font-body)', width: '100%' }} />
-                  <button onClick={() => removeReviewExpense(i)} disabled={reviewExpenses.length <= 1} className="cursor-pointer border-0 transition-all duration-200 disabled:opacity-20" style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)' }}>
+                  <button onClick={() => removeReviewExpense(i)} disabled={reviewExpenses.length <= 1} style={{ background: 'rgba(239,68,68,0.06)', borderRadius: 'var(--radius-lg)', padding: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--danger-400)', border: 'none', cursor: 'pointer', opacity: reviewExpenses.length <= 1 ? 0.2 : 1 }}>
                     ✕
                   </button>
                 </div>
               ))}
+              </div>
             </div>
+            <div style={{ height: '12px' }} />
 
             {/* Totals Summary */}
             <div style={{

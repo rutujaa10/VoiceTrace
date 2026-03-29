@@ -198,12 +198,11 @@ export default function Report() {
   return (
     <div style={{ padding: '0' }}>
       {/* Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
-            style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-          <BarChart3 size={32} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">Reports</span>
+      <div style={{ marginBottom: '20px' }}>
+        <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: 'clamp(1.2rem, 5vw, 1.75rem)', fontWeight: 800, color: 'var(--text-primary)' }}>
+          <BarChart3 size={24} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '6px' }} /> <span className="gradient-text">Reports</span>
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>
           Generate date-wise business reports and export to PDF
         </p>
       </div>
@@ -294,7 +293,7 @@ export default function Report() {
         <div className="animate-[fadeIn_0.4s_ease]">
 
           {/* Summary Cards */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(140px, 100%), 1fr))', gap: '12px', marginBottom: '20px' }}>
             {[
               { label: 'Total Sales', value: `₹${summary.totalSales.toLocaleString('en-IN')}`, icon: <TrendingUp size={18} />, color: 'var(--primary-500)', bg: 'rgba(34,197,94,0.06)' },
               { label: 'Total Expenses', value: `₹${summary.totalExpenses.toLocaleString('en-IN')}`, icon: <TrendingDown size={18} />, color: 'var(--danger-400)', bg: 'rgba(239,68,68,0.06)' },
@@ -347,14 +346,16 @@ export default function Report() {
               borderRadius: 'var(--radius-3xl)', overflow: 'hidden',
               boxShadow: '0 2px 12px -2px rgba(0,0,0,0.04)',
             }}>
+              {/* Scrollable table wrapper for mobile */}
+              <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
               {/* Table Header */}
               <div style={{
                 display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 0.6fr',
-                padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)',
-                background: 'rgba(34,197,94,0.04)',
+                padding: '12px 16px', borderBottom: '1px solid var(--border-subtle)',
+                background: 'rgba(34,197,94,0.04)', minWidth: '480px',
               }}>
                 {['Date', 'Sales', 'Expenses', 'Profit', 'Items'].map(h => (
-                  <div key={h} style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div key={h} style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                     {h}
                   </div>
                 ))}
@@ -366,17 +367,17 @@ export default function Report() {
                   key={i}
                   style={{
                     display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 0.6fr',
-                    padding: '14px 20px',
+                    padding: '12px 16px', minWidth: '480px',
                     borderBottom: i < summary.daily.length - 1 ? '1px solid var(--border-subtle)' : 'none',
                     transition: 'background 0.15s',
                   }}
                   onMouseEnter={e => e.currentTarget.style.background = 'rgba(34,197,94,0.02)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                 >
-                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-primary)' }}>{row.date}</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--primary-500)' }}>₹{row.sales.toLocaleString('en-IN')}</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 600, color: 'var(--danger-400)' }}>₹{row.expenses.toLocaleString('en-IN')}</div>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 700, color: row.profit >= 0 ? 'var(--primary-500)' : 'var(--danger-400)' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>{row.date}</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--primary-500)', whiteSpace: 'nowrap' }}>₹{row.sales.toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--danger-400)', whiteSpace: 'nowrap' }}>₹{row.expenses.toLocaleString('en-IN')}</div>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: row.profit >= 0 ? 'var(--primary-500)' : 'var(--danger-400)', whiteSpace: 'nowrap' }}>
                     {row.profit >= 0 ? '+' : ''}₹{row.profit.toLocaleString('en-IN')}
                   </div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{row.items}</div>
@@ -386,7 +387,7 @@ export default function Report() {
               {/* Total Row */}
               <div style={{
                 display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 0.6fr',
-                padding: '14px 20px', borderTop: '2px solid var(--border-subtle)',
+                padding: '12px 16px', borderTop: '2px solid var(--border-subtle)', minWidth: '480px',
                 background: 'rgba(34,197,94,0.04)',
               }}>
                 <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>Total</div>
@@ -396,6 +397,7 @@ export default function Report() {
                   {summary.totalProfit >= 0 ? '+' : ''}₹{summary.totalProfit.toLocaleString('en-IN')}
                 </div>
                 <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-primary)' }}>{summary.totalItems}</div>
+              </div>
               </div>
             </div>
           ) : (

@@ -588,7 +588,7 @@ a:hover {
   min-height: 100vh;
 }
 
-/* Mobile */
+/* Mobile (tablets and phones) */
 @media (max-width: 768px) {
   .app-sidebar {
     transform: translateX(-100%);
@@ -607,12 +607,232 @@ a:hover {
   }
 
   .app-top-actions {
-    top: var(--space-md);
-    right: var(--space-md);
+    top: var(--space-sm);
+    right: var(--space-sm);
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 60%;
   }
 
   .top-action-pill.hide-mobile {
     display: none;
+  }
+
+  .top-action-pill {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .top-action-pill.user-pill {
+    display: none;
+  }
+
+  .top-action-pill.theme-toggle {
+    width: 34px;
+    height: 34px;
+  }
+
+  .top-action-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.7rem;
+  }
+
+  /* Voice recording area — slightly smaller on mobile */
+  .voice-btn-core {
+    width: 120px;
+    height: 120px;
+  }
+
+  .voice-label-primary {
+    font-size: 1.2rem;
+  }
+
+  .voice-label-secondary {
+    font-size: 0.82rem;
+  }
+
+  @keyframes expanding-ring {
+    0% { width: 120px; height: 120px; opacity: 1; border-width: 4px; }
+    100% { width: 240px; height: 240px; opacity: 0; border-width: 1px; }
+  }
+
+  /* Stat cards */
+  .stat-card {
+    padding: var(--space-md);
+  }
+
+  .stat-card .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.4rem;
+  }
+
+  /* Gauge */
+  .gauge-svg {
+    width: 160px;
+    height: 160px;
+  }
+
+  .gauge-score {
+    font-size: 2rem;
+  }
+}
+
+/* ═══ iPhone 15 Pro / narrow phones (≤430px viewport) ═══ */
+@media (max-width: 430px) {
+  .app-main {
+    padding: var(--space-sm);
+    padding-top: 52px;
+  }
+
+  .app-top-actions {
+    top: 8px;
+    right: 8px;
+    gap: 3px;
+    max-width: 65%;
+  }
+
+  .top-action-pill {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
+
+  .top-action-pill.danger span {
+    display: none;
+  }
+
+  .top-action-pill.theme-toggle {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Voice recording area */
+  .voice-btn-core {
+    width: 100px;
+    height: 100px;
+  }
+
+  .voice-label-primary {
+    font-size: 1.05rem;
+  }
+
+  .voice-label-secondary {
+    font-size: 0.78rem;
+    gap: 6px;
+  }
+
+  .voice-label-secondary::before,
+  .voice-label-secondary::after {
+    width: 12px;
+  }
+
+  @keyframes expanding-ring {
+    0% { width: 100px; height: 100px; opacity: 1; border-width: 3px; }
+    100% { width: 200px; height: 200px; opacity: 0; border-width: 1px; }
+  }
+
+  /* Section titles */
+  .section-title {
+    font-size: 1.05rem;
+  }
+
+  /* Glass cards */
+  .glass-card {
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+  }
+
+  /* Stat cards */
+  .stat-card {
+    padding: 12px;
+    gap: var(--space-sm);
+  }
+
+  .stat-card .stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.2rem;
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.72rem;
+  }
+
+  /* Gauge on mobile */
+  .gauge-svg {
+    width: 140px;
+    height: 140px;
+  }
+
+  .gauge-score {
+    font-size: 1.6rem;
+  }
+
+  .gauge-label {
+    font-size: 0.7rem;
+  }
+
+  /* Buttons */
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.82rem;
+  }
+
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+
+  /* Badges */
+  .badge {
+    padding: 3px 8px;
+    font-size: 0.68rem;
+  }
+
+  /* Insight cards */
+  .insight-card {
+    padding: var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .insight-card .insight-body h4 {
+    font-size: 0.85rem;
+  }
+
+  .insight-card .insight-body p {
+    font-size: 0.78rem;
+  }
+
+  /* Sidebar on narrow phones */
+  .app-sidebar {
+    width: 260px;
+  }
+
+  .nav-logo {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  .nav-link {
+    padding: 10px var(--space-md);
+    font-size: 0.82rem;
+  }
+
+  /* Safe area insets for notch/dynamic island */
+  .app-main {
+    padding-bottom: max(var(--space-md), env(safe-area-inset-bottom));
+  }
+
+  .app-top-actions {
+    top: max(8px, env(safe-area-inset-top));
   }
 }
 
