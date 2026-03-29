@@ -14,13 +14,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
-import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI, pdfAPI } from '../api';
+import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI, pdfAPI, smartCartAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
 import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
 import AnomalyAlert from '../components/common/AnomalyAlert';
 import ClarificationBanner from '../components/common/ClarificationBanner';
-import { IndianRupee, BarChart2, Calendar, TrendingDown, Lightbulb, CloudRain, Cloud, Snowflake, Sun, Target, Mic, FileText, Brain, Package, TrendingUp, Award, Flame, CheckCircle } from 'lucide-react';
+import { IndianRupee, BarChart2, Calendar, TrendingDown, Lightbulb, CloudRain, Cloud, Snowflake, Sun, Target, Mic, FileText, Brain, Package, TrendingUp, Award, Flame, CheckCircle, PartyPopper, MapPin, Clock, ShoppingCart, Navigation, Sparkles, Star, Gift, Zap } from 'lucide-react';
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
@@ -32,11 +32,29 @@ export default function Dashboard() {
   const [todayAnomaly, setTodayAnomaly] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [smartTips, setSmartTips] = useState([]);
+  const [festivals, setFestivals] = useState([]);
+  const [smartCartData, setSmartCartData] = useState(null);
+  const [gpsCoords, setGpsCoords] = useState(null);
 
   useEffect(() => {
     if (!state.vendorId) return;
     fetchDashboard();
+
+    // Get GPS coordinates for Smart-Cart
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setGpsCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => setGpsCoords(null),
+        { timeout: 5000 }
+      );
+    }
   }, [state.vendorId]);
+
+  // Fetch Smart-Cart data when GPS becomes available
+  useEffect(() => {
+    if (!state.vendorId) return;
+    fetchSmartCartData();
+  }, [gpsCoords, state.vendorId]);
 
   const fetchDashboard = async () => {
     setLoading(true);
@@ -155,6 +173,30 @@ export default function Dashboard() {
       }
     } catch (e) {
       console.warn('Smart insights fetch (non-critical):', e);
+    }
+  };
+
+  const fetchSmartCartData = async () => {
+    try {
+      const vendorCategory = state.vendor?.category || 'general';
+
+      // Festivals — always available
+      const festRes = await smartCartAPI.getFestivals(7, vendorCategory).catch(() => null);
+      if (festRes?.data?.data) {
+        setFestivals(festRes.data.data);
+      }
+
+      // Smart-Cart recommendations — requires GPS
+      if (gpsCoords) {
+        const cartRes = await smartCartAPI.getRecommendations(
+          gpsCoords.lat, gpsCoords.lng, vendorCategory
+        ).catch(() => null);
+        if (cartRes?.data?.data) {
+          setSmartCartData(cartRes.data.data);
+        }
+      }
+    } catch (e) {
+      console.warn('Smart-Cart fetch (non-critical):', e);
     }
   };
 
@@ -336,6 +378,259 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      </div>
+
+      {/* ═══════════ FESTIVE BOARD ═══════════ */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-3xl)',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Festive gradient top bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #f59e0b, #ef4444, #ec4899, #8b5cf6, #3b82f6)' }} />
+
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <PartyPopper size={20} style={{ color: '#f59e0b' }} /> {t('dashboard.festiveBoard')}
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          {t('dashboard.festiveBoardSub')}
+        </p>
+
+        {festivals.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {festivals.slice(0, 4).map((fest, i) => {
+              const festColors = [
+                { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.25)', accent: '#f59e0b' },
+                { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', accent: '#ef4444' },
+                { bg: 'rgba(139,92,246,0.08)', border: 'rgba(139,92,246,0.2)', accent: '#8b5cf6' },
+                { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', accent: '#3b82f6' },
+              ];
+              const color = festColors[i % 4];
+              const timeLabel = fest.daysUntil === 0
+                ? t('dashboard.festiveToday')
+                : fest.daysUntil === 1
+                ? t('dashboard.festiveTomorrow')
+                : t('dashboard.festiveDaysAway', { days: fest.daysUntil });
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    background: color.bg,
+                    border: `1px solid ${color.border}`,
+                    borderRadius: 'var(--radius-2xl)',
+                    padding: '16px',
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: 36, height: 36, borderRadius: '50%',
+                        background: `linear-gradient(135deg, ${color.accent}22, ${color.accent}44)`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <Gift size={18} style={{ color: color.accent }} />
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{fest.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {new Date(fest.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: 'var(--radius-full)',
+                        background: fest.daysUntil <= 1 ? 'rgba(239,68,68,0.15)' : 'rgba(99,102,241,0.1)',
+                        color: fest.daysUntil <= 1 ? '#ef4444' : '#6366f1',
+                      }}>
+                        {timeLabel}
+                      </span>
+                      {fest.impact === 'high_demand' && (
+                        <span style={{
+                          fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px',
+                          borderRadius: 'var(--radius-full)',
+                          background: 'rgba(245,158,11,0.15)', color: '#d97706',
+                        }}>
+                          🔥 {t('dashboard.festiveHighDemand')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Suggestion text */}
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '8px 0' }}>
+                    {fest.suggestion}
+                  </p>
+
+                  {/* Relevant items chips */}
+                  {fest.relevantItems?.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                      {fest.relevantItems.slice(0, 5).map((item, j) => (
+                        <span key={j} style={{
+                          fontSize: '0.72rem', fontWeight: 600, padding: '3px 10px',
+                          borderRadius: 'var(--radius-full)',
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border-subtle)',
+                          textTransform: 'capitalize',
+                        }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+            <Calendar size={32} style={{ marginBottom: '8px', opacity: 0.4 }} />
+            <p>{t('dashboard.festiveNoUpcoming')}</p>
+          </div>
+        )}
+      </div>
+
+      {/* ═══════════ SMART-CART ADVISOR ═══════════ */}
+      <div
+        style={{
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-3xl)',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 12px -2px rgba(0,0,0,0.06)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Smart-Cart gradient top bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #10b981, #06b6d4, #3b82f6)' }} />
+
+        <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <ShoppingCart size={20} style={{ color: '#10b981' }} /> {t('dashboard.smartCart')}
+        </h2>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          {t('dashboard.smartCartSub')}
+        </p>
+
+        {!gpsCoords ? (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+            <Navigation size={32} style={{ marginBottom: '8px', opacity: 0.4 }} />
+            <p>{t('dashboard.smartCartNoLocation')}</p>
+          </div>
+        ) : smartCartData?.recommendations?.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {smartCartData.recommendations.slice(0, 3).map((rec, i) => {
+              const typeIcons = {
+                school: '🏫', office: '🏢', transit: '🚇', market: '🛒', temple: '🛕', hospital: '🏥',
+              };
+              const typeColors = {
+                school: { bg: 'rgba(59,130,246,0.08)', border: 'rgba(59,130,246,0.2)', accent: '#3b82f6' },
+                office: { bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)', accent: '#6366f1' },
+                transit: { bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)', accent: '#10b981' },
+                market: { bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', accent: '#f59e0b' },
+                temple: { bg: 'rgba(236,72,153,0.08)', border: 'rgba(236,72,153,0.2)', accent: '#ec4899' },
+                hospital: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', accent: '#ef4444' },
+              };
+              const color = typeColors[rec.anchorType] || typeColors.market;
+              const emoji = typeIcons[rec.anchorType] || '📍';
+
+              const distStr = rec.distance < 1000
+                ? `${rec.distance}m`
+                : `${(rec.distance / 1000).toFixed(1)}km`;
+
+              return (
+                <div
+                  key={i}
+                  style={{
+                    background: color.bg,
+                    border: `1px solid ${color.border}`,
+                    borderRadius: 'var(--radius-2xl)',
+                    padding: '16px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.3rem' }}>{emoji}</span>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{rec.anchorName}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <MapPin size={11} /> {rec.address} · {distStr}
+                        </div>
+                      </div>
+                    </div>
+                    {rec.nextPeak?.isActive && (
+                      <span style={{
+                        fontSize: '0.68rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: 'var(--radius-full)',
+                        background: 'rgba(16,185,129,0.2)', color: '#059669',
+                        animation: 'pulse 2s ease-in-out infinite',
+                      }}>
+                        ⚡ {t('dashboard.smartCartActive')}
+                      </span>
+                    )}
+                  </div>
+
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: '8px 0' }}>
+                    {rec.suggestion}
+                  </p>
+
+                  {/* Hot items for this anchor */}
+                  {rec.hotItems?.length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                      {rec.hotItems.slice(0, 4).map((item, j) => (
+                        <span key={j} style={{
+                          fontSize: '0.72rem', fontWeight: 600, padding: '3px 10px',
+                          borderRadius: 'var(--radius-full)',
+                          background: 'var(--bg-elevated)',
+                          border: '1px solid var(--border-subtle)',
+                          textTransform: 'capitalize',
+                        }}>
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Next Day Plan summary */}
+            {smartCartData.nextDayPlan?.available && (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.06), rgba(6,182,212,0.06))',
+                border: '1px solid rgba(16,185,129,0.15)',
+                borderRadius: 'var(--radius-2xl)',
+                padding: '16px',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                  <Sparkles size={16} style={{ color: '#10b981' }} />
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#059669' }}>
+                    {t('dashboard.smartCartTomorrow')}
+                  </span>
+                </div>
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', lineHeight: 1.55, margin: 0 }}>
+                  {smartCartData.nextDayPlan.message}
+                </p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)', fontSize: '0.88rem' }}>
+            <MapPin size={32} style={{ marginBottom: '8px', opacity: 0.4 }} />
+            <p>{t('dashboard.smartCartNoAnchors')}</p>
+          </div>
+        )}
       </div>
 
       {/* ═══════════ WEEKLY PATTERNS (3-col bento) ═══════════ */}

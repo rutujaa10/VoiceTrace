@@ -98,4 +98,14 @@ export const assistantAPI = {
     api.post('/assistant/chat', { vendorId, message }),
 };
 
+// ---- Smart-Cart APIs ----
+export const smartCartAPI = {
+  getRecommendations: (lat, lng, category, radius = 2000) =>
+    api.get('/smartcart/recommendations', { params: { lat, lng, category, radius } }),
+  getFestivals: (days = 7, category = 'general') =>
+    api.get('/smartcart/festivals', { params: { days, category } }),
+  getDailyBrief: (lat, lng, category) =>
+    api.get('/smartcart/daily-brief', { params: { lat, lng, category } }),
+};
+
 export default api;

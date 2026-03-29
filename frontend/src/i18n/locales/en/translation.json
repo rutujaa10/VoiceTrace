@@ -97,7 +97,23 @@
       "revenueScore": "Avg Revenue",
       "expenseScore": "Expense Tracking",
       "profileScore": "Profile Complete"
-    }
+    },
+    "festiveBoard": "Upcoming Festivals",
+    "festiveBoardSub": "Plan your inventory for high-demand days",
+    "festiveToday": "Today",
+    "festiveTomorrow": "Tomorrow",
+    "festiveDaysAway": "in {{days}} days",
+    "festiveHighDemand": "High Demand",
+    "festiveStockUp": "Stock Up",
+    "festiveNoUpcoming": "No festivals in the next 7 days",
+    "smartCart": "Smart-Cart Advisor",
+    "smartCartSub": "Where to go and when — based on nearby foot traffic",
+    "smartCartActive": "Active now!",
+    "smartCartNextPeak": "Next rush in {{time}}",
+    "smartCartBring": "Bring: {{items}}",
+    "smartCartTomorrow": "Tomorrow's Plan",
+    "smartCartNoLocation": "Enable location to get personalized cart advice",
+    "smartCartNoAnchors": "No high-traffic spots found nearby"
   },
   "ledger": {
     "title": "Business Ledger",

@@ -20,6 +20,7 @@ const webhookRoutes = require('./routes/webhook.routes');
 const pdfRoutes = require('./routes/pdf.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const assistantRoutes = require('./routes/assistant.routes');
+const smartCartRoutes = require('./routes/smartcart.routes');
 
 // Cron jobs
 const { initCronJobs } = require('./jobs');
@@ -77,6 +78,7 @@ app.use('/api/webhook', webhookRoutes);
 app.use('/api/pdf', pdfRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/assistant', assistantRoutes);
+app.use('/api/smartcart', smartCartRoutes);
 
 // ---- Error Handling ----
 app.use(notFound);
