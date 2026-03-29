@@ -557,46 +557,83 @@ IMPORTANT RULES:
   // ---- Render ----
   return (
     <div className="min-h-[calc(100vh-40px)]" style={{ padding: '0' }}>
-      <div className="max-w-lg mx-auto" style={{ paddingTop: '8px' }}>
+      <div className="max-w-4xl mx-auto" style={{ paddingTop: '8px' }}>
 
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight"
+        <div className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight flex items-center gap-3"
               style={{ fontFamily: 'var(--font-heading)', color: 'var(--text-primary)' }}>
-            <FileText size={24} style={{ display: 'inline', verticalAlign: 'text-bottom' }} /> <span className="gradient-text">Daily Log</span>
+            <FileText size={32} style={{ color: 'var(--primary-500)' }} /> 
+            <span className="gradient-text" style={{ paddingBottom: '4px' }}>Daily Log</span>
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginTop: '6px' }}>
             Speak naturally — AI detects your sales, expenses & items
           </p>
         </div>
 
         {/* ======== AI CONVERSATION HERO ======== */}
         {mode === 'choose' && phase === 'idle' && (
-          <div className="flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease]"
-               style={{ minHeight: 'calc(100vh - 200px)', paddingBottom: '40px' }}>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '40px 32px', textAlign: 'center', width: '100%', maxWidth: '420px', boxShadow: '0 4px 24px -4px rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
-              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
-              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '20px' }}>
-                <div className="animate-pulse" style={{ position: 'absolute', inset: '-12px', borderRadius: '50%', background: 'rgba(34,197,94,0.08)' }} />
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 32px -4px rgba(34,197,94,0.3)', position: 'relative' }}>
-                  <MessageSquare size={34} className="text-white" />
+          <div className="flex flex-col items-center animate-[fadeIn_0.5s_ease]"
+               style={{ marginTop: '32px', paddingBottom: '40px' }}>
+            
+            <div style={{ 
+              background: 'var(--bg-card)', 
+              border: '1px solid var(--border-subtle)', 
+              borderRadius: '32px', 
+              padding: '48px 40px', 
+              textAlign: 'center', 
+              width: '100%', 
+              maxWidth: '460px', 
+              boxShadow: '0 20px 40px -12px rgba(0,0,0,0.08), 0 0 0 1px rgba(34,197,94,0.05)', 
+              position: 'relative', 
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}>
+              {/* Top gradient line */}
+              <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: 'var(--gradient-primary)' }} />
+              
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '28px' }}>
+                <div className="animate-ping" style={{ position: 'absolute', inset: '-16px', borderRadius: '50%', background: 'rgba(34,197,94,0.1)', animationDuration: '3s' }} />
+                <div className="animate-pulse" style={{ position: 'absolute', inset: '-8px', borderRadius: '50%', background: 'rgba(34,197,94,0.15)', animationDuration: '2s' }} />
+                <div style={{ width: '90px', height: '90px', borderRadius: '50%', background: 'var(--gradient-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 12px 36px -8px rgba(34,197,94,0.5)', position: 'relative' }}>
+                  <Mic size={38} className="text-white" />
                 </div>
               </div>
-              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.35rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}><MessageCircle size={22} style={{ display: 'inline', verticalAlign: 'bottom', marginRight: '8px' }} />AI Conversation</h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: 1.6, maxWidth: '320px', margin: '0 auto 20px' }}>
-                AI voice assistant will ask you questions one by one in <span style={{ color: 'var(--primary-500)', fontWeight: 600 }}>Hindi, English, or Hinglish</span> and extract your business data automatically.
-              </p>
-              <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Mic size={14} /> Voice Guided</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(99,102,241,0.08)', color: '#6366f1', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> Auto Extract</span>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: 'rgba(245,158,11,0.08)', color: '#f59e0b', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Edit3 size={14} /> Review & Edit</span>
+              
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '16px', letterSpacing: '-0.02em' }}>
+                AI Conversation
+              </h2>
+              
+              <div style={{ 
+                  background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.04)', 
+                  borderRadius: '20px', padding: '20px', marginBottom: '32px', width: '100%' 
+              }}>
+                <p style={{ fontSize: '1.25rem', fontWeight: 800, lineHeight: 1.3, margin: '0 0 4px 0', color: 'var(--text-primary)' }}>
+                  बस बोलो — बाकी AI संभालेगा
+                </p>
+                <p style={{ fontSize: '0.85rem', fontWeight: 500, margin: 0, color: 'var(--text-muted)' }}>
+                  (Just speak — AI handles the rest)
+                </p>
               </div>
-              <button onClick={() => { setMode('vapi'); }} className="transition-all duration-300 cursor-pointer border-0 hover:scale-[1.03] active:scale-[0.97]" style={{ background: 'var(--gradient-primary)', color: 'white', padding: '14px 40px', borderRadius: 'var(--radius-lg)', fontSize: '0.95rem', fontWeight: 700, fontFamily: 'var(--font-body)', boxShadow: '0 8px 24px -4px rgba(34,197,94,0.35)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                <Phone size={18} /> Start Conversation
+              
+              <button onClick={() => { setMode('vapi'); }} 
+                      className="w-full transition-all duration-300 cursor-pointer border-0 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.98]" 
+                      style={{ 
+                        background: 'var(--gradient-primary)', 
+                        color: 'white', padding: '16px 24px', 
+                        borderRadius: '20px', fontSize: '1.05rem', fontWeight: 700, fontFamily: 'var(--font-body)', 
+                        boxShadow: '0 8px 24px -4px rgba(34,197,94,0.35)', 
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' 
+                      }}>
+                <Phone size={20} /> Start Conversation
               </button>
             </div>
-            <div style={{ marginTop: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-              <Lightbulb size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Tip: Just answer the AI's questions naturally — it handles the rest!
+            
+            <div style={{ marginTop: '28px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', fontWeight: 500 }}>
+              <Lightbulb size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'text-bottom', color: 'var(--primary-400)' }} /> 
+              Tip: Just answer the AI's questions naturally — it handles the rest!
             </div>
           </div>
         )}
@@ -604,7 +641,7 @@ IMPORTANT RULES:
 
         {/* ======== SMART EXTRACT MODE ======== */}
         {mode === 'smart' && phase === 'idle' && (
-          <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.4s_ease]">
+          <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.4s_ease]" style={{ marginTop: '32px', paddingBottom: '40px' }}>
             <div className="relative">
               <div className="absolute inset-[-16px] rounded-full animate-ping" style={{ border: '2px solid rgba(34,197,94,0.1)', animationDuration: '3s' }} />
               <button onClick={startSmartRecording} className="relative w-32 h-32 rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer border-0" style={{ background: 'var(--gradient-primary)', boxShadow: '0 12px 40px -8px rgba(34,197,94,0.35)' }}>
@@ -625,7 +662,7 @@ IMPORTANT RULES:
 
         {/* Smart Extract: Recording */}
         {mode === 'smart' && phase === 'recording' && (
-          <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.3s_ease]">
+          <div className="flex flex-col items-center gap-6 animate-[fadeIn_0.3s_ease]" style={{ marginTop: '32px', paddingBottom: '40px' }}>
             <div className="relative">
               <div className="absolute inset-[-20px] rounded-full animate-ping" style={{ background: 'rgba(239,68,68,0.1)', animationDuration: '1.5s' }} />
               <div className="absolute inset-[-10px] rounded-full animate-pulse" style={{ border: '2px solid rgba(239,68,68,0.25)' }} />
@@ -643,7 +680,7 @@ IMPORTANT RULES:
 
         {/* Smart Extract: Processing */}
         {mode === 'smart' && phase === 'processing' && (
-          <div className="flex flex-col items-center gap-4 py-16 animate-[fadeIn_0.3s_ease]">
+          <div className="flex flex-col items-center gap-4 py-16 animate-[fadeIn_0.3s_ease]" style={{ marginTop: '32px', paddingBottom: '40px' }}>
             <Loader2 size={40} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
             <div className="text-center">
               <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>AI is analyzing your speech...</p>
@@ -655,7 +692,7 @@ IMPORTANT RULES:
 
         {/* ======== VAPI MODE — Start Call ======== */}
         {mode === 'vapi' && phase === 'idle' && (
-          <div className="flex flex-col items-center justify-center animate-[fadeIn_0.5s_ease]" style={{ minHeight: 'calc(100vh - 200px)', paddingBottom: '40px' }}>
+          <div className="flex flex-col items-center animate-[fadeIn_0.5s_ease]" style={{ marginTop: '32px', paddingBottom: '40px' }}>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)', padding: '48px 36px 40px', textAlign: 'center', width: '100%', maxWidth: '420px', boxShadow: '0 4px 24px -4px rgba(0,0,0,0.06)', position: 'relative', overflow: 'hidden' }}>
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'var(--gradient-primary)', borderRadius: 'var(--radius-3xl) var(--radius-3xl) 0 0' }} />
               <div style={{ position: 'relative', display: 'inline-block', marginBottom: '24px' }}>
@@ -686,31 +723,89 @@ IMPORTANT RULES:
 
         {/* Vapi: Active Call */}
         {mode === 'vapi' && phase === 'calling' && (
-          <div className="flex flex-col items-center gap-5 animate-[fadeIn_0.4s_ease]">
+          <div className="flex flex-col items-center gap-5 animate-[fadeIn_0.4s_ease]" style={{ marginTop: '32px', paddingBottom: '40px', width: '100%', maxWidth: '560px', margin: '32px auto 0' }}>
+            {/* Pulsing mic orb */}
             <div className="relative">
               <div className="absolute inset-[-20px] rounded-full animate-ping" style={{ background: 'rgba(34,197,94,0.1)', animationDuration: '2s' }} />
               <div className="absolute inset-[-10px] rounded-full animate-pulse" style={{ border: '2px solid rgba(34,197,94,0.25)' }} />
-              <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: 'var(--gradient-primary)', boxShadow: '0 12px 40px -8px rgba(34,197,94,0.35)' }}>
-                <Volume2 size={32} className="text-white animate-pulse" />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center" style={{ background: 'var(--gradient-primary)', boxShadow: '0 12px 40px -8px rgba(34,197,94,0.35)' }}>
+                <Volume2 size={28} className="text-white animate-pulse" />
               </div>
             </div>
             <div className="text-center">
               <p className="font-semibold text-sm" style={{ color: 'var(--primary-500)' }}>{callStatus}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Speak naturally in Hindi, English, or Hinglish</p>
             </div>
+
+            {/* Conversation transcript */}
             {messages.length > 0 && (
-              <div className="w-full rounded-2xl p-4 max-h-52 overflow-y-auto" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-3xl)' }}>
-                <p className="text-xs font-semibold mb-3 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}><MessageSquare size={12} /> Conversation</p>
-                <div className="space-y-2">
+              <div className="w-full" style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '16px',
+                padding: '20px',
+                maxHeight: '320px',
+                overflowY: 'auto',
+                boxShadow: '0 2px 12px -2px rgba(0,0,0,0.04)'
+              }}>
+                <p style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MessageSquare size={12} /> Live Conversation
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {messages.slice(-8).map((msg, i) => (
-                    <div key={i} className="text-sm px-3 py-2 rounded-xl max-w-[85%]" style={msg.role === 'assistant' ? { background: 'rgba(34,197,94,0.08)', color: 'var(--primary-500)', marginRight: 'auto', borderBottomLeftRadius: '4px' } : { background: 'var(--bg-secondary)', color: 'var(--text-primary)', marginLeft: 'auto', textAlign: 'right', borderBottomRightRadius: '4px' }}>
-                      {msg.text}
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'assistant' ? 'flex-start' : 'flex-end' }}>
+                      {/* Sender label */}
+                      <span style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em',
+                        marginBottom: '4px',
+                        color: msg.role === 'assistant' ? 'var(--primary-500)' : 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        {msg.role === 'assistant' ? (
+                          <><Brain size={10} /> AI Assistant</>
+                        ) : (
+                          <><Mic size={10} /> You</>
+                        )}
+                      </span>
+                      {/* Message bubble */}
+                      <div style={{
+                        maxWidth: '85%',
+                        padding: '10px 14px',
+                        borderRadius: '12px',
+                        fontSize: '0.85rem',
+                        lineHeight: 1.5,
+                        ...(msg.role === 'assistant'
+                          ? {
+                              background: 'rgba(34,197,94,0.06)',
+                              color: 'var(--text-primary)',
+                              borderBottomLeftRadius: '4px',
+                              border: '1px solid rgba(34,197,94,0.1)'
+                            }
+                          : {
+                              background: 'var(--bg-secondary)',
+                              color: 'var(--text-primary)',
+                              borderBottomRightRadius: '4px',
+                              border: '1px solid var(--border-subtle)'
+                            }
+                        )
+                      }}>
+                        {msg.text}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-            <button onClick={endCall} className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--danger-400)' }}>
+
+            <button onClick={endCall} className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 cursor-pointer" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', color: 'var(--danger-400)' }}
+              onMouseEnter={(e) => e.target.style.background = 'rgba(239,68,68,0.12)'}
+              onMouseLeave={(e) => e.target.style.background = 'rgba(239,68,68,0.08)'}
+            >
               <PhoneOff size={15} /> End Call
             </button>
           </div>
@@ -719,7 +814,7 @@ IMPORTANT RULES:
 
         {/* ======== PROCESSING PHASE ======== */}
         {phase === 'processing' && (
-          <div className="flex flex-col items-center gap-5 py-16 animate-[fadeIn_0.3s_ease]">
+          <div className="flex flex-col items-center gap-5 py-16 animate-[fadeIn_0.3s_ease]" style={{ marginTop: '32px', paddingBottom: '40px' }}>
             <Loader2 size={44} style={{ color: 'var(--primary-500)' }} className="animate-spin" />
             <div className="text-center">
               <p className="font-semibold text-lg" style={{ color: 'var(--text-primary)' }}>Extracting your data...</p>

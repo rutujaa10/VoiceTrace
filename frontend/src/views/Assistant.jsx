@@ -207,23 +207,27 @@ export default function Assistant() {
             {/* Bubble */}
             <div
               style={{
-                padding: '12px 16px',
+                padding: '14px 18px',
                 borderRadius:
                   msg.role === 'user'
-                    ? '16px 16px 4px 16px'
-                    : '16px 16px 16px 4px',
+                    ? '20px 20px 4px 20px'
+                    : '20px 20px 20px 4px',
                 background:
                   msg.role === 'user'
                     ? 'linear-gradient(135deg, var(--primary-500), var(--primary-600))'
                     : msg.isError
-                    ? 'rgba(239, 68, 68, 0.15)'
-                    : 'rgba(255, 255, 255, 0.06)',
+                    ? 'rgba(239, 68, 68, 0.08)'
+                    : 'var(--bg-card)',
                 border:
                   msg.role === 'ai'
                     ? '1px solid var(--border-subtle)'
                     : 'none',
-                fontSize: '0.88rem',
+                boxShadow: msg.role === 'user' 
+                    ? '0 6px 16px -4px rgba(34,197,94,0.35)' 
+                    : '0 4px 12px -2px rgba(0,0,0,0.04)',
+                fontSize: '0.92rem',
                 lineHeight: 1.6,
+                fontWeight: msg.role === 'user' ? 500 : 400,
                 color: msg.role === 'user' ? '#fff' : 'var(--text-primary)',
                 whiteSpace: 'pre-wrap',
                 wordBreak: 'break-word',
@@ -345,12 +349,19 @@ export default function Assistant() {
               key={q}
               className="btn btn-ghost"
               style={{
-                fontSize: '0.75rem',
-                padding: '6px 12px',
-                borderRadius: '20px',
-                border: '1px solid var(--border-subtle)',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                padding: '10px 18px',
+                borderRadius: '24px',
+                background: 'rgba(34,197,94,0.06)',
+                color: 'var(--primary-600)',
+                border: '1px solid rgba(34,197,94,0.2)',
                 whiteSpace: 'nowrap',
+                boxShadow: '0 2px 8px -2px rgba(34,197,94,0.1)',
+                transition: 'all 0.2s'
               }}
+              onMouseEnter={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.background = 'rgba(34,197,94,0.1)' }}
+              onMouseLeave={(e) => { e.target.style.transform = 'none'; e.target.style.background = 'rgba(34,197,94,0.06)' }}
               onClick={() => handleSend(q)}
               disabled={isLoading}
             >
@@ -362,12 +373,15 @@ export default function Assistant() {
 
       {/* Input Area */}
       <div
-        className="glass-card"
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 'var(--space-sm)',
-          padding: '8px 12px',
+          gap: 'var(--space-md)',
+          padding: '12px 16px',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: '32px',
+          boxShadow: '0 8px 32px -8px rgba(0,0,0,0.08)',
           flexShrink: 0,
         }}
       >
@@ -377,15 +391,14 @@ export default function Assistant() {
             onClick={handleMicToggle}
             disabled={isLoading}
             style={{
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               borderRadius: '50%',
               border: 'none',
               background: speech.isListening
-                ? 'rgba(239, 68, 68, 0.2)'
-                : 'rgba(99, 102, 241, 0.15)',
-              color: speech.isListening ? 'var(--danger-400)' : 'var(--text-accent)',
-              fontSize: '1.1rem',
+                ? 'rgba(239, 68, 68, 0.15)'
+                : 'linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.1))',
+              color: speech.isListening ? 'var(--danger-500)' : '#6366f1',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
@@ -395,7 +408,7 @@ export default function Assistant() {
             }}
             aria-label={speech.isListening ? 'Stop listening' : 'Voice input'}
           >
-            {speech.isListening ? <Square size={18} /> : <Mic size={18} />}
+            {speech.isListening ? <Square size={20} className="animate-pulse" /> : <Mic size={20} />}
           </button>
         )}
 
@@ -414,7 +427,7 @@ export default function Assistant() {
             border: 'none',
             outline: 'none',
             color: 'var(--text-primary)',
-            fontSize: '0.9rem',
+            fontSize: '1rem',
             padding: '8px 0',
           }}
         />
@@ -424,26 +437,26 @@ export default function Assistant() {
           onClick={() => handleSend()}
           disabled={!input.trim() || isLoading}
           style={{
-            width: 40,
-            height: 40,
+            width: 44,
+            height: 44,
             borderRadius: '50%',
             border: 'none',
             background:
               input.trim() && !isLoading
                 ? 'linear-gradient(135deg, var(--primary-500), var(--primary-600))'
-                : 'rgba(255, 255, 255, 0.05)',
+                : 'var(--bg-secondary)',
             color: input.trim() && !isLoading ? '#fff' : 'var(--text-muted)',
-            fontSize: '1.1rem',
             cursor: input.trim() && !isLoading ? 'pointer' : 'default',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
             transition: 'all 0.2s',
+            boxShadow: input.trim() && !isLoading ? '0 4px 12px rgba(34,197,94,0.3)' : 'none'
           }}
           aria-label="Send message"
         >
-          <Send size={16} />
+          <Send size={18} />
         </button>
       </div>
     </div>

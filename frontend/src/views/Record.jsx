@@ -11,7 +11,8 @@
  * - Phase 4 Feature 8: Audio playback button per extracted item (Whisper mode)
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
@@ -35,6 +36,7 @@ const EMPTY_EXPENSE = { description: '', category: 'raw_material', amount: '' };
 
 export default function Record() {
   const { state, dispatch } = useApp();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Mode toggle
   const [mode, setMode] = useState('speech'); // 'speech' | 'audio' | 'manual'
@@ -85,6 +87,19 @@ export default function Record() {
       }
     }
   }, [mode, speech, recorder]);
+
+  // ---- Handle autoStart from Dashboard ----
+  useEffect(() => {
+    if (searchParams.get('autoStart') === 'true') {
+      const timer = setTimeout(() => {
+        if (!isActive && !processing) {
+          handleToggle();
+        }
+      }, 400);
+      setSearchParams({});
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams, handleToggle, setSearchParams, isActive, processing]);
 
   // ---- Helper: populate review form from AI extraction ----
   const populateReviewForm = (extraction) => {
@@ -363,45 +378,69 @@ export default function Record() {
       {/* ═══════════ VOICE MODES (speech / audio) — MIC AREA ═══════════ */}
       {(mode === 'speech' || mode === 'audio') && !reviewMode && (
         <>
-          {/* Mic Button Area */}
+          {/* New Central Voice Interaction Area */}
           <div
-            className="glass-card"
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              padding: 'var(--space-2xl)',
-              marginBottom: 'var(--space-xl)',
-            }}
+            className={`voice-area-container ${processing ? 'voice-state-processing' : isActive ? 'voice-state-listening' : 'voice-state-idle'} glass-card`}
+            style={{ marginBottom: 'var(--space-xl)', border: isActive ? '1px solid rgba(16,185,129,0.3)' : '1px solid var(--border-glass)' }}
           >
-            {/* Big Mic Button */}
+            {isActive && !processing && (
+              <>
+                <div className="listening-ring"></div>
+                <div className="listening-ring delay"></div>
+              </>
+            )}
+
             <button
-              id="mic-record-btn"
-              className={`mic-btn ${isActive ? 'recording' : ''}`}
+              className="voice-btn-core"
               onClick={handleToggle}
               disabled={processing}
               aria-label={isActive ? 'Stop recording' : 'Start recording'}
             >
-              {isActive ? <Square size={24} /> : <Mic size={24} />}
+              {processing ? (
+                <div className="processing-dots" style={{ display: 'flex', gap: '4px', position: 'absolute' }}>
+                  <span style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }}></span>
+                  <span style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }}></span>
+                  <span style={{ width: '8px', height: '8px', background: 'white', borderRadius: '50%' }}></span>
+                </div>
+              ) : isActive ? (
+                <Square size={32} />
+              ) : (
+                <Mic size={48} />
+              )}
             </button>
 
-            {/* Timer */}
-            <div style={{ marginTop: 'var(--space-lg)', textAlign: 'center' }}>
-              {isActive ? (
+            {isActive && !processing && (
+              <div className="waveform-container" style={{ position: 'absolute', top: '24px' }}>
+                <div className="waveform-bar"></div>
+                <div className="waveform-bar"></div>
+                <div className="waveform-bar"></div>
+                <div className="waveform-bar"></div>
+                <div className="waveform-bar"></div>
+              </div>
+            )}
+
+            <div className="voice-labels">
+              {processing ? (
                 <>
-                  <div className="mic-timer">{formattedTime}</div>
-                  <div className="mic-status" style={{ color: 'var(--danger-400)' }}>
-                    <span className="animate-pulse">🔴</span> {mode === 'speech' ? 'Listening...' : 'Recording...'} Tap to stop
-                  </div>
+                  <div className="voice-label-primary">Samajh raha hoon...</div>
+                  <div className="voice-label-secondary" style={{ color: 'var(--primary-400)' }}>Extracting details</div>
+                </>
+              ) : isActive ? (
+                <>
+                  <div className="voice-label-primary animate-pulse" style={{ color: 'var(--danger-400)' }}>Listening...</div>
+                  <div className="voice-label-secondary">{formattedTime} • Tap to stop</div>
                 </>
               ) : (
-                <div className="mic-status">
-                  {hasData
-                    ? mode === 'speech'
-                      ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14} /> Transcribed {formattedTime} — Ready to process</span>
-                      : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14} /> Recorded {formattedTime} — Ready to upload</span>
-                    : `Tap the mic to start ${mode === 'speech' ? 'listening' : 'recording'}`}
-                </div>
+                <>
+                   <div className="voice-label-primary">Tap &amp; Speak</div>
+                   <div className="voice-label-secondary">
+                     {hasData ? (
+                       mode === 'speech'
+                         ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success-400)' }}><CheckCircle size={14} /> Transcribed {formattedTime}</span>
+                         : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success-400)' }}><CheckCircle size={14} /> Recorded {formattedTime}</span>
+                     ) : 'Bol ke likho'}
+                   </div>
+                </>
               )}
             </div>
 

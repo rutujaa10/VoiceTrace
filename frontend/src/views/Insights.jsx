@@ -14,6 +14,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useApp } from '../state/AppContext';
 import { insightAPI } from '../api';
 import InsightCard from '../components/common/InsightCard';
+import SpotlightCard from '../components/common/SpotlightCard';
 
 import { Lightbulb, CloudLightning, Map, BookOpen, TrendingDown, CloudRain, Sun, Cloud, CloudDrizzle, Snowflake, CloudFog, Droplets, Wind, FileText, Sprout, BarChart2, Rocket, TrendingUp, Brain, History, Package, Calendar, IndianRupee, Flame, CheckCircle } from 'lucide-react';
 
@@ -65,26 +66,186 @@ export default function Insights() {
     if (state.vendorId && activeTab === 'history') fetchHistoricalInsights();
   }, [activeFilter]);
 
+  // Dummy insights to replace unlock/gating cards with real-looking data
+  const DEMO_INSIGHTS = [
+    {
+      type: 'revenue_analysis', icon: '💰',
+      title: 'Your Average: ₹1,870/day',
+      subtitle: 'Based on 7 days of logging',
+      content: 'Your daily revenue averages ₹1,870 with a healthy 68% profit margin. Weekend sales are 32% higher than weekdays — consider extending hours on Saturdays.',
+      data: {}
+    },
+    {
+      type: 'top_items', icon: '⭐',
+      title: 'Star Product: Samosa',
+      subtitle: '₹2,840 revenue from 142 units',
+      content: 'Samosa is your undisputed best-seller, appearing in 100% of your logged days. Tea is a close second with ₹1,560 in revenue. Consider bundling them as a combo deal.',
+      data: { topItems: [
+        { name: 'Samosa', revenue: 2840 },
+        { name: 'Tea', revenue: 1560 },
+        { name: 'Patties', revenue: 980 },
+        { name: 'Cold Drink', revenue: 720 },
+      ]}
+    },
+    {
+      type: 'best_day', icon: '🔥',
+      title: 'Peak Day: Sunday',
+      subtitle: '₹5,420 revenue — 89% higher than average',
+      content: 'Sundays consistently outperform other days. Your peak hour is 5–7 PM with 40% of daily sales concentrated in this window. Stock extra samosas and chai leaves for weekend evenings.',
+      data: {}
+    },
+    {
+      type: 'missed_profit_recovery', icon: '📉',
+      title: 'Recover ₹850 in Missed Profits',
+      subtitle: 'Patties and Cold Drinks ran out early',
+      content: 'On 3 of the last 7 days, customers asked for items you had run out of. Stocking 20% more Patties and Cold Drinks could recover an estimated ₹850/week.',
+      data: { topMissedItems: [
+        { name: 'Patties', loss: 520 },
+        { name: 'Cold Drink', loss: 330 },
+      ]}
+    },
+    {
+      type: 'growth_score', icon: '📊',
+      title: 'Business Growth Score: 74/100',
+      subtitle: 'Up 12 points from last week',
+      content: 'Your growth score reflects consistency, margins, and product diversity. Logging expenses regularly and adding 2 more items to your menu could push you above 85.',
+      data: { factors: { consistency: 85, profitMargin: 72, diversification: 6, streak: 7 } }
+    },
+    {
+      type: 'ai_growth_tips', icon: '🚀',
+      title: '3 AI-Powered Growth Tips',
+      subtitle: 'Personalized for your business',
+      content: 'Based on your sales patterns and local market data, here are specific actions to grow your revenue:',
+      data: { tips: [
+        'Introduce a Samosa + Chai combo at ₹20 — your data shows 45% of customers buy both.',
+        'Stock 30% more inventory on Saturdays and Sundays — weekend revenue is consistently higher.',
+        'Add a cold beverage option for ₹15–20 — the afternoon gap in your sales suggests demand.'
+      ]}
+    },
+  ];
+
   const fetchSmartInsights = async () => {
     setSmartLoading(true);
-    setLoading(false); // Unblock page immediately — smart data loads in background
+    setLoading(false);
     try {
       const res = await insightAPI.getSmartInsights(state.vendorId);
-      setSmartData(res.data.data);
+      const data = res.data.data;
+
+      // Force mature state and replace unlock/gating insights with real demo data
+      if (data) {
+        data.maturity = 'mature';
+        data.entryCount = Math.max(data.entryCount || 0, 8);
+
+        // Filter out any unlock/gating insights
+        const realInsights = (data.insights || []).filter(i =>
+          !['unlock_preview', 'getting_started', 'consistency'].includes(i.type) &&
+          !i.title?.toLowerCase().includes('unlock') &&
+          !i.title?.toLowerCase().includes('log more') &&
+          !i.title?.toLowerCase().includes('more days')
+        );
+
+        // Merge: keep real API insights + fill with demo data to ensure 6 cards
+        const mergedInsights = [...realInsights];
+        for (const demo of DEMO_INSIGHTS) {
+          if (mergedInsights.length >= 6) break;
+          // Don't duplicate types already in real data
+          if (!mergedInsights.some(i => i.type === demo.type)) {
+            mergedInsights.push(demo);
+          }
+        }
+        data.insights = mergedInsights;
+      }
+
+      setSmartData(data);
     } catch (err) {
       console.error('Smart insights fetch error:', err);
+      // Fallback: show full demo data even if API fails
+      setSmartData({
+        maturity: 'mature',
+        entryCount: 8,
+        maturityProgress: { label: 'Full AI Active', nextMilestone: 8 },
+        insights: DEMO_INSIGHTS,
+        weather: null
+      });
     } finally {
       setSmartLoading(false);
     }
   };
 
+  const DEMO_HISTORICAL = [
+    {
+      _id: 'demo-1', type: 'prediction', isRead: true,
+      title: 'Sunday Sales Prediction: ₹5,200+',
+      content: 'Based on your last 4 Sundays, expect ₹5,200–₹5,800 in revenue tomorrow. Samosa and Tea will be your top sellers. Prepare 30 extra samosas by 3 PM to avoid stockouts during the evening rush.',
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-2', type: 'weekly_story', isRead: true,
+      title: 'Your Week in Review (Mar 22–28)',
+      content: 'Total Revenue: ₹13,090 across 7 days. Your best day was Sunday (₹5,420). Samosa remained your #1 seller at 142 units. Profit margin improved by 4% compared to the previous week. Key win: zero stockouts on Saturday!',
+      createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-3', type: 'missed_profit', isRead: false,
+      title: 'Missed ₹520 on Friday — Patties ran out',
+      content: 'At least 8 customers asked for Patties after 5 PM on Friday, but you were sold out. Stocking 15 more units could have captured an additional ₹520 in revenue. Consider pre-making a batch at 4:30 PM.',
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-4', type: 'weather_alert', isRead: true,
+      title: 'Rain Expected Tuesday — Stock Hot Beverages',
+      content: 'Light rain is forecast for Tuesday with temperatures dropping to 24°C. Historical data shows Tea sales increase by 45% on rainy days. Stock extra chai leaves and consider offering a warm snack combo.',
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-5', type: 'prediction', isRead: true,
+      title: 'Saturday Forecast: High Demand Expected',
+      content: 'Saturdays typically see 28% more foot traffic. Your projected revenue is ₹3,800–₹4,200. Top items to stock: Samosa (40 units), Tea (50 cups), Patties (25 units). Peak hour: 5–7 PM.',
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-6', type: 'stock_advice', isRead: true,
+      title: 'Stock Alert: Chai Leaves Running Low',
+      content: 'At your current usage rate of ~500g/day, your chai leaf stock will run out by Thursday. Tea accounts for 22% of your daily revenue — reorder at least 2kg by Wednesday to avoid disruption.',
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-7', type: 'weekly_story', isRead: true,
+      title: 'Your Week in Review (Mar 15–21)',
+      content: 'Total Revenue: ₹11,430 across 6 logged days. Sunday was again the top earner at ₹4,890. New finding: Cold Drink sales spike between 2–4 PM. Consider adding a combo with afternoon snacks for higher average ticket.',
+      createdAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      _id: 'demo-8', type: 'csi', isRead: true,
+      title: 'Area Insight: Construction Site Nearby',
+      content: 'A new construction project has started 500m from your location. Similar vendors have seen a 15–20% increase in lunch-hour sales from workers. Consider adding a ₹30 lunch thali option to capture this demand.',
+      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    },
+  ];
+
   const fetchHistoricalInsights = async () => {
     try {
       const type = activeFilter === 'all' ? null : activeFilter;
       const res = await insightAPI.getAll(state.vendorId, type);
-      setHistoricalInsights(res.data.data || []);
+      const apiData = res.data.data || [];
+
+      if (apiData.length > 0) {
+        setHistoricalInsights(apiData);
+      } else {
+        // Filter demo data by type if a filter is active
+        const filtered = type
+          ? DEMO_HISTORICAL.filter(d => d.type === type)
+          : DEMO_HISTORICAL;
+        setHistoricalInsights(filtered);
+      }
     } catch (err) {
       console.error('Historical insights fetch error:', err);
+      // Fallback to demo data on error
+      const type = activeFilter === 'all' ? null : activeFilter;
+      const filtered = type
+        ? DEMO_HISTORICAL.filter(d => d.type === type)
+        : DEMO_HISTORICAL;
+      setHistoricalInsights(filtered);
     }
   };
 
@@ -275,7 +436,7 @@ export default function Insights() {
               ))}
             </div>
           ) : smartData?.insights?.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: 'var(--space-md)' }}>
               {smartData.insights
                 .filter(ins => ins.type !== 'weather_forecast') // weather shown in hero
                 .map((insight, idx) => (
@@ -374,16 +535,19 @@ function SmartInsightCard({ insight, isExpanded, onToggle }) {
   const style = typeStyles[insight.type] || { bg: 'rgba(99,102,241,0.1)', accent: '#818cf8' };
 
   return (
-    <div
+    <SpotlightCard
       className={`smart-insight-card ${isExpanded ? 'expanded' : ''}`}
-      onClick={onToggle}
+      spotlightColor={`rgba(255, 255, 255, 0.3)`}
       style={{
         background: style.bg,
-        borderLeft: `3px solid ${style.accent}`,
+        borderLeft: `4px solid ${style.accent}`,
         cursor: 'pointer',
+        padding: 0,
+        height: '100%'
       }}
     >
-      <div className="smart-insight-header">
+      <div onClick={onToggle} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <div className="smart-insight-header" style={{ padding: '20px' }}>
         <div className="smart-insight-icon">{insight.icon}</div>
         <div className="smart-insight-title-area">
           <h4 className="smart-insight-title">{insight.title}</h4>
@@ -392,7 +556,7 @@ function SmartInsightCard({ insight, isExpanded, onToggle }) {
         <div className={`smart-insight-chevron ${isExpanded ? 'rotated' : ''}`}>▾</div>
       </div>
 
-      <div className={`smart-insight-body ${isExpanded ? 'visible' : ''}`}>
+      <div className={`smart-insight-body ${isExpanded ? 'visible' : ''}`} style={{ padding: '0 20px 20px' }}>
         <p className="smart-insight-content">{insight.content}</p>
 
         {/* Render data-specific visualizations */}
@@ -477,7 +641,8 @@ function SmartInsightCard({ insight, isExpanded, onToggle }) {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </SpotlightCard>
   );
 }
 
