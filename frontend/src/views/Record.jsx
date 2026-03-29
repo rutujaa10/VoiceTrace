@@ -13,6 +13,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
@@ -27,8 +28,13 @@ import {
 import ReviewForm from '../components/ledger/ReviewForm';
 
 const LANGUAGES = [
-  { code: 'hi-IN', label: '🇮🇳 Hindi', short: 'hi' },
-  { code: 'en-IN', label: '🇬🇧 English', short: 'en' },
+  { code: 'hi-IN', label: 'Hindi', short: 'hi' },
+  { code: 'en-IN', label: 'English', short: 'en' },
+  { code: 'mr-IN', label: 'Marathi', short: 'mr' },
+  { code: 'gu-IN', label: 'Gujarati', short: 'gu' },
+  { code: 'kn-IN', label: 'Kannada', short: 'kn' },
+  { code: 'ta-IN', label: 'Tamil', short: 'ta' },
+  { code: 'te-IN', label: 'Telugu', short: 'te' },
 ];
 
 const EMPTY_ITEM = { name: '', quantity: '1', unitPrice: '', totalPrice: '' };
@@ -36,6 +42,7 @@ const EMPTY_EXPENSE = { description: '', category: 'raw_material', amount: '' };
 
 export default function Record() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Mode toggle
@@ -150,7 +157,7 @@ export default function Record() {
     setProcessing(true);
     setError('');
     try {
-      const res = await ledgerAPI.uploadAudio(state.vendorId, recorder.audioBlob);
+      const res = await ledgerAPI.uploadAudio(state.vendorId, recorder.audioBlob, lang.short);
       const data = res.data.data;
       // Audio upload now returns extraction (via save=false) or saved entry.
       // We'll populate review form, and keep audioUrl & wordTimestamps to save via manual entry.
@@ -422,23 +429,23 @@ export default function Record() {
             <div className="voice-labels">
               {processing ? (
                 <>
-                  <div className="voice-label-primary">Samajh raha hoon...</div>
-                  <div className="voice-label-secondary" style={{ color: 'var(--primary-400)' }}>Extracting details</div>
+                  <div className="voice-label-primary">{t('record.processing')}</div>
+                  <div className="voice-label-secondary" style={{ color: 'var(--primary-400)' }}>{t('record.processing')}</div>
                 </>
               ) : isActive ? (
                 <>
-                  <div className="voice-label-primary animate-pulse" style={{ color: 'var(--danger-400)' }}>Listening...</div>
-                  <div className="voice-label-secondary">{formattedTime} • Tap to stop</div>
+                  <div className="voice-label-primary animate-pulse" style={{ color: 'var(--danger-400)' }}>{t('record.stopRecording')}</div>
+                  <div className="voice-label-secondary">{formattedTime} • {t('record.stopRecording')}</div>
                 </>
               ) : (
                 <>
-                   <div className="voice-label-primary">Tap &amp; Speak</div>
+                   <div className="voice-label-primary">{t('record.startRecording')}</div>
                    <div className="voice-label-secondary">
                      {hasData ? (
                        mode === 'speech'
                          ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success-400)' }}><CheckCircle size={14} /> Transcribed {formattedTime}</span>
                          : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--success-400)' }}><CheckCircle size={14} /> Recorded {formattedTime}</span>
-                     ) : 'Bol ke likho'}
+                     ) : t('record.hint')}
                    </div>
                 </>
               )}

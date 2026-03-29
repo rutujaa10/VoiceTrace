@@ -7,26 +7,30 @@
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
 import { vendorAPI } from '../api';
 
 import { Mic, Key, Sparkles, Phone, AlertTriangle, CheckCircle, Apple, Leaf, Pizza, Coffee, Utensils, IceCream, Milk, Flower2, Store, Package, User } from 'lucide-react';
 
-const CATEGORIES = [
-  { value: 'fruits', label: 'Fruits', icon: <Apple size={24} /> },
-  { value: 'vegetables', label: 'Vegetables', icon: <Leaf size={24} /> },
-  { value: 'snacks', label: 'Snacks', icon: <Pizza size={24} /> },
-  { value: 'beverages', label: 'Beverages', icon: <Coffee size={24} /> },
-  { value: 'street_food', label: 'Street Food', icon: <Utensils size={24} /> },
-  { value: 'sweets', label: 'Sweets', icon: <IceCream size={24} /> },
-  { value: 'dairy', label: 'Dairy', icon: <Milk size={24} /> },
-  { value: 'flowers', label: 'Flowers', icon: <Flower2 size={24} /> },
-  { value: 'general', label: 'General', icon: <Store size={24} /> },
-  { value: 'other', label: 'Other', icon: <Package size={24} /> },
-];
+const CATEGORY_ICONS = {
+  fruits: <Apple size={24} />,
+  vegetables: <Leaf size={24} />,
+  snacks: <Pizza size={24} />,
+  beverages: <Coffee size={24} />,
+  street_food: <Utensils size={24} />,
+  sweets: <IceCream size={24} />,
+  dairy: <Milk size={24} />,
+  flowers: <Flower2 size={24} />,
+  general: <Store size={24} />,
+  other: <Package size={24} />,
+};
+
+const CATEGORY_KEYS = Object.keys(CATEGORY_ICONS);
 
 export default function Login() {
   const { dispatch } = useApp();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
@@ -43,7 +47,7 @@ export default function Login() {
     setSuccessMsg('');
 
     if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit phone number');
+      setError(t('login.invalidPhone'));
       return;
     }
 
@@ -57,10 +61,10 @@ export default function Login() {
       navigate('/app', { replace: true });
     } catch (err) {
       const status = err.response?.status;
-      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Login failed';
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || t('login.loginError');
 
       if (status === 404) {
-        setError('No account found with this number.');
+        setError(t('login.loginError'));
         setSuccessMsg('');
       } else {
         setError(msg);
@@ -76,11 +80,11 @@ export default function Login() {
     setSuccessMsg('');
 
     if (!phone || phone.length < 10) {
-      setError('Please enter a valid 10-digit phone number');
+      setError(t('login.invalidPhone'));
       return;
     }
     if (!name.trim()) {
-      setError('Please enter your name');
+      setError(t('login.invalidName'));
       return;
     }
 
@@ -98,7 +102,7 @@ export default function Login() {
       navigate('/app', { replace: true });
     } catch (err) {
       const status = err.response?.status;
-      const msg = err.response?.data?.error?.message || err.response?.data?.message || 'Registration failed';
+      const msg = err.response?.data?.error?.message || err.response?.data?.message || t('login.registerError');
 
       if (status === 409) {
         setError('');
@@ -167,7 +171,7 @@ export default function Login() {
           <span className="gradient-text">VoiceTrace</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 'var(--space-xl)' }}>
-          Apni awaaz se business sambhalein
+          {t('login.subtitle')}
         </p>
 
         {/* ═══ Login / Register Tab Switcher ═══ */}
@@ -201,7 +205,7 @@ export default function Login() {
               boxShadow: mode === 'login' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Key size={16} /> Login</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Key size={16} /> {t('login.loginButton')}</span>
           </button>
           <button
             id="tab-register"
@@ -221,7 +225,7 @@ export default function Login() {
               boxShadow: mode === 'register' ? 'var(--shadow-glow)' : 'none',
             }}
           >
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={16} /> Register</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Sparkles size={16} /> {t('login.registerButton')}</span>
           </button>
         </div>
 
@@ -240,12 +244,12 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> Phone Number</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> {t('login.phoneLabel')}</span>
               </label>
               <input
                 id="login-phone"
                 type="tel"
-                placeholder="Enter your registered phone number"
+                placeholder={t('login.phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={15}
@@ -292,7 +296,7 @@ export default function Login() {
                       textDecoration: 'underline',
                     }}
                   >
-                    → Create a new account
+                    → {t('login.switchToRegister')}
                   </button>
                 )}
               </div>
@@ -321,11 +325,10 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? 'Logging in...' : 'Login to My Account'}
+              {loading ? t('common.loading') : t('login.loginButton')}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>
-              New here?{' '}
               <button
                 type="button"
                 onClick={() => switchMode('register')}
@@ -340,7 +343,7 @@ export default function Login() {
                   textDecoration: 'underline',
                 }}
               >
-                Create an account →
+                {t('login.switchToRegister')}
               </button>
             </p>
           </form>
@@ -361,12 +364,12 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> Phone Number *</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Phone size={14} /> {t('login.phoneLabel')} *</span>
               </label>
               <input
                 id="register-phone"
                 type="tel"
-                placeholder="e.g. 9876543210"
+                placeholder={t('login.phonePlaceholder')}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                 maxLength={15}
@@ -394,12 +397,12 @@ export default function Login() {
                   marginBottom: 6,
                 }}
               >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><User size={14} /> Your Name *</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><User size={14} /> {t('login.nameLabel')} *</span>
               </label>
               <input
                 id="register-name"
                 type="text"
-                placeholder="Enter your name"
+                placeholder={t('login.namePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 maxLength={100}
@@ -426,7 +429,7 @@ export default function Login() {
                   marginBottom: 8,
                 }}
               >
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Store size={14} /> Business Category</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Store size={14} /> {t('login.categoryLabel')}</span>
               </label>
               <div
                 style={{
@@ -435,19 +438,19 @@ export default function Login() {
                   gap: 6,
                 }}
               >
-                {CATEGORIES.map((cat) => (
+                {CATEGORY_KEYS.map((key) => (
                   <button
-                    key={cat.value}
+                    key={key}
                     type="button"
-                    onClick={() => setCategory(cat.value)}
-                    id={`cat-${cat.value}`}
+                    onClick={() => setCategory(key)}
+                    id={`cat-${key}`}
                     style={{
                       padding: '8px 4px',
-                      border: category === cat.value
+                      border: category === key
                         ? '2px solid var(--primary-500)'
                         : '1px solid var(--border-glass)',
                       borderRadius: 'var(--radius-md)',
-                      background: category === cat.value
+                      background: category === key
                         ? 'rgba(34, 197, 94, 0.1)'
                         : 'var(--bg-glass)',
                       cursor: 'pointer',
@@ -458,13 +461,13 @@ export default function Login() {
                       gap: 2,
                     }}
                   >
-                    <span style={{ display: 'inline-flex', color: category === cat.value ? 'var(--primary-500)' : 'var(--text-muted)' }}>{cat.icon}</span>
+                    <span style={{ display: 'inline-flex', color: category === key ? 'var(--primary-500)' : 'var(--text-muted)' }}>{CATEGORY_ICONS[key]}</span>
                     <span style={{
                       fontSize: '0.62rem',
                       fontWeight: 600,
-                      color: category === cat.value ? 'var(--text-accent)' : 'var(--text-muted)',
+                      color: category === key ? 'var(--text-accent)' : 'var(--text-muted)',
                     }}>
-                      {cat.label}
+                      {t(`login.categories.${key}`)}
                     </span>
                   </button>
                 ))}
@@ -511,11 +514,10 @@ export default function Login() {
               disabled={loading}
               style={{ width: '100%' }}
             >
-              {loading ? 'Creating Account...' : 'Create My Account'}
+              {loading ? t('common.loading') : t('login.registerButton')}
             </button>
 
             <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 'var(--space-lg)' }}>
-              Already have an account?{' '}
               <button
                 type="button"
                 onClick={() => switchMode('login')}
@@ -530,7 +532,7 @@ export default function Login() {
                   textDecoration: 'underline',
                 }}
               >
-                Login here →
+                {t('login.switchToLogin')}
               </button>
             </p>
           </form>

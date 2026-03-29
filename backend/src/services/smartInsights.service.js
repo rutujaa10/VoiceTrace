@@ -817,6 +817,14 @@ const generateSmartInsights = async (vendorId) => {
   const allInsights = [weatherInsight, ...stageInsights]
     .sort((a, b) => a.priority - b.priority);
 
+  // Try to get demand forecast from Python ML service
+  let forecast = null;
+  try {
+    forecast = await getDemandForecast(entries, vendor);
+  } catch (err) {
+    console.warn('[SmartInsights] ML forecast unavailable:', err.message);
+  }
+
   return {
     maturity,
     entryCount: entries.length,
@@ -830,7 +838,64 @@ const generateSmartInsights = async (vendorId) => {
     },
     weather: weatherInsight,
     insights: allInsights,
+    forecast,
   };
 };
 
-module.exports = { generateSmartInsights };
+/**
+ * Call the Python ML microservice for demand forecasting.
+ * Falls back gracefully if the service is unavailable.
+ */
+const getDemandForecast = async (entries, vendor) => {
+  const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+
+  try {
+    // Prepare entries for the Python service
+    const payload = {
+      entries: entries.map(e => ({
+        date: e.date instanceof Date ? e.date.toISOString() : String(e.date),
+        items: (e.items || []).map(i => ({
+          name: i.name || 'unknown',
+          quantity: i.quantity || 0,
+          unitPrice: i.unitPrice || 0,
+          totalPrice: i.totalPrice || 0,
+        })),
+        expenses: (e.expenses || []).map(ex => ({
+          category: ex.category || 'other',
+          amount: ex.amount || 0,
+          description: ex.description || '',
+        })),
+        missedProfits: (e.missedProfits || []).map(mp => ({
+          item: mp.item || 'unknown',
+          estimatedLoss: mp.estimatedLoss || 0,
+        })),
+        totalRevenue: e.totalRevenue || 0,
+        totalExpenses: e.totalExpenses || 0,
+        netProfit: e.netProfit || 0,
+      })),
+      forecastDays: 7,
+      vendorName: vendor.name || 'Unknown',
+      businessCategory: vendor.businessCategory || 'general',
+    };
+
+    const response = await fetch(`${ML_SERVICE_URL}/predict`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(15000), // 15s timeout
+    });
+
+    if (!response.ok) {
+      throw new Error(`ML service returned ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.success ? result.data : null;
+  } catch (err) {
+    // Don't throw — forecast is optional
+    console.warn('[SmartInsights] ML forecast error:', err.message);
+    return null;
+  }
+};
+
+module.exports = { generateSmartInsights, getDemandForecast };

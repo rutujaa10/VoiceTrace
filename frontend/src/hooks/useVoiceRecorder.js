@@ -5,9 +5,10 @@
  * real-time, in-browser speech-to-text — zero Whisper API cost.
  *
  * Features:
- *   - Supports Hindi (hi-IN) and English (en-IN)
+ *   - Supports Hindi, English, Marathi, Gujarati, Kannada, Tamil, Telugu
  *   - Auto-restarts on speech gaps (continuous mode)
  *   - Returns real-time interim + final transcript
+ *   - Picks best alternative by confidence score
  *   - Timer tracking
  *   - Graceful fallback check (isSupported)
  */
@@ -35,6 +36,12 @@ export function useVoiceRecorder({
   const timerRef = useRef(null);
   const shouldRestartRef = useRef(false);
   const transcriptRef = useRef('');
+  const langRef = useRef(lang);
+
+  // Keep langRef in sync with prop changes
+  useEffect(() => {
+    langRef.current = lang;
+  }, [lang]);
 
   // Check browser support on mount
   useEffect(() => {
@@ -57,8 +64,8 @@ export function useVoiceRecorder({
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = lang;
-    recognition.maxAlternatives = 1;
+    recognition.lang = langRef.current;
+    recognition.maxAlternatives = 3;
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -70,10 +77,17 @@ export function useVoiceRecorder({
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
+        // Pick the alternative with highest confidence
+        let bestAlt = result[0];
+        for (let j = 1; j < result.length; j++) {
+          if (result[j].confidence > bestAlt.confidence) {
+            bestAlt = result[j];
+          }
+        }
         if (result.isFinal) {
-          finalText += result[0].transcript + ' ';
+          finalText += bestAlt.transcript + ' ';
         } else {
-          interim += result[0].transcript;
+          interim += bestAlt.transcript;
         }
       }
 
@@ -135,7 +149,7 @@ export function useVoiceRecorder({
         return prev + 1;
       });
     }, 1000);
-  }, [lang, maxDurationSeconds, autoRestart]);
+  }, [maxDurationSeconds, autoRestart]);
 
   const stopListening = useCallback(() => {
     shouldRestartRef.current = false;
@@ -167,6 +181,7 @@ export function useVoiceRecorder({
 
   const changeLang = useCallback(
     (newLang) => {
+      langRef.current = newLang;
       if (isListening) {
         stopListening();
         // Small delay then restart with new lang

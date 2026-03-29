@@ -38,7 +38,7 @@ const MIME_TYPES = {
  * @param {string} filepath – Absolute path to the audio file.
  * @returns {{ text: string, language: string, duration: number, segments: Array, words: Array }}
  */
-const transcribe = async (filepath) => {
+const transcribe = async (filepath, language = 'hi') => {
   if (!fs.existsSync(filepath)) {
     throw new Error(`Audio file not found: ${filepath}`);
   }
@@ -74,7 +74,7 @@ const transcribe = async (filepath) => {
   if (env.GROQ_API_KEY) {
     try {
       console.log('[Transcribe] Trying Groq Whisper...');
-      const result = await transcribeWithGroq(filepath);
+      const result = await transcribeWithGroq(filepath, language);
       console.log('[Transcribe] ✅ Groq succeeded:', result.text.substring(0, 80) + '...');
       return result;
     } catch (err) {
@@ -187,14 +187,14 @@ RESPOND WITH ONLY THE TRANSCRIPTION TEXT. No labels, no formatting, no quotes.`,
  * Transcribe using Groq's free Whisper API.
  * Groq provides whisper-large-v3-turbo for free with generous rate limits.
  */
-const transcribeWithGroq = async (filepath) => {
+const transcribeWithGroq = async (filepath, language = 'hi') => {
   const form = new FormData();
   form.append('file', fs.createReadStream(filepath), {
     filename: path.basename(filepath),
     contentType: MIME_TYPES[path.extname(filepath).toLowerCase()] || 'audio/ogg',
   });
   form.append('model', 'whisper-large-v3-turbo');
-  form.append('language', 'hi');
+  form.append('language', language);
   form.append('response_format', 'verbose_json');
   form.append('timestamp_granularities[]', 'word');
   form.append('prompt',

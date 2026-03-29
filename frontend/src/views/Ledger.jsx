@@ -8,6 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../state/AppContext';
 import { ledgerAPI } from '../api';
 import { useAudioPlayback } from '../hooks/useAudioPlayback';
@@ -15,6 +16,7 @@ import { BookOpen, Volume2, TrendingDown, CheckCircle, Clock } from 'lucide-reac
 
 export default function Ledger() {
   const { state } = useApp();
+  const { t } = useTranslation();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -179,10 +181,10 @@ export default function Ledger() {
     <div className="max-w-4xl mx-auto px-4 stagger-children">
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          <BookOpen size={24} style={{ display: 'inline', color: 'var(--text-primary)', verticalAlign: 'text-bottom', marginRight: '8px' }} /><span className="gradient-text">Business Ledger</span>
+          <BookOpen size={24} style={{ display: 'inline', color: 'var(--text-primary)', verticalAlign: 'text-bottom', marginRight: '8px' }} /><span className="gradient-text">{t('ledger.title')}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>
-          Your daily sales history — tap items to hear original audio
+          {t('ledger.subtitle')}
         </p>
       </div>
 
@@ -195,8 +197,8 @@ export default function Ledger() {
       ) : entries.length === 0 ? (
         <div className="empty-state glass-card">
           <div className="empty-icon"><BookOpen size={40} style={{ color: 'var(--text-muted)' }} /></div>
-          <h3>No Entries Yet</h3>
-          <p>Start recording your sales to see them here!</p>
+          <h3>{t('ledger.noEntries')}</h3>
+          <p>{t('ledger.noEntriesHint')}</p>
         </div>
       ) : (
         <>
@@ -234,17 +236,17 @@ export default function Ledger() {
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                ← Previous
+                ← {t('common.previous')}
               </button>
               <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                Page {page} of {pagination.pages}
+                {t('common.pageOf', { page, pages: pagination.pages })}
               </span>
               <button
                 className="btn btn-secondary"
                 disabled={page === pagination.pages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next →
+                {t('common.next')} →
               </button>
             </div>
           )}
@@ -337,7 +339,7 @@ function LedgerEntryCard({ entry, isExpanded, isEditable, onToggle, onConfirm, o
             border: entry.confirmedByVendor ? '1px solid rgba(34,197,94,0.15)' : '1px solid rgba(245,158,11,0.15)'
           }}>
             <div style={{ width: 5, height: 5, borderRadius: '50%', background: entry.confirmedByVendor ? '#22c55e' : '#f59e0b' }} />
-            {entry.confirmedByVendor ? 'Verified' : 'Pending'}
+            {entry.confirmedByVendor ? t('ledger.confirmed') : t('ledger.pending')}
           </div>
         </div>
 

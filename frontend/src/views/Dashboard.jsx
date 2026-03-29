@@ -12,8 +12,9 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useApp, actionTypes } from '../state/AppContext';
-import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI } from '../api';
+import { vendorAPI, insightAPI, ledgerAPI, analyticsAPI, pdfAPI } from '../api';
 import LoanGauge from '../components/common/LoanGauge';
 import StatCard from '../components/common/StatCard';
 import InsightCard from '../components/common/InsightCard';
@@ -23,6 +24,7 @@ import { IndianRupee, BarChart2, Calendar, TrendingDown, Lightbulb, CloudRain, C
 
 export default function Dashboard() {
   const { state, dispatch } = useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
   const [recentInsights, setRecentInsights] = useState([]);
@@ -159,7 +161,7 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div style={{ paddingTop: 'var(--space-lg)' }}>
-        <div className="section-title">Dashboard</div>
+        <div className="section-title">{t('nav.dashboard')}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '20px' }}>
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="skeleton" style={{ height: 100, borderRadius: 'var(--radius-3xl)' }} />
@@ -187,10 +189,10 @@ export default function Dashboard() {
             lineHeight: 1.3,
           }}
         >
-          Namaste, <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span>
+          {t('dashboard.greeting', { name: '' })} <span className="gradient-text">{state.vendor?.name || 'Vendor'}</span>
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', marginTop: '4px', fontWeight: 500 }}>
-          Here&apos;s your business at a glance
+          {t('dashboard.subtitle')}
         </p>
       </div>
 
@@ -207,8 +209,8 @@ export default function Dashboard() {
             <Mic size={56} color="white" />
           </div>
           <div className="voice-labels">
-            <div className="voice-label-primary">Tap &amp; Speak</div>
-            <div className="voice-label-secondary">Bol ke likho</div>
+            <div className="voice-label-primary">{t('dashboard.recordSales')}</div>
+            <div className="voice-label-secondary">{t('dashboard.recordSubtitle')}</div>
           </div>
         </div>
       </Link>
@@ -228,25 +230,25 @@ export default function Dashboard() {
         <StatCard
           icon={<IndianRupee size={20} />}
           value={`₹${(summary?.totalRevenue || 0).toLocaleString('en-IN')}`}
-          label="30-Day Revenue"
+          label={t('dashboard.revenue30d')}
           bgColor="rgba(34, 197, 94, 0.12)"
         />
         <StatCard
           icon={<BarChart2 size={20} />}
           value={`₹${(summary?.totalProfit || 0).toLocaleString('en-IN')}`}
-          label="30-Day Profit"
+          label={t('dashboard.profit30d')}
           bgColor="rgba(99, 102, 241, 0.12)"
         />
         <StatCard
           icon={<Calendar size={20} />}
           value={summary?.entryCount || 0}
-          label="Days Logged"
+          label={t('dashboard.daysLogged')}
           bgColor="rgba(168, 85, 247, 0.12)"
         />
         <StatCard
           icon={<TrendingDown size={20} />}
           value={`₹${(summary?.totalMissedRevenue || 0).toLocaleString('en-IN')}`}
-          label="Missed Revenue"
+          label={t('dashboard.missedRevenue')}
           bgColor="rgba(239, 68, 68, 0.12)"
         />
       </div>
@@ -266,7 +268,7 @@ export default function Dashboard() {
             }}
           >
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            <Brain size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Weekly Observations
+            <Brain size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> {t('dashboard.weeklyObservations')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {weeklyPatterns.plainInsights.map((insight, i) => (
@@ -304,7 +306,7 @@ export default function Dashboard() {
             }}
           >
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            <Package size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Tomorrow&apos;s Stock Suggestions
+            <Package size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> {t('dashboard.stockSuggestions')}
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {weeklyPatterns.stockSuggestions.map((sug, i) => (
@@ -340,7 +342,7 @@ export default function Dashboard() {
       {weeklyPatterns && (
         <div style={{ marginBottom: '24px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, marginBottom: '16px' }}>
-            <TrendingUp size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Weekly Patterns
+            <TrendingUp size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> {t('dashboard.weeklyPatterns')}
           </h2>
           <div
             style={{
@@ -364,7 +366,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #22c55e, #10b981)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                <Award size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Best Seller
+                <Award size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> {t('dashboard.bestSeller')}
               </div>
               {weeklyPatterns.bestSeller ? (
                 <>
@@ -379,7 +381,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
@@ -397,7 +399,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #6366f1, #a855f7)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                <Flame size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Peak Day
+                <Flame size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> {t('dashboard.peakDay')}
               </div>
               {weeklyPatterns.peakDay ? (
                 <>
@@ -412,7 +414,7 @@ export default function Dashboard() {
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No data yet</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('common.noDataYet')}</div>
               )}
             </div>
 
@@ -430,7 +432,7 @@ export default function Dashboard() {
             >
               <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '3px', background: 'linear-gradient(90deg, #ef4444, #f97316)' }} />
               <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> Missed Profits
+                <TrendingDown size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> {t('dashboard.missedProfits')}
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.15rem', fontWeight: 800, color: 'var(--danger-400)', marginBottom: 4 }}>
                 ~₹{(weeklyPatterns.missedProfits?.totalLoss || 0).toLocaleString('en-IN')}
@@ -440,7 +442,7 @@ export default function Dashboard() {
                   Top: {weeklyPatterns.missedProfits.topMissedItems.slice(0, 2).map((m) => m.item).join(', ')}
                 </div>
               ) : (
-                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}><CheckCircle size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> No missed profits!</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--success-400)' }}><CheckCircle size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'text-bottom' }} /> {t('dashboard.noMissedProfits')}</div>
               )}
             </div>
           </div>
@@ -468,7 +470,7 @@ export default function Dashboard() {
               }}
               onClick={handleDownloadPDF}
             >
-              <FileText size={18} style={{ marginRight: '10px' }} /> Download PDF
+              <FileText size={18} style={{ marginRight: '10px' }} /> {t('dashboard.downloadPDF')}
             </button>
 
             {/* AI Insights */}
@@ -489,7 +491,7 @@ export default function Dashboard() {
                 transition: 'all 0.2s'
               }}
             >
-              <Brain size={18} style={{ marginRight: '10px' }} /> AI Insights
+              <Brain size={18} style={{ marginRight: '10px' }} /> {t('dashboard.aiInsights')}
             </Link>
           </div>
         </div>
@@ -500,10 +502,10 @@ export default function Dashboard() {
         <div style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>
-              <Lightbulb size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> Latest Insights
+              <Lightbulb size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'bottom', color: 'var(--primary-500)' }} /> {t('dashboard.latestInsights')}
             </h2>
             <Link to="/app/insights" className="btn btn-secondary" style={{ fontSize: '0.8rem', borderRadius: 'var(--radius-full)' }}>
-              View All →
+              {t('common.viewAll')} →
             </Link>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -532,7 +534,7 @@ export default function Dashboard() {
         {/* Left Side: Gauge */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
           <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Target size={22} style={{ color: 'var(--primary-500)' }} /> Micro-Loan Readiness
+            <Target size={22} style={{ color: 'var(--primary-500)' }} /> {t('dashboard.loanReadiness')}
           </h2>
           <LoanGauge
             score={loan.score || 0}
@@ -544,10 +546,10 @@ export default function Dashboard() {
         {/* Right Side: Score Breakdown Bento Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', height: '100%' }}>
           {[
-            { key: 'streakScore', label: 'Logging Streak', bg: '#a855f7', icon: <Flame color="white" size={24} />, val: loan.breakdown?.streakScore || 0 },
-            { key: 'stabilityScore', label: 'Revenue Stability', bg: '#1f2937', icon: <BarChart2 color="white" size={24} />, val: loan.breakdown?.stabilityScore || 0 },
-            { key: 'revenueScore', label: 'Avg Revenue', bg: '#06b6d4', icon: <TrendingUp color="white" size={24} />, val: loan.breakdown?.revenueScore || 0 },
-            { key: 'expenseScore', label: 'Expense Tracking', bg: '#3b82f6', icon: <FileText color="white" size={24} />, val: loan.breakdown?.expenseScore || 0 }
+            { key: 'streakScore', label: t('dashboard.breakdownLabels.streakScore'), bg: '#a855f7', icon: <Flame color="white" size={24} />, val: loan.breakdown?.streakScore || 0 },
+            { key: 'stabilityScore', label: t('dashboard.breakdownLabels.stabilityScore'), bg: '#1f2937', icon: <BarChart2 color="white" size={24} />, val: loan.breakdown?.stabilityScore || 0 },
+            { key: 'revenueScore', label: t('dashboard.breakdownLabels.revenueScore'), bg: '#06b6d4', icon: <TrendingUp color="white" size={24} />, val: loan.breakdown?.revenueScore || 0 },
+            { key: 'expenseScore', label: t('dashboard.breakdownLabels.expenseScore'), bg: '#3b82f6', icon: <FileText color="white" size={24} />, val: loan.breakdown?.expenseScore || 0 }
           ].map((item, idx) => (
             <div
               key={idx}
@@ -599,15 +601,18 @@ export default function Dashboard() {
   );
 
   async function handleDownloadPDF() {
+    if (!state.vendorId) return;
     try {
-      const { pdfAPI } = await import('../api');
       const res = await pdfAPI.downloadEarnings(state.vendorId, 30);
-      const url = URL.createObjectURL(res.data);
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = 'VoiceTrace_Earnings.pdf';
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (err) {
       console.error('PDF download error:', err);
     }

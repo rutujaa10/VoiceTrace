@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../state/AppContext';
 import { insightAPI } from '../api';
 import InsightCard from '../components/common/InsightCard';
@@ -47,6 +48,7 @@ const weatherEmoji = {
 
 export default function Insights() {
   const { state } = useApp();
+  const { t } = useTranslation();
   const [smartData, setSmartData] = useState(null);
   const [historicalInsights, setHistoricalInsights] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -269,7 +271,7 @@ export default function Insights() {
       {/* ═══ Header ═══ */}
       <div style={{ marginBottom: 'var(--space-lg)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', fontWeight: 800 }}>
-          <Lightbulb size={28} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">AI Business Insights</span>
+          <Lightbulb size={28} style={{ display: 'inline', color: 'var(--primary-500)', verticalAlign: 'text-bottom', marginRight: '8px' }} /> <span className="gradient-text">{t('insights.title')}</span>
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
           {smartData?.maturity === 'mature'

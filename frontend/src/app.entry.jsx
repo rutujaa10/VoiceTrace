@@ -10,6 +10,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './state/AppContext';
 import { ThemeProvider } from './state/ThemeContext';
+import './i18n'; // Initialize multilingual support
 import AppLayout from './layouts/AppLayout';
 import Landing from './views/Landing';
 import LandingNavbar from './components/landing/LandingNavbar';

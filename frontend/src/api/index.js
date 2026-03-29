@@ -31,10 +31,10 @@ export const vendorAPI = {
 
 // ---- Ledger APIs ----
 export const ledgerAPI = {
-  uploadAudio: (vendorId, audioBlob) => {
+  uploadAudio: (vendorId, audioBlob, language = 'hi') => {
     const formData = new FormData();
     formData.append('audio', audioBlob, 'recording.webm');
-    return api.post(`/ledger/${vendorId}/audio?save=false`, formData, {
+    return api.post(`/ledger/${vendorId}/audio?save=false&language=${language}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 60000,
     });

@@ -38,7 +38,8 @@ const processAudio = asyncHandler(async (req, res) => {
   }
 
   // Transcribe (now returns word-level timestamps)
-  const transcription = await whisperService.transcribe(req.file.path);
+  const language = req.query.language || 'hi';
+  const transcription = await whisperService.transcribe(req.file.path, language);
 
   // Extract entities with word timestamps for audio mapping
   const extraction = await extractionService.extractEntities(

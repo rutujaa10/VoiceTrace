@@ -11,11 +11,14 @@
 import { Outlet, NavLink, Navigate, useNavigate } from 'react-router-dom';
 import { useApp, actionTypes } from '../state/AppContext';
 import { useTheme } from '../state/ThemeContext';
+import { useTranslation } from 'react-i18next';
 import { BarChart2, Mic, FileText, BookOpen, Lightbulb, Bot, CheckCircle, RefreshCw, Home, Sun, Moon, LogOut, Menu } from 'lucide-react';
+import LanguageSwitcher from '../components/common/LanguageSwitcher';
 
 export default function AppLayout() {
   const { state, dispatch } = useApp();
   const { isDark, toggleTheme } = useTheme();
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // Redirect to login if no vendor
@@ -24,13 +27,13 @@ export default function AppLayout() {
   }
 
   const navItems = [
-    { path: '/app', icon: <BarChart2 size={20} />, label: 'Dashboard' },
-    { path: '/app/record', icon: <Mic size={20} />, label: 'Record' },
-    { path: '/app/daily-log', icon: <FileText size={20} />, label: 'Daily Log' },
-    { path: '/app/ledger', icon: <BookOpen size={20} />, label: 'Ledger' },
-    { path: '/app/insights', icon: <Lightbulb size={20} />, label: 'Insights' },
-    { path: '/app/report', icon: <BarChart2 size={20} />, label: 'Report' },
-    { path: '/app/assistant', icon: <Bot size={20} />, label: 'AI Assistant' },
+    { path: '/app', icon: <BarChart2 size={20} />, label: t('nav.dashboard') },
+    { path: '/app/record', icon: <Mic size={20} />, label: t('nav.record') },
+    { path: '/app/daily-log', icon: <FileText size={20} />, label: t('nav.dailyLog') },
+    { path: '/app/ledger', icon: <BookOpen size={20} />, label: t('nav.ledger') },
+    { path: '/app/insights', icon: <Lightbulb size={20} />, label: t('nav.insights') },
+    { path: '/app/report', icon: <BarChart2 size={20} />, label: t('nav.report') },
+    { path: '/app/assistant', icon: <Bot size={20} />, label: t('nav.assistant') },
   ];
 
   const handleLogout = () => {
@@ -100,7 +103,7 @@ export default function AppLayout() {
             }}
           >
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-              Loan Score
+              {t('loanGauge.loanScore')}
             </div>
             <div
               className="gradient-text"
@@ -119,7 +122,7 @@ export default function AppLayout() {
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                 {loan.isLoanReady ? <CheckCircle size={14} /> : <RefreshCw size={14} />}
-                <span>{loan.isLoanReady ? 'Loan Ready' : 'Building...'}</span>
+                <span>{loan.isLoanReady ? t('loanGauge.ready') : t('loanGauge.building')}</span>
               </div>
             </div>
           </div>
@@ -135,7 +138,7 @@ export default function AppLayout() {
           onClick={handleGoHome}
           title="Go to Home Page"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Home size={16} /> Home</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Home size={16} /> {t('nav.home')}</div>
         </button>
 
         {/* Theme Toggle */}
@@ -146,6 +149,9 @@ export default function AppLayout() {
         >
           {isDark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+
+        {/* Language Switcher */}
+        <LanguageSwitcher />
 
         {/* User Pill */}
         {vendorName && (
@@ -164,7 +170,7 @@ export default function AppLayout() {
           onClick={handleLogout}
           title="Logout"
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={16} /> Logout</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={16} /> {t('common.logout')}</div>
         </button>
 
         {/* Mobile hamburger */}

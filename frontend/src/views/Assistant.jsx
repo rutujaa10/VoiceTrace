@@ -10,6 +10,7 @@
  */
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useApp } from '../state/AppContext';
 import { assistantAPI, ledgerAPI } from '../api';
 import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
@@ -28,6 +29,7 @@ import { Bot, CheckCircle, Send, Mic, Square, AlertCircle } from 'lucide-react';
 
 export default function Assistant() {
   const { state } = useApp();
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([
     {
       id: 'welcome',
@@ -169,7 +171,7 @@ export default function Assistant() {
           }}
         >
           <Bot size={24} style={{ color: 'var(--primary-500)', flexShrink: 0 }} />
-          <span className="gradient-text">AI Assistant</span>
+          <span className="gradient-text">{t('assistant.title')}</span>
           <span
             className="badge badge-success"
             style={{ fontSize: '0.65rem', marginLeft: 'auto' }}
@@ -301,7 +303,7 @@ export default function Assistant() {
               ))}
             </div>
             <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-              AI soch raha hai...
+              {t('assistant.thinking')}
             </span>
           </div>
         )}
@@ -419,7 +421,7 @@ export default function Assistant() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Apna sawaal poochiye..."
+          placeholder={t('assistant.placeholder')}
           disabled={isLoading || speech.isListening}
           style={{
             flex: 1,

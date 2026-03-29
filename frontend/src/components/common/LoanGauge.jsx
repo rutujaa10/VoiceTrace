@@ -2,9 +2,11 @@
  * LoanGauge — Animated SVG gauge for Micro-Loan Readiness Meter
  */
 
+import { useTranslation } from 'react-i18next';
 import { CheckCircle, RefreshCw, Flame } from 'lucide-react';
 
 export default function LoanGauge({ score = 0, isReady = false, streak = 0 }) {
+  const { t } = useTranslation();
   const radius = 80;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
@@ -93,7 +95,7 @@ export default function LoanGauge({ score = 0, isReady = false, streak = 0 }) {
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
             {isReady ? <CheckCircle size={16} /> : <RefreshCw size={16} />}
-            <span>{isReady ? 'PM SVANidhi Ready!' : 'Keep Logging Daily'}</span>
+            <span>{isReady ? t('loanGauge.ready') : t('loanGauge.keepLogging')}</span>
           </div>
         </div>
         <p
